@@ -456,6 +456,7 @@
 "Assets/Scripts/EnemySpawner.cs"
 "Assets/Scripts/ExperienceDrop.cs"
 "Assets/Scripts/PlayerController.cs"
+"Assets/Scripts/Start Menu/StartMenu.cs"
 -langversion:9.0
 /deterministic
 /optimize+
