@@ -455,8 +455,9 @@
 "Assets/Scripts/GameScene/Enemy.cs"
 "Assets/Scripts/GameScene/EnemySpawner.cs"
 "Assets/Scripts/GameScene/ExperienceDrop.cs"
+"Assets/Scripts/GameScene/PauseMenu.cs"
 "Assets/Scripts/GameScene/PlayerController.cs"
-"Assets/Scripts/Start Menu/StartMenu.cs"
+"Assets/Scripts/StartMenu/StartMenu.cs"
 -langversion:9.0
 /deterministic
 /optimize+

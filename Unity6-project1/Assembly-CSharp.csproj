@@ -71,7 +71,8 @@
     <Compile Include="Assets\Scripts\GameScene\ExperienceDrop.cs" />
     <Compile Include="Assets\Scripts\GameScene\Bullet.cs" />
     <Compile Include="Assets\Scripts\GameScene\EnemySpawner.cs" />
-    <Compile Include="Assets\Scripts\Start Menu\StartMenu.cs" />
+    <Compile Include="Assets\Scripts\GameScene\PauseMenu.cs" />
+    <Compile Include="Assets\Scripts\StartMenu\StartMenu.cs" />
     <Compile Include="Assets\Scripts\GameScene\Bomb.cs" />
     <Compile Include="Assets\Scripts\GameScene\Enemy.cs" />
   </ItemGroup>
