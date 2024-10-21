@@ -12,12 +12,18 @@ public class EnemySpawner : MonoBehaviour
 
     private float currentSpawnRate;
     private float gameStartTime;
+    private float gameTime = 0f;    // Game timer records game time (exclude pause)
 
     void Start()
     {
         currentSpawnRate = spawnRate;
         gameStartTime = Time.time; // get the start time of the game
         StartCoroutine(SpawnEnemies());
+    }
+
+    void Update()
+    {
+        gameTime += Time.deltaTime;
     }
 
     IEnumerator SpawnEnemies()
@@ -67,9 +73,8 @@ public class EnemySpawner : MonoBehaviour
 
         if(enemyScript != null)
         {
-            // calculate the base damage
-            float elaspedTime = Time.time - gameStartTime;
-            float additionalHealth = Mathf.Floor(elaspedTime / healIncreaseTime) * healIncreaseRate; // increase heal every setting time
+            // calculate the base health
+            float additionalHealth = Mathf.Floor(gameTime / healIncreaseTime) * healIncreaseRate; // increase heal every setting time
 
             enemyScript.maxHealth += additionalHealth;
             enemyScript.currentHealth = enemyScript.maxHealth;

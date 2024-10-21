@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
     public CooldownIndicator bulletCooldownIndicator; // Bullet cooldown indicator
     public CooldownIndicator dashCooldownIndicator; // Dash cooldown indicator
     public CooldownIndicator bombCooldownIndicator; // Bomb cooldown indicator
+    public float gameTime = 0f;    // gameTimer, will stop when pause
 
     private Rigidbody2D rb;
     private Vector2 movement;
@@ -30,6 +31,7 @@ public class PlayerController : MonoBehaviour
     private float lastFireTime = 0f; // Timestamp of the last shot
     private float lastBombTime = -100f; // Timestamp of the last bomb
     private int currentExperience = 0;  // current experience collected
+    
 
     void Start()
     {
@@ -39,6 +41,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        gameTime += Time.deltaTime;
         // Get input from the player (arrow keys or WASD)
         movement.x = Input.GetAxisRaw("Horizontal");  // Left/Right movement
         movement.y = Input.GetAxisRaw("Vertical");    // Up/Down movement
@@ -145,7 +148,7 @@ public class PlayerController : MonoBehaviour
 
             // Set the bullet's direction
             Bullet bulletScript = bullet.GetComponent<Bullet>();
-            Debug.Log($"Bullet Position: {bulletScript}");
+            // Debug.Log($"Bullet Position: {bulletScript}");
             bulletScript.Initialize(fireDirection, this);
 
             /*

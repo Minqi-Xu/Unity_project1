@@ -7,7 +7,12 @@ public class Enemy : MonoBehaviour
     [HideInInspector]
     public float currentHealth;
     public GameObject experiencePrefab; // link to the exp prefab in the inspector
+    public float baseDamage = 10f;  // Base damage of enemy
+    public float damageIncreaseRate = 0.1f; // Rate of damage increase within the time enemy survive
+    public float maxDamage = 100 * 0.4f;   // 100 -> player max hp, 0.4f -> 40% of player's max hp
     private Transform player; // Reference to the player’s position
+    private float currentDamage;
+    private float damageMultiplier = 1f;  // damageMultiplier, currently not use, but may be used for buff
 
     void Start()
     {
@@ -16,6 +21,9 @@ public class Enemy : MonoBehaviour
 
         // Set initial health
         currentHealth = maxHealth;
+
+        // Set initial damage
+        currentDamage = baseDamage;
 
         if (player == null)
         {
@@ -32,6 +40,26 @@ public class Enemy : MonoBehaviour
             transform.position = Vector2.MoveTowards(transform.position, player.position, speed * Time.deltaTime);
 
             // Debug.Log($"Enemy moving towards player. Position: {transform.position}, Direction: {direction}");
+
+            // Increase damage overtime
+            currentDamage += damageIncreaseRate * Time.deltaTime;
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.CompareTag("Player")) // if the player is "touch" by enemy
+        {
+            PlayerHealth playerHealth = collision.GetComponent<PlayerHealth>();
+            PlayerController playerController = collision.GetComponent<PlayerController>();
+            if(playerHealth != null)
+            {
+                Debug.Log($"Enemy deal {Mathf.Min(currentDamage * damageMultiplier, maxDamage)} dmg");
+                playerHealth.TakeDamage(Mathf.Min(currentDamage * damageMultiplier, maxDamage), playerController);  // Deal damage to player with damage multiplier applied
+            }
+
+            // Destroy the enemy (without exp drop)
+            Destroy(gameObject);
         }
     }
 

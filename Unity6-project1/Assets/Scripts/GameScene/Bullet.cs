@@ -43,7 +43,7 @@ public class Bullet : MonoBehaviour
 
                 // Deal damage to enemy hit
                 enemy.TakeDamage(currentDamage);
-                Debug.Log($"Deal {currentDamage} damage to enemy!");
+                // Debug.Log($"Deal {currentDamage} damage to enemy!");
             }
             Destroy(gameObject);
         }
