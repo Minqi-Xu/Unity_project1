@@ -5,13 +5,13 @@ public class MainMenu : MonoBehaviour
 {
     public void StartGame()
     {
-        Debug.Log($"START GAME BOTTON");
+        //Debug.Log($"START GAME BOTTON");
         SceneManager.LoadScene("GameScene");
     }
 
     public void QuitGame()
     {
-        Debug.Log($"QUIT GAME BOTTON");
+        //Debug.Log($"QUIT GAME BOTTON");
         Application.Quit();
     }
 }

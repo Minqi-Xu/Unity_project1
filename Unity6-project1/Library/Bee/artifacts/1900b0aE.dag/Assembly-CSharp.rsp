@@ -455,6 +455,7 @@
 "Assets/Scripts/GameScene/Enemy.cs"
 "Assets/Scripts/GameScene/EnemySpawner.cs"
 "Assets/Scripts/GameScene/ExperienceDrop.cs"
+"Assets/Scripts/GameScene/GameOverManager.cs"
 "Assets/Scripts/GameScene/PauseMenu.cs"
 "Assets/Scripts/GameScene/PlayerController.cs"
 "Assets/Scripts/GameScene/PlayerHealth.cs"

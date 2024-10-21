@@ -54,7 +54,7 @@ public class Enemy : MonoBehaviour
             PlayerController playerController = collision.GetComponent<PlayerController>();
             if(playerHealth != null)
             {
-                Debug.Log($"Enemy deal {Mathf.Min(currentDamage * damageMultiplier, maxDamage)} dmg");
+                //Debug.Log($"Enemy deal {Mathf.Min(currentDamage * damageMultiplier, maxDamage)} dmg");
                 playerHealth.TakeDamage(Mathf.Min(currentDamage * damageMultiplier, maxDamage), playerController);  // Deal damage to player with damage multiplier applied
             }
 

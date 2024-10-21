@@ -75,6 +75,7 @@
     <Compile Include="Assets\Scripts\GameScene\PauseMenu.cs" />
     <Compile Include="Assets\Scripts\StartMenu\StartMenu.cs" />
     <Compile Include="Assets\Scripts\GameScene\Bomb.cs" />
+    <Compile Include="Assets\Scripts\GameScene\GameOverManager.cs" />
     <Compile Include="Assets\Scripts\GameScene\Enemy.cs" />
   </ItemGroup>
   <ItemGroup>

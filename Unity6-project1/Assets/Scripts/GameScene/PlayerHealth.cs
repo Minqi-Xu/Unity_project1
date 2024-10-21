@@ -14,6 +14,7 @@ public class PlayerHealth : MonoBehaviour
     public float damageReceiveIncreasingRate = 0.005f; // player damage receiving increasing rate over time
     public float damageMultiplier = 1f;
     public float maxReceivingDmg = 80f;
+    public GameObject gameOverUI;  // Reference to the player's PriteRenderer component
 
     private SpriteRenderer playerSprite;    // Reference to the player's SpriteRenderer component
 
@@ -34,7 +35,7 @@ public class PlayerHealth : MonoBehaviour
     {
         float final_damage = damage * (damageMultiplier + damageReceiveIncreasingRate * player.gameTime);
         final_damage = Mathf.Min(final_damage, maxReceivingDmg);
-        Debug.Log($"Player receives {final_damage} damage");
+        // Debug.Log($"Player receives {final_damage} damage");
         currentHealth -= final_damage; // Reduce health by damage amount
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Ensure health doesn't go below 0
         UpdateHealthUI();
@@ -85,6 +86,7 @@ public class PlayerHealth : MonoBehaviour
     {
         // Handle player death (e.g., restart game, show game over screen, etc.)
         Debug.Log("Player is dead!");
-
+        gameOverUI.SetActive(true);
+        Time.timeScale = 0f;    // Pause the game
     }
 }
