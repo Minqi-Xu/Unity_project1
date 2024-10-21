@@ -10,26 +10,28 @@ public class PauseMenu : MonoBehaviour
     public GameObject pauseMenuUI;
     public TextMeshProUGUI countdownText;  // Reference to a countdown text UI
     public TextMeshProUGUI pauseText;   // Reference to PAUSED text UI
-    private bool isPaused = false;
-    private bool isCountDown = false;
+    private bool isPaused = false;  // Flag to track if game is paused
+    private bool isCountDown = false;   // Flag to track if countdown is in progress
 
     void Update()
     {
+        // Check for ESC key press
         if(Input.GetKeyDown(KeyCode.Escape))
         {
             if(isPaused)
             {
-                Resume();
+                Resume();   // Resume if game is paused
             }
             else
             {
-                Pause();
+                Pause();    // Pause if game if not paused
             }
         }
     }
 
     public void Resume()
     {
+        // Only resume if countdown is not active
         if(!isCountDown)
         {
             StartCoroutine(CountdownAndResume());   // start the countdown coroutine
@@ -41,18 +43,18 @@ public class PauseMenu : MonoBehaviour
         pauseText.gameObject.SetActive(false);  // hide the PAUSED text
         countdownText.gameObject.SetActive(true);   // show countdown
         isCountDown = true;
-        float countdownTime = 3f;
+        float countdownTime = 3f;   // Set countdown duration
 
         // display countdown
         while(countdownTime > 0)
         {
             countdownText.text = Mathf.Ceil(countdownTime).ToString();   // Update countdown
-            countdownTime -= Time.unscaledDeltaTime;
+            countdownTime -= Time.unscaledDeltaTime;    // Decrease countdown time
             yield return null;  // wait for next frame
         }
-        countdownText.text = "";
+        countdownText.text = "";    // clear countdown text
         countdownText.gameObject.SetActive(false);  // hide the countdown
-        pauseMenuUI.SetActive(false);
+        pauseMenuUI.SetActive(false);   // close pause menu
         Time.timeScale = 1f;    // Resume to normal speed
         isPaused = false;
         isCountDown = false;
