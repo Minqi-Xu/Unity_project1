@@ -13,6 +13,7 @@ public class Enemy : MonoBehaviour
     private Transform player; // Reference to the player’s position
     private float currentDamage;
     private float damageMultiplier = 1f;  // damageMultiplier, currently not use, but may be used for buff
+    private float cameraSizeFactor;
 
     void Start()
     {
@@ -33,11 +34,13 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
+        // get the camera's orthographic size
+        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
         if (player != null)
         {
             // Move towards the player's position
             Vector2 direction = (player.position - transform.position).normalized;
-            transform.position = Vector2.MoveTowards(transform.position, player.position, speed * Time.deltaTime);
+            transform.position = Vector2.MoveTowards(transform.position, player.position, speed * Time.deltaTime * cameraSizeFactor);
 
             // Debug.Log($"Enemy moving towards player. Position: {transform.position}, Direction: {direction}");
 

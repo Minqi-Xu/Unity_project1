@@ -13,6 +13,7 @@ public class Bomb: MonoBehaviour
     private Vector2 direction;
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to playerController
+    private float cameraSizeFactor;
 
     public void Initialize(Vector2 dir, PlayerController controller)
     {
@@ -23,8 +24,11 @@ public class Bomb: MonoBehaviour
 
     void Update()
     {
+        // get the camera's orthographic size
+        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
+
         // Move the bomb in the direction set
-        transform.position += (Vector3)direction * bombSpeed * Time.deltaTime;
+        transform.position += (Vector3)direction * bombSpeed * Time.deltaTime * cameraSizeFactor;
 
         // Check if the bomb has traveled too far to auto exploded
         if(Vector2.Distance(spawnPosition, transform.position) >= maxDistance)

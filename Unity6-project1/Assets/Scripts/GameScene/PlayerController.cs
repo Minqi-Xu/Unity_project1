@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour
     private float lastFireTime = 0f; // Timestamp of the last shot
     private float lastBombTime = -100f; // Timestamp of the last bomb
     private int currentExperience = 0;  // current experience collected
+    private float cameraSizeFactor;
     
 
     void Start()
@@ -41,6 +42,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // get the camera's orthographic size
+        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
         gameTime += Time.deltaTime;
         // Get input from the player (arrow keys or WASD)
         movement.x = Input.GetAxisRaw("Horizontal");  // Left/Right movement
@@ -80,7 +83,7 @@ public class PlayerController : MonoBehaviour
         if(!isDashing)
         {
             // calculate the new position
-            Vector2 newPosition = rb.position + movement * moveSpeed * Time.fixedDeltaTime;
+            Vector2 newPosition = rb.position + movement * moveSpeed * Time.fixedDeltaTime * cameraSizeFactor;
 
             // Clamp position to screeen bounds
             newPosition = ClampToScreenBound(newPosition);
@@ -102,7 +105,7 @@ public class PlayerController : MonoBehaviour
         while (Time.time < startTime + dashDuration)
         {
             // calculate the new position
-            Vector2 newPosition = rb.position + dashDirection * dashSpeed * Time.fixedDeltaTime;
+            Vector2 newPosition = rb.position + dashDirection * dashSpeed * Time.fixedDeltaTime * cameraSizeFactor;
 
             // Clamp position to screeen bounds
             newPosition = ClampToScreenBound(newPosition);
@@ -151,19 +154,13 @@ public class PlayerController : MonoBehaviour
             // Debug.Log($"Bullet Position: {bulletScript}");
             bulletScript.Initialize(fireDirection, this);
 
-            /*
-            // Calculate and log the bullet's position
-            Vector3 bulletPosition = transform.position + (Vector3)fireDirection; // Adjust the position
-            bullet.transform.position = bulletPosition;
-            Debug.Log($"Bullet Position: {bullet.transform.position}");
-            */
 
             // calculate the angle to rotate the bullet to face the direction of movement
             float angle = Mathf.Atan2(fireDirection.y, fireDirection.x) * Mathf.Rad2Deg;
             bullet.transform.rotation = Quaternion.Euler(0, 0, angle);
 
             // Destroy the bullet after a few seconds to avoid clutter
-            // Destroy(bullet, 2f);  // Destroy after 2 seconds
+            Destroy(bullet, 10f);  // Destroy after 10 seconds
 
             // Update the last fire time
             lastFireTime = Time.time;

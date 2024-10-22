@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2070996324682197763}
   - component: {fileID: 7796951604905197346}
   - component: {fileID: 3589096607068793336}
+  - component: {fileID: -616457183225468077}
   m_Layer: 0
   m_Name: ExperienceDrop
   m_TagString: Untagged
@@ -139,3 +140,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lifespan: 60
   moveSpeed: 1
+--- !u!114 &-616457183225468077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7211036015649524815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83d0dd55677155048abcf753db6f04ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

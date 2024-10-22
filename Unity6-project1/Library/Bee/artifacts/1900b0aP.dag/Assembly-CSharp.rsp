@@ -348,6 +348,7 @@
 -analyzer:"C:/Program Files/Unity/Hub/Editor/6000.0.23f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll"
 -analyzer:"C:/Program Files/Unity/Hub/Editor/6000.0.23f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 -analyzer:"C:/Program Files/Unity/Hub/Editor/6000.0.23f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.UIToolkit.SourceGenerator.dll"
+"Assets/Scripts/CameraScaler.cs"
 "Assets/Scripts/GameScene/Bomb.cs"
 "Assets/Scripts/GameScene/Bullet.cs"
 "Assets/Scripts/GameScene/CameraFollow.cs"
@@ -359,6 +360,7 @@
 "Assets/Scripts/GameScene/PauseMenu.cs"
 "Assets/Scripts/GameScene/PlayerController.cs"
 "Assets/Scripts/GameScene/PlayerHealth.cs"
+"Assets/Scripts/ObjectScaler.cs"
 "Assets/Scripts/SettingsMenu/SettingsMenu.cs"
 "Assets/Scripts/StartMenu/StartMenu.cs"
 -langversion:9.0

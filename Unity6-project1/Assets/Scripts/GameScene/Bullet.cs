@@ -8,6 +8,7 @@ public class Bullet : MonoBehaviour
     private Vector2 direction;
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to the PlayerController
+    private float cameraSizeFactor;
 
 
     // This method is called when the bullet is instantiated
@@ -20,11 +21,13 @@ public class Bullet : MonoBehaviour
 
     void Update()
     {
+        // get the camera's orthographic size
+        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
         // Move the bullet in the specified direction
-        transform.position += (Vector3)direction * bulletSpeed * Time.deltaTime;
+        transform.position += (Vector3)direction * bulletSpeed * Time.deltaTime * cameraSizeFactor;
 
-        // Optionally, destroy the bullet after a certain distance (e.g., 10 units)
-        if (Vector2.Distance(transform.position, spawnPosition) > 10f) // Adjust as needed
+        // Optionally, destroy the bullet after a certain distance (e.g., 100 units)
+        if (Vector2.Distance(transform.position, spawnPosition) > 100f) // Adjust as needed
         {
             Destroy(gameObject);
         }

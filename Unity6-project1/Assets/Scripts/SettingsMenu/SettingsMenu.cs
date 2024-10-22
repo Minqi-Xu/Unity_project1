@@ -71,6 +71,14 @@ public class SettingsMenu : MonoBehaviour
         bool isFullscreen = fullscreenToggle.isOn;
         Screen.SetResolution(resolution.width, resolution.height, isFullscreen);
         Debug.Log($"Setting resolution to: {resolution.width} x {resolution.height}, Fullscreen: {isFullscreen}");
+
+        // Adjust the camera size after the resolution change
+        CameraScaler cameraScaler = Camera.main.GetComponent<CameraScaler>();
+        if(cameraScaler != null)
+        {
+            cameraScaler.OnResolutionChanged();
+        }
+        BroadcastResolutionChange();
     }
 
     public void SetFullscreen()
@@ -84,5 +92,15 @@ public class SettingsMenu : MonoBehaviour
         string previousScene = PlayerPrefs.GetString("PreviousScene", "StartMenu"); // Default to start menu if not found
         Time.timeScale = 1f;    // Resume to normal speed
         SceneManager.LoadScene(previousScene);
+    }
+
+    void BroadcastResolutionChange()
+    {
+        // Send a message to all objects that have an ObjectScaler to adjust their size
+        ObjectScaler[] scalers = FindObjectsOfType<ObjectScaler>();
+        foreach (var scaler in scalers)
+        {
+            scaler.OnResolutionChanged();
+        }
     }
 }

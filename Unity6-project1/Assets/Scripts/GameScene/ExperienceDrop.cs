@@ -5,6 +5,7 @@ public class ExperienceDrop: MonoBehaviour
     public float lifespan = 60f;    // time before it disappears
     public float moveSpeed = 1f;    // Speed of moving towards the player
     private Transform player;
+    private float cameraSizeFactor;
 
     void Start()
     {
@@ -16,14 +17,17 @@ public class ExperienceDrop: MonoBehaviour
 
     void Update()
     {
+        // get the camera's orthographic size
+        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
+
         // Move towards the player if within a certain distance
         if (player != null)
         {
             float distance = Vector2.Distance(transform.position, player.position);
-            if (distance <= 3f)
+            if (distance <= 3f * cameraSizeFactor)
             {
                 Vector2 direction = (player.position - transform.position).normalized;
-                transform.position += (Vector3)direction * moveSpeed * Time.deltaTime;
+                transform.position += (Vector3)direction * moveSpeed * Time.deltaTime * cameraSizeFactor;
             }
         }
     }

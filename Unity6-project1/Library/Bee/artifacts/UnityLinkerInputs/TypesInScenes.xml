@@ -3,12 +3,14 @@
 		<type fullname="Bomb" preserve="nothing"/>
 		<type fullname="Bullet" preserve="nothing"/>
 		<type fullname="CameraFollow" preserve="nothing"/>
+		<type fullname="CameraScaler" preserve="nothing"/>
 		<type fullname="CooldownIndicator" preserve="nothing"/>
 		<type fullname="Enemy" preserve="nothing"/>
 		<type fullname="EnemySpawner" preserve="nothing"/>
 		<type fullname="ExperienceDrop" preserve="nothing"/>
 		<type fullname="GameOverManager" preserve="nothing"/>
 		<type fullname="MainMenu" preserve="nothing"/>
+		<type fullname="ObjectScaler" preserve="nothing"/>
 		<type fullname="PauseMenu" preserve="nothing"/>
 		<type fullname="PlayerController" preserve="nothing"/>
 		<type fullname="PlayerHealth" preserve="nothing"/>

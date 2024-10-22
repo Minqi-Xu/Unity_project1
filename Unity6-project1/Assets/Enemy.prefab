@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7207583264730108645}
   - component: {fileID: -7665808662606251541}
   - component: {fileID: 8519936176980224761}
+  - component: {fileID: 8603389677953330509}
   m_Layer: 5
   m_Name: Enemy
   m_TagString: Enemy
@@ -139,6 +140,7 @@ MonoBehaviour:
   experiencePrefab: {fileID: 7211036015649524815, guid: efb94609935736b4e8474cd212768194, type: 3}
   baseDamage: 10
   damageIncreaseRate: 0.2
+  maxDamage: 40
 --- !u!58 &8519936176980224761
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -175,3 +177,15 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.65
+--- !u!114 &8603389677953330509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1409974815921776139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83d0dd55677155048abcf753db6f04ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
