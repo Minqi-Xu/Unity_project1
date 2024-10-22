@@ -459,6 +459,7 @@
 "Assets/Scripts/GameScene/PauseMenu.cs"
 "Assets/Scripts/GameScene/PlayerController.cs"
 "Assets/Scripts/GameScene/PlayerHealth.cs"
+"Assets/Scripts/SettingsMenu/SettingsMenu.cs"
 "Assets/Scripts/StartMenu/StartMenu.cs"
 -langversion:9.0
 /deterministic

@@ -76,6 +76,13 @@ public class PauseMenu : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);     // Currently GameScene, but is to restart current scene
     }
 
+    public void OpenSettings()
+    {
+        // Store the current scene before opening settings
+        PlayerPrefs.SetString("PreviousScene", SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene("SettingsMenu");
+    }
+
     public void QuitToStartMenu()
     {
         Time.timeScale = 1f;    // Resume to normal speed
