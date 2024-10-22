@@ -577,7 +577,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -285, y: 272}
+  m_AnchoredPosition: {x: -423, y: 399}
   m_SizeDelta: {x: 80, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &96118406
@@ -1265,12 +1265,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -1609,10 +1609,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -1744,7 +1744,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -552.8, y: 313.7}
+  m_AnchoredPosition: {x: -698, y: 451}
   m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &795268482
@@ -2165,7 +2165,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -518, y: 274}
+  m_AnchoredPosition: {x: -664, y: 397}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1116406870
@@ -2254,12 +2254,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -2390,11 +2390,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: ac10c772a8a32264c92cc5fa1673e6d6, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -63
+      value: -40
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: ac10c772a8a32264c92cc5fa1673e6d6, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 250
+      value: 430
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: ac10c772a8a32264c92cc5fa1673e6d6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2628,11 +2628,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: d4032a5ede403ee45bbdc0cd7a793419, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 23
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: d4032a5ede403ee45bbdc0cd7a793419, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 250
+      value: 430
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: d4032a5ede403ee45bbdc0cd7a793419, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2808,11 +2808,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: 58dc4f2be575a224daf8564c75a403f0, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -20.7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: 58dc4f2be575a224daf8564c75a403f0, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 250
+      value: 430
       objectReference: {fileID: 0}
     - target: {fileID: 5718337169426204432, guid: 58dc4f2be575a224daf8564c75a403f0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -4182,7 +4182,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -518, y: 274}
+  m_AnchoredPosition: {x: -664, y: 397}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1967687067
