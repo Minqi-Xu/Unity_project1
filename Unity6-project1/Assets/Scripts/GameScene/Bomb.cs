@@ -13,7 +13,7 @@ public class Bomb: MonoBehaviour
     private Vector2 direction;
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to playerController
-    private float cameraSizeFactor;
+    private float cameraSizeFactor;     // Since camera size changed due to resolution change, the speed related should also changed accordingly
 
     public void Initialize(Vector2 dir, PlayerController controller)
     {

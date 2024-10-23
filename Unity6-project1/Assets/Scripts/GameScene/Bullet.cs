@@ -8,7 +8,7 @@ public class Bullet : MonoBehaviour
     private Vector2 direction;
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to the PlayerController
-    private float cameraSizeFactor;
+    private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
 
 
     // This method is called when the bullet is instantiated

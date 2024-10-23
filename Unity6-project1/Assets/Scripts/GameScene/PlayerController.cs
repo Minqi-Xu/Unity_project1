@@ -31,7 +31,7 @@ public class PlayerController : MonoBehaviour
     private float lastFireTime = 0f; // Timestamp of the last shot
     private float lastBombTime = -100f; // Timestamp of the last bomb
     private int currentExperience = 0;  // current experience collected
-    private float cameraSizeFactor;
+    private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
     
 
     void Start()

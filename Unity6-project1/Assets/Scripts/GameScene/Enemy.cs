@@ -13,7 +13,7 @@ public class Enemy : MonoBehaviour
     private Transform player; // Reference to the player’s position
     private float currentDamage;
     private float damageMultiplier = 1f;  // damageMultiplier, currently not use, but may be used for buff
-    private float cameraSizeFactor;
+    private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
 
     void Start()
     {

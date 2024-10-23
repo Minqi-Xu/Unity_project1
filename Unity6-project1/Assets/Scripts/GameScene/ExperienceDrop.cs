@@ -5,7 +5,7 @@ public class ExperienceDrop: MonoBehaviour
     public float lifespan = 60f;    // time before it disappears
     public float moveSpeed = 1f;    // Speed of moving towards the player
     private Transform player;
-    private float cameraSizeFactor;
+    private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
 
     void Start()
     {
