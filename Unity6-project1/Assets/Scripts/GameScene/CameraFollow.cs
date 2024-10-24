@@ -16,8 +16,9 @@ public class CameraFollow : MonoBehaviour
         }
         else
         {
-            Debug.Log("Camera cannot find player!");
+            Debug.Log("Camera cannot find player when start!");
         }
+        transform.position = offset;    // Set the initial position to starting position even though player is not found
     }
 
     void LateUpdate()
