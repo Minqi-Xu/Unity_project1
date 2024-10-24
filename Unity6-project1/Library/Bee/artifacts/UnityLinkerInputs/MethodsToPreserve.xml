@@ -1,14 +1,22 @@
 <linker>
 	<assembly fullname="Assembly-CSharp" ignoreIfMissing="1">
-		<type fullname="GameOverManager">
+		<type fullname="CharacterSelectionManager">
+			<method name="ConfirmSelection"/>
+			<method name="SelectCharacter"/>
+			<method name="SelectCharacter"/>
+		</type>
+		<type fullname="GameManager">
+			<method name="ExitToStartMenu"/>
 			<method name="ExitToStartMenu"/>
 			<method name="QuitGame"/>
+			<method name="QuitGame"/>
+			<method name="RestartGame"/>
 			<method name="RestartGame"/>
 		</type>
 		<type fullname="MainMenu">
+			<method name="GoToCharacterSelection"/>
 			<method name="OpenSettings"/>
 			<method name="QuitGame"/>
-			<method name="StartGame"/>
 		</type>
 		<type fullname="PauseMenu">
 			<method name="OpenSettings"/>

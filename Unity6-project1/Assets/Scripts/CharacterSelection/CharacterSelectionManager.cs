@@ -4,7 +4,10 @@ using UnityEngine.SceneManagement;
 public class CharacterSelectionManager : MonoBehaviour
 {
     public GameObject[] characters; // Assign character prefabs in the Inspector
+    public Transform previewPosition;  // Assign the preview position
+
     private int selectedCharacterIndex = 0; // Index of the selected character
+    private GameObject currentPreviewCharacter; // Stores the currently previewed character
 
     void Start()
     {
@@ -30,10 +33,17 @@ public class CharacterSelectionManager : MonoBehaviour
 
     void DisplaySelectedCharacter()
     {
-        // Display the selected character, e.g., highlight the button or preview the character in 3D or UI
-        for (int i = 0; i < characters.Length; i++)
+        // Destroy the previous preview character, if any
+        if(currentPreviewCharacter != null)
         {
-            characters[i].SetActive(i == selectedCharacterIndex); // Show only the selected character
+            Destroy(currentPreviewCharacter);
         }
+
+        // Instantiate the selected character at the preview position
+        currentPreviewCharacter = Instantiate(characters[selectedCharacterIndex], previewPosition.position, Quaternion.identity);
+        
+        // Adjust the scale and position for the preview to fit the scene
+        currentPreviewCharacter.transform.SetParent(previewPosition);   // Set parent to keep organized
+
     }
 }

@@ -5,11 +5,12 @@ ScriptsOnlyBuild:
     - Bullet
     - CameraFollow
     - CameraScaler
+    - CharacterSelectionManager
     - CooldownIndicator
     - Enemy
     - EnemySpawner
     - ExperienceDrop
-    - GameOverManager
+    - GameManager
     - MainMenu
     - ObjectScaler
     - PauseMenu
@@ -19,10 +20,13 @@ ScriptsOnlyBuild:
     Unity.2D.Animation.Editor.dll:
     - UnityEditor.U2D.Animation.BoneGizmo
     Unity.2D.Animation.Runtime.dll:
+    - UnityEngine.U2D.Animation.BufferManager
     - UnityEngine.U2D.Animation.DeformationManager
     - UnityEngine.U2D.Animation.DeformationManagerUpdater
     Unity.2D.IK.Editor.dll:
     - UnityEditor.U2D.IK.IKEditorManager
+    Unity.2D.SpriteShape.Runtime.dll:
+    - UnityEngine.U2D.SpriteShapeDefaultCreator
     Unity.2D.Tilemap.Editor.dll:
     - UnityEditor.Tilemaps.GridPaintingState
     - UnityEditor.Tilemaps.GridPaletteBrushes
@@ -262,7 +266,7 @@ ScriptsOnlyBuild:
   methodsToPreserve:
   - assembly: Assembly-CSharp
     fullTypeName: MainMenu
-    methodName: StartGame
+    methodName: GoToCharacterSelection
   - assembly: Assembly-CSharp
     fullTypeName: MainMenu
     methodName: OpenSettings
@@ -312,14 +316,23 @@ ScriptsOnlyBuild:
     fullTypeName: UnityEngine.Rendering.UI.DebugUIHandlerPanel
     methodName: ResetDebugManager
   - assembly: Assembly-CSharp
-    fullTypeName: GameOverManager
+    fullTypeName: GameManager
+    methodName: RestartGame
+  - assembly: Assembly-CSharp
+    fullTypeName: GameManager
     methodName: RestartGame
   - assembly: Assembly-CSharp
     fullTypeName: PauseMenu
     methodName: QuitToStartMenu
   - assembly: Assembly-CSharp
-    fullTypeName: GameOverManager
+    fullTypeName: GameManager
     methodName: ExitToStartMenu
+  - assembly: Assembly-CSharp
+    fullTypeName: GameManager
+    methodName: ExitToStartMenu
+  - assembly: Assembly-CSharp
+    fullTypeName: GameManager
+    methodName: QuitGame
   - assembly: Assembly-CSharp
     fullTypeName: PauseMenu
     methodName: Resume
@@ -330,7 +343,7 @@ ScriptsOnlyBuild:
     fullTypeName: PauseMenu
     methodName: OpenSettings
   - assembly: Assembly-CSharp
-    fullTypeName: GameOverManager
+    fullTypeName: GameManager
     methodName: QuitGame
   - assembly: Assembly-CSharp
     fullTypeName: SettingsMenu
@@ -341,7 +354,97 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: SettingsMenu
     methodName: BackToPreviousMenu
+  - assembly: Assembly-CSharp
+    fullTypeName: CharacterSelectionManager
+    methodName: ConfirmSelection
+  - assembly: Assembly-CSharp
+    fullTypeName: CharacterSelectionManager
+    methodName: SelectCharacter
+  - assembly: Assembly-CSharp
+    fullTypeName: CharacterSelectionManager
+    methodName: SelectCharacter
   sceneClasses:
+    Assets/Scenes/CharacterSelection.unity:
+    - Class: 1
+      Script: {instanceID: 0}
+    - Class: 4
+      Script: {instanceID: 0}
+    - Class: 20
+      Script: {instanceID: 0}
+    - Class: 21
+      Script: {instanceID: 0}
+    - Class: 28
+      Script: {instanceID: 0}
+    - Class: 48
+      Script: {instanceID: 0}
+    - Class: 50
+      Script: {instanceID: 0}
+    - Class: 58
+      Script: {instanceID: 0}
+    - Class: 61
+      Script: {instanceID: 0}
+    - Class: 81
+      Script: {instanceID: 0}
+    - Class: 89
+      Script: {instanceID: 0}
+    - Class: 104
+      Script: {instanceID: 0}
+    - Class: 114
+      Script: {instanceID: 31302}
+    - Class: 114
+      Script: {instanceID: 31588}
+    - Class: 114
+      Script: {instanceID: 31800}
+    - Class: 114
+      Script: {instanceID: 32628}
+    - Class: 114
+      Script: {instanceID: 33112}
+    - Class: 114
+      Script: {instanceID: 33532}
+    - Class: 114
+      Script: {instanceID: 33538}
+    - Class: 114
+      Script: {instanceID: 35422}
+    - Class: 114
+      Script: {instanceID: 36524}
+    - Class: 114
+      Script: {instanceID: 36666}
+    - Class: 114
+      Script: {instanceID: 38054}
+    - Class: 114
+      Script: {instanceID: 38222}
+    - Class: 114
+      Script: {instanceID: 41404}
+    - Class: 114
+      Script: {instanceID: 42154}
+    - Class: 114
+      Script: {instanceID: 42256}
+    - Class: 114
+      Script: {instanceID: 43042}
+    - Class: 114
+      Script: {instanceID: 55200}
+    - Class: 115
+      Script: {instanceID: 0}
+    - Class: 128
+      Script: {instanceID: 0}
+    - Class: 157
+      Script: {instanceID: 0}
+    - Class: 196
+      Script: {instanceID: 0}
+    - Class: 198
+      Script: {instanceID: 0}
+    - Class: 199
+      Script: {instanceID: 0}
+    - Class: 212
+      Script: {instanceID: 0}
+    - Class: 213
+      Script: {instanceID: 0}
+    - Class: 222
+      Script: {instanceID: 0}
+    - Class: 223
+      Script: {instanceID: 0}
+    - Class: 224
+      Script: {instanceID: 0}
     Assets/Scenes/GameScene.unity:
     - Class: 1
       Script: {instanceID: 0}
@@ -398,8 +501,6 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 38222}
     - Class: 114
-      Script: {instanceID: 39112}
-    - Class: 114
       Script: {instanceID: 39158}
     - Class: 114
       Script: {instanceID: 41404}
@@ -415,6 +516,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 43042}
     - Class: 114
       Script: {instanceID: 43806}
+    - Class: 114
+      Script: {instanceID: 49768}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -1812,12 +1915,6 @@ ScriptsOnlyBuild:
     className: InputDeviceDebuggerWindow
   - hash:
       serializedVersion: 2
-      Hash: 5999476a429cf1d4c9b10cbbb41e419a
-    assemblyName: Assembly-CSharp
-    namespaceName: 
-    className: GameOverManager
-  - hash:
-      serializedVersion: 2
       Hash: ff1d122a5081169fd0cddc56096e9c4f
     assemblyName: Assembly-CSharp
     namespaceName: 
@@ -2422,9 +2519,22 @@ ScriptsOnlyBuild:
     assemblyName: Unity.Timeline
     namespaceName: UnityEngine.Timeline
     className: PlayableTrack
+  - hash:
+      serializedVersion: 2
+      Hash: 1106d8c64b889838d7cb016138855a6c
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: GameManager
+  - hash:
+      serializedVersion: 2
+      Hash: 8f228cb3576d48e7d4b0a89e34e4704d
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: CharacterSelectionManager
   platform: 19
   scenePathNames:
   - Assets/Scenes/StartMenu.unity
   - Assets/Scenes/GameScene.unity
   - Assets/Scenes/SettingsMenu.unity
+  - Assets/Scenes/CharacterSelection.unity
   playerPath: C:/Users/Sterren/Desktop/demog/Unity6-project1.exe

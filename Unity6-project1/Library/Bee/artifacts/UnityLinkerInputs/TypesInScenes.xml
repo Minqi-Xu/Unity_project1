@@ -4,11 +4,12 @@
 		<type fullname="Bullet" preserve="nothing"/>
 		<type fullname="CameraFollow" preserve="nothing"/>
 		<type fullname="CameraScaler" preserve="nothing"/>
+		<type fullname="CharacterSelectionManager" preserve="nothing"/>
 		<type fullname="CooldownIndicator" preserve="nothing"/>
 		<type fullname="Enemy" preserve="nothing"/>
 		<type fullname="EnemySpawner" preserve="nothing"/>
 		<type fullname="ExperienceDrop" preserve="nothing"/>
-		<type fullname="GameOverManager" preserve="nothing"/>
+		<type fullname="GameManager" preserve="nothing"/>
 		<type fullname="MainMenu" preserve="nothing"/>
 		<type fullname="ObjectScaler" preserve="nothing"/>
 		<type fullname="PauseMenu" preserve="nothing"/>
@@ -17,8 +18,12 @@
 		<type fullname="SettingsMenu" preserve="nothing"/>
 	</assembly>
 	<assembly fullname="Unity.2D.Animation.Runtime">
+		<type fullname="UnityEngine.U2D.Animation.BufferManager" preserve="nothing"/>
 		<type fullname="UnityEngine.U2D.Animation.DeformationManager" preserve="nothing"/>
 		<type fullname="UnityEngine.U2D.Animation.DeformationManagerUpdater" preserve="nothing"/>
+	</assembly>
+	<assembly fullname="Unity.2D.SpriteShape.Runtime">
+		<type fullname="UnityEngine.U2D.SpriteShapeDefaultCreator" preserve="nothing"/>
 	</assembly>
 	<assembly fullname="Unity.InputSystem">
 		<type fullname="UnityEngine.InputSystem.InputActionAsset" preserve="nothing"/>
