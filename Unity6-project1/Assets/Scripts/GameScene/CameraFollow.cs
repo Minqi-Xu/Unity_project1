@@ -7,6 +7,19 @@ public class CameraFollow : MonoBehaviour
     public float smoothTime = 0.3f; // Time taken to smooth the camera movement
     private Vector3 velocity = Vector3.zero; // Velocity of the camera
 
+    void Start()
+    {
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if(playerObject != null)
+        {
+            player = playerObject.transform;
+        }
+        else
+        {
+            Debug.Log("Camera cannot find player!");
+        }
+    }
+
     void LateUpdate()
     {
         if (player != null)
@@ -16,6 +29,18 @@ public class CameraFollow : MonoBehaviour
 
             // Smoothly move the camera to the target position using SmoothDamp
             transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
+        }
+        else
+        {
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if(playerObject != null)
+            {
+                player = playerObject.transform;
+            }
+            else
+            {
+                Debug.Log("Camera cannot find player in LateUpdate!");
+            }
         }
     }
 }

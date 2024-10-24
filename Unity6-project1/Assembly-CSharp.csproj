@@ -79,6 +79,7 @@
     <Compile Include="Assets\Scripts\GameScene\Bomb.cs" />
     <Compile Include="Assets\Scripts\GameScene\GameManager.cs" />
     <Compile Include="Assets\Scripts\GameScene\Enemy.cs" />
+    <Compile Include="Assets\Scripts\CharacterSelection\CharacterSelectionManager.cs" />
     <Compile Include="Assets\Scripts\SettingsMenu\SettingsMenu.cs" />
   </ItemGroup>
   <ItemGroup>

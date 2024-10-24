@@ -38,6 +38,11 @@ public class PlayerController : MonoBehaviour
     {
         // Get the Rigidbody2D component attached to the player
         rb = GetComponent<Rigidbody2D>();
+        levelText = GameObject.Find("LevelText").GetComponent<TextMeshProUGUI>();
+        bulletCooldownIndicator = GameObject.Find("BulletCooldownIndicator").GetComponent<CooldownIndicator>();
+        dashCooldownIndicator = GameObject.Find("DashCooldownIndicator").GetComponent<CooldownIndicator>();
+        bombCooldownIndicator = GameObject.Find("BombCooldownIndicator").GetComponent<CooldownIndicator>();
+        
     }
 
     void Update()

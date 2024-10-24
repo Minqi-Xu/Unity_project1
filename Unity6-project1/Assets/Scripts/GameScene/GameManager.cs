@@ -4,16 +4,42 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance { get { return instance; } } // Singleton instance
+
     public TextMeshProUGUI survivalTimeText; // Assign in Inspector
     public GameObject gameOverPanel;    // Assign the survival gameOverPanel here
+    public GameObject gameOverWindow;   // Assign the gameOverWindow which display when player die
     public float targetGameTime = 1200f;  // Time that player need to survive
+    public GameObject[] characterPrefabs;   // Assign the character prefabs
+
     private float survivalTime = 0f;
     private bool gameEnded = false;
+    private GameObject playerCharacter;
+    private static GameManager instance;
+
+    void Awake()
+    {
+        // Singleton pattern - ensure only one instance of GameManager exists
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);    // Destroy duplicate GameManager instances
+        }
+    }
 
     void Start()
     {
         survivalTime = 0f;
         gameEnded = false;
+        
+        // Retrieve the selected character index from PlayerPrefs
+        int selectedCharacterIndex = PlayerPrefs.GetInt("SelectedCharacter", 0);    // Default to first character
+
+        // Instantiate the selected character
+        playerCharacter = Instantiate(characterPrefabs[selectedCharacterIndex], Vector3.zero, Quaternion.identity);
     }
 
     void Update()

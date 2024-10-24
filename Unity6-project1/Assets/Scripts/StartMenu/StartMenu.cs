@@ -9,6 +9,11 @@ public class MainMenu : MonoBehaviour
         SceneManager.LoadScene("GameScene");
     }
 
+    public void GoToCharacterSelection()
+    {
+        SceneManager.LoadScene("CharacterSelection");
+    }
+
     public void OpenSettings()
     {
         // Store the current sacene before opening settings

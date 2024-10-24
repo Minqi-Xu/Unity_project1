@@ -20,6 +20,11 @@ public class PlayerHealth : MonoBehaviour
 
     void Start()
     {
+        healthBar = GameObject.Find("HealthBar").GetComponent<Image>();
+        damageOverlay = GameObject.Find("DamageOverlay").GetComponent<Image>();
+        healthPercentText = GameObject.Find("HealthPercent").GetComponent<TextMeshProUGUI>();
+        gameOverUI = GameManager.Instance.gameOverWindow;
+
         currentHealth = maxHealth; // Initialize health
         UpdateHealthUI();
 
