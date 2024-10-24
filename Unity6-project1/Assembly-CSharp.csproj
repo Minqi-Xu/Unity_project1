@@ -77,7 +77,7 @@
     <Compile Include="Assets\Scripts\ObjectScaler.cs" />
     <Compile Include="Assets\Scripts\StartMenu\StartMenu.cs" />
     <Compile Include="Assets\Scripts\GameScene\Bomb.cs" />
-    <Compile Include="Assets\Scripts\GameScene\GameOverManager.cs" />
+    <Compile Include="Assets\Scripts\GameScene\GameManager.cs" />
     <Compile Include="Assets\Scripts\GameScene\Enemy.cs" />
     <Compile Include="Assets\Scripts\SettingsMenu\SettingsMenu.cs" />
   </ItemGroup>
