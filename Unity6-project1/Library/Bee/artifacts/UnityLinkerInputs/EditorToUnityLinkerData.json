@@ -395,7 +395,6 @@
             "fullManagedTypeName": "UnityEngine.BoxCollider2D",
             "moduleName": "Physics2D",
             "usedInScenes": [
-                "Assets/Scenes/CharacterSelection.unity",
                 "Assets/Scenes/GameScene.unity"
             ]
         },
@@ -441,7 +440,6 @@
             "fullManagedTypeName": "UnityEngine.CircleCollider2D",
             "moduleName": "Physics2D",
             "usedInScenes": [
-                "Assets/Scenes/CharacterSelection.unity",
                 "Assets/Scenes/GameScene.unity"
             ]
         },
@@ -451,7 +449,6 @@
             "fullManagedTypeName": "UnityEngine.Collider2D",
             "moduleName": "Physics2D",
             "usedInScenes": [
-                "Assets/Scenes/CharacterSelection.unity",
                 "Assets/Scenes/GameScene.unity"
             ]
         },
@@ -619,7 +616,6 @@
             "fullManagedTypeName": "UnityEngine.ParticleSystem",
             "moduleName": "ParticleSystem",
             "usedInScenes": [
-                "Assets/Scenes/CharacterSelection.unity",
                 "Assets/Scenes/GameScene.unity"
             ]
         },
@@ -629,7 +625,6 @@
             "fullManagedTypeName": "UnityEngine.ParticleSystemRenderer",
             "moduleName": "ParticleSystem",
             "usedInScenes": [
-                "Assets/Scenes/CharacterSelection.unity",
                 "Assets/Scenes/GameScene.unity"
             ]
         },
@@ -1093,7 +1088,6 @@
             "fullManagedTypeName": "UnityEngine.Rigidbody2D",
             "moduleName": "Physics2D",
             "usedInScenes": [
-                "Assets/Scenes/CharacterSelection.unity",
                 "Assets/Scenes/GameScene.unity"
             ]
         },
@@ -1182,13 +1176,6 @@
         {
             "managedAssemblyName": "Unity.2D.Animation.Runtime.dll",
             "nativeClass": "",
-            "fullManagedTypeName": "UnityEngine.U2D.Animation.BufferManager",
-            "moduleName": "",
-            "usedInScenes": []
-        },
-        {
-            "managedAssemblyName": "Unity.2D.Animation.Runtime.dll",
-            "nativeClass": "",
             "fullManagedTypeName": "UnityEngine.U2D.Animation.DeformationManager",
             "moduleName": "",
             "usedInScenes": []
@@ -1197,13 +1184,6 @@
             "managedAssemblyName": "Unity.2D.Animation.Runtime.dll",
             "nativeClass": "",
             "fullManagedTypeName": "UnityEngine.U2D.Animation.DeformationManagerUpdater",
-            "moduleName": "",
-            "usedInScenes": []
-        },
-        {
-            "managedAssemblyName": "Unity.2D.SpriteShape.Runtime.dll",
-            "nativeClass": "",
-            "fullManagedTypeName": "UnityEngine.U2D.SpriteShapeDefaultCreator",
             "moduleName": "",
             "usedInScenes": []
         },
