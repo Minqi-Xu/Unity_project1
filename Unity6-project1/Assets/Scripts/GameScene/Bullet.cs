@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
@@ -9,6 +8,8 @@ public class Bullet : MonoBehaviour
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to the PlayerController
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
+    private Camera mainCamera;
+    private CameraScaler cameraScaler;
 
 
     // This method is called when the bullet is instantiated
@@ -17,12 +18,14 @@ public class Bullet : MonoBehaviour
         direction = dir.normalized;
         spawnPosition = transform.position;
         playerController = controller;  // Store the reference
+        mainCamera = Camera.main;
+        cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
 
     void Update()
     {
         // get the camera's orthographic size
-        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
+        cameraSizeFactor = GetCameraSizeFactor();
         // Move the bullet in the specified direction
         transform.position += (Vector3)direction * bulletSpeed * Time.deltaTime * cameraSizeFactor;
 
@@ -42,7 +45,7 @@ public class Bullet : MonoBehaviour
             if(enemy != null)
             {
                 // increase damage over time
-                float currentDamage = baseDamage * playerController.damageMultiplier;
+                float currentDamage = baseDamage * (playerController != null ? playerController.damageMultiplier : 1f);
 
                 // Deal damage to enemy hit
                 enemy.TakeDamage(currentDamage);
@@ -50,5 +53,22 @@ public class Bullet : MonoBehaviour
             }
             Destroy(gameObject);
         }
+    }
+
+    private float GetCameraSizeFactor()
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (cameraScaler == null && mainCamera != null)
+        {
+            cameraScaler = mainCamera.GetComponent<CameraScaler>();
+        }
+
+        return mainCamera != null && cameraScaler != null
+            ? mainCamera.orthographicSize / cameraScaler.baseOrthographicSize
+            : 1f;
     }
 }

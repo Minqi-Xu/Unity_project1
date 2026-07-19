@@ -1,8 +1,6 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
 
 public class PlayerController : MonoBehaviour
 {
@@ -32,23 +30,27 @@ public class PlayerController : MonoBehaviour
     private float lastBombTime = -100f; // Timestamp of the last bomb
     private int currentExperience = 0;  // current experience collected
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
-    
+    private Camera mainCamera;
+    private CameraScaler cameraScaler;
 
     void Start()
     {
         // Get the Rigidbody2D component attached to the player
         rb = GetComponent<Rigidbody2D>();
-        levelText = GameObject.Find("LevelText").GetComponent<TextMeshProUGUI>();
-        bulletCooldownIndicator = GameObject.Find("BulletCooldownIndicator").GetComponent<CooldownIndicator>();
-        dashCooldownIndicator = GameObject.Find("DashCooldownIndicator").GetComponent<CooldownIndicator>();
-        bombCooldownIndicator = GameObject.Find("BombCooldownIndicator").GetComponent<CooldownIndicator>();
-        
+        mainCamera = Camera.main;
+        cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
+
+        levelText = FindComponentByName<TextMeshProUGUI>("LevelText");
+        bulletCooldownIndicator = FindComponentByName<CooldownIndicator>("BulletCooldownIndicator");
+        dashCooldownIndicator = FindComponentByName<CooldownIndicator>("DashCooldownIndicator");
+        bombCooldownIndicator = FindComponentByName<CooldownIndicator>("BombCooldownIndicator");
+        UpdateLevelText();
     }
 
     void Update()
     {
         // get the camera's orthographic size
-        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
+        cameraSizeFactor = GetCameraSizeFactor();
         gameTime += Time.deltaTime;
         // Get input from the player (arrow keys or WASD)
         movement.x = Input.GetAxisRaw("Horizontal");  // Left/Right movement
@@ -58,7 +60,10 @@ public class PlayerController : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Space) && !isDashing && dashCooldownTimer <= 0f)
         {
             StartCoroutine(Dash());
-            dashCooldownIndicator.StartCooldown(dashCooldown);
+            if (dashCooldownIndicator != null)
+            {
+                dashCooldownIndicator.StartCooldown(dashCooldown);
+            }
         }
 
         // Detect fire input
@@ -103,6 +108,12 @@ public class PlayerController : MonoBehaviour
         //start Dash
         isDashing = true;
         Vector2 dashDirection = movement.normalized; // Direction of the dash based on current movement
+        if (dashDirection == Vector2.zero)
+        {
+            isDashing = false;
+            dashCooldownTimer = dashCooldown;
+            yield break;
+        }
 
         float startTime = Time.time;
 
@@ -110,7 +121,7 @@ public class PlayerController : MonoBehaviour
         while (Time.time < startTime + dashDuration)
         {
             // calculate the new position
-            Vector2 newPosition = rb.position + dashDirection * dashSpeed * Time.fixedDeltaTime * cameraSizeFactor;
+            Vector2 newPosition = rb.position + dashDirection * dashSpeed * Time.deltaTime * cameraSizeFactor;
 
             // Clamp position to screeen bounds
             newPosition = ClampToScreenBound(newPosition);
@@ -128,8 +139,18 @@ public class PlayerController : MonoBehaviour
     Vector2 ClampToScreenBound(Vector2 targetPosition)
     {
         // Get the screen bounds in world space
-        Vector3 minScreenBounds = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, 0));
-        Vector3 maxScreenBounds = Camera.main.ViewportToWorldPoint(new Vector3(1, 1, 0));
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (mainCamera == null)
+        {
+            return targetPosition;
+        }
+
+        Vector3 minScreenBounds = mainCamera.ViewportToWorldPoint(new Vector3(0, 0, 0));
+        Vector3 maxScreenBounds = mainCamera.ViewportToWorldPoint(new Vector3(1, 1, 0));
 
         // Clamp thee position within the screen bounds
         targetPosition.x = Mathf.Clamp(targetPosition.x, minScreenBounds.x, maxScreenBounds.x);
@@ -142,9 +163,18 @@ public class PlayerController : MonoBehaviour
     {
         if (Time.time >= lastFireTime + fireCooldown)
         {
-            bulletCooldownIndicator.StartCooldown(fireCooldown);
+            if (bulletCooldownIndicator != null)
+            {
+                bulletCooldownIndicator.StartCooldown(fireCooldown);
+            }
+
+            if (bulletPrefab == null || mainCamera == null)
+            {
+                return;
+            }
+
             // Get the mouse position in the world
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 mousePosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mousePosition.z = 0;  // We only care about 2D positions
 
             //calculate the direction to the mouse
@@ -157,7 +187,10 @@ public class PlayerController : MonoBehaviour
             // Set the bullet's direction
             Bullet bulletScript = bullet.GetComponent<Bullet>();
             // Debug.Log($"Bullet Position: {bulletScript}");
-            bulletScript.Initialize(fireDirection, this);
+            if (bulletScript != null)
+            {
+                bulletScript.Initialize(fireDirection, this);
+            }
 
 
             // calculate the angle to rotate the bullet to face the direction of movement
@@ -176,9 +209,18 @@ public class PlayerController : MonoBehaviour
     {
         if(Time.time >= lastBombTime + bombCooldown)
         {
-            bombCooldownIndicator.StartCooldown(bombCooldown);
+            if (bombCooldownIndicator != null)
+            {
+                bombCooldownIndicator.StartCooldown(bombCooldown);
+            }
+
+            if (bombPrefab == null || mainCamera == null)
+            {
+                return;
+            }
+
             // Get the mouse poisition in the world
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 mousePosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mousePosition.z = 0;  // We only care about 2D positions
 
             //calculate the direction to the mouse
@@ -189,7 +231,10 @@ public class PlayerController : MonoBehaviour
 
             // Set the bomb's direction
             Bomb bombScript = bomb.GetComponent<Bomb>();
-            bombScript.Initialize(fireDirection, this);
+            if (bombScript != null)
+            {
+                bombScript.Initialize(fireDirection, this);
+            }
 
             // Update the last bomb time
             lastBombTime = Time.time;
@@ -214,10 +259,37 @@ public class PlayerController : MonoBehaviour
 
         }
 
-        // Update level display
+        UpdateLevelText();
+    }
+
+    private void UpdateLevelText()
+    {
         if(levelText != null)
         {
             levelText.text = $"Level: {level} ({currentExperience}/{experienceThreshold})";
         }
+    }
+
+    private float GetCameraSizeFactor()
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (cameraScaler == null && mainCamera != null)
+        {
+            cameraScaler = mainCamera.GetComponent<CameraScaler>();
+        }
+
+        return mainCamera != null && cameraScaler != null
+            ? mainCamera.orthographicSize / cameraScaler.baseOrthographicSize
+            : 1f;
+    }
+
+    private static T FindComponentByName<T>(string objectName) where T : Component
+    {
+        GameObject target = GameObject.Find(objectName);
+        return target != null ? target.GetComponent<T>() : null;
     }
 }

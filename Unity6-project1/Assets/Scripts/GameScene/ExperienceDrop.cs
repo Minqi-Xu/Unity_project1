@@ -6,10 +6,19 @@ public class ExperienceDrop: MonoBehaviour
     public float moveSpeed = 1f;    // Speed of moving towards the player
     private Transform player;
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
+    private Camera mainCamera;
+    private CameraScaler cameraScaler;
 
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+        }
+
+        mainCamera = Camera.main;
+        cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
 
         // destory after lifespan
         Destroy(gameObject, lifespan);
@@ -18,7 +27,7 @@ public class ExperienceDrop: MonoBehaviour
     void Update()
     {
         // get the camera's orthographic size
-        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
+        cameraSizeFactor = GetCameraSizeFactor();
 
         // Move towards the player if within a certain distance
         if (player != null)
@@ -46,4 +55,20 @@ public class ExperienceDrop: MonoBehaviour
         }
     }
 
+    private float GetCameraSizeFactor()
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (cameraScaler == null && mainCamera != null)
+        {
+            cameraScaler = mainCamera.GetComponent<CameraScaler>();
+        }
+
+        return mainCamera != null && cameraScaler != null
+            ? mainCamera.orthographicSize / cameraScaler.baseOrthographicSize
+            : 1f;
+    }
 }

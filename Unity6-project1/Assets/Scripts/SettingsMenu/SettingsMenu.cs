@@ -97,7 +97,7 @@ public class SettingsMenu : MonoBehaviour
     void BroadcastResolutionChange()
     {
         // Send a message to all objects that have an ObjectScaler to adjust their size
-        ObjectScaler[] scalers = FindObjectsOfType<ObjectScaler>();
+        ObjectScaler[] scalers = FindObjectsByType<ObjectScaler>(FindObjectsInactive.Exclude);
         foreach (var scaler in scalers)
         {
             scaler.OnResolutionChanged();

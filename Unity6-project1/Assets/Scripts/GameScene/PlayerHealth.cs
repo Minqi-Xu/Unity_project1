@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI; // For UI elements
 using TMPro;
-using System;
 using System.Collections; // For TextMeshPro
 
 public class PlayerHealth : MonoBehaviour
@@ -20,10 +19,10 @@ public class PlayerHealth : MonoBehaviour
 
     void Start()
     {
-        healthBar = GameObject.Find("HealthBar").GetComponent<Image>();
-        damageOverlay = GameObject.Find("DamageOverlay").GetComponent<Image>();
-        healthPercentText = GameObject.Find("HealthPercent").GetComponent<TextMeshProUGUI>();
-        gameOverUI = GameManager.Instance.gameOverWindow;
+        healthBar = FindComponentByName<Image>("HealthBar");
+        damageOverlay = FindComponentByName<Image>("DamageOverlay");
+        healthPercentText = FindComponentByName<TextMeshProUGUI>("HealthPercent");
+        gameOverUI = GameManager.Instance != null ? GameManager.Instance.gameOverWindow : gameOverUI;
 
         currentHealth = maxHealth; // Initialize health
         UpdateHealthUI();
@@ -59,11 +58,21 @@ public class PlayerHealth : MonoBehaviour
     private void UpdateHealthUI()
     {
         // Update health bar and percent text
-        healthBar.fillAmount = currentHealth / maxHealth; // Update health bar
-        healthPercentText.text = $"{(currentHealth / maxHealth) * 100:0}%"; // Update health percentage text
+        if (healthBar != null)
+        {
+            healthBar.fillAmount = currentHealth / maxHealth; // Update health bar
+        }
+
+        if (healthPercentText != null)
+        {
+            healthPercentText.text = $"{(currentHealth / maxHealth) * 100:0}%"; // Update health percentage text
+        }
 
         // Update damage overlay
-        damageOverlay.fillAmount = 1 - (currentHealth / maxHealth); // Red cover over the health bar
+        if (damageOverlay != null)
+        {
+            damageOverlay.fillAmount = 1 - (currentHealth / maxHealth); // Red cover over the health bar
+        }
     }
 
     private IEnumerator FlashOnDamage()
@@ -91,7 +100,16 @@ public class PlayerHealth : MonoBehaviour
     {
         // Handle player death (e.g., restart game, show game over screen, etc.)
         Debug.Log("Player is dead!");
-        gameOverUI.SetActive(true);
+        if (gameOverUI != null)
+        {
+            gameOverUI.SetActive(true);
+        }
         Time.timeScale = 0f;    // Pause the game
+    }
+
+    private static T FindComponentByName<T>(string objectName) where T : Component
+    {
+        GameObject target = GameObject.Find(objectName);
+        return target != null ? target.GetComponent<T>() : null;
     }
 }

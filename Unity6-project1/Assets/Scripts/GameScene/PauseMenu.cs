@@ -1,8 +1,6 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using TMPro;
 
 public class PauseMenu : MonoBehaviour
@@ -69,11 +67,16 @@ public class PauseMenu : MonoBehaviour
         isPaused = true;
     }
 
-    public void RestartGmae()
+    public void RestartGame()
     {
         Time.timeScale = 1f;    // Resume to normal speed
         isPaused = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);     // Currently GameScene, but is to restart current scene
+    }
+
+    public void RestartGmae()
+    {
+        RestartGame();
     }
 
     public void OpenSettings()

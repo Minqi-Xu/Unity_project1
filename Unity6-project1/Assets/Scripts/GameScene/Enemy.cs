@@ -14,11 +14,21 @@ public class Enemy : MonoBehaviour
     private float currentDamage;
     private float damageMultiplier = 1f;  // damageMultiplier, currently not use, but may be used for buff
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
+    private Camera mainCamera;
+    private CameraScaler cameraScaler;
 
     void Start()
     {
         // Find the player by tag (assuming you tagged the player as "Player")
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+        }
+        else
+        {
+            Debug.LogError("Player not found! Make sure the player is tagged as 'Player'.");
+        }
 
         // Set initial health
         currentHealth = maxHealth;
@@ -26,16 +36,14 @@ public class Enemy : MonoBehaviour
         // Set initial damage
         currentDamage = baseDamage;
 
-        if (player == null)
-        {
-            Debug.LogError("Player not found! Make sure the player is tagged as 'Player'.");
-        }
+        mainCamera = Camera.main;
+        cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
 
     void Update()
     {
         // get the camera's orthographic size
-        cameraSizeFactor = Camera.main.orthographicSize / FindFirstObjectByType<CameraScaler>().baseOrthographicSize;
+        cameraSizeFactor = GetCameraSizeFactor();
         if (player != null)
         {
             // Move towards the player's position
@@ -87,5 +95,22 @@ public class Enemy : MonoBehaviour
         Instantiate(experiencePrefab, transform.position, Quaternion.identity);
 
         Destroy(gameObject);
+    }
+
+    private float GetCameraSizeFactor()
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (cameraScaler == null && mainCamera != null)
+        {
+            cameraScaler = mainCamera.GetComponent<CameraScaler>();
+        }
+
+        return mainCamera != null && cameraScaler != null
+            ? mainCamera.orthographicSize / cameraScaler.baseOrthographicSize
+            : 1f;
     }
 }

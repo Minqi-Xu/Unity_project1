@@ -32,11 +32,20 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        Time.timeScale = 1f;
         survivalTime = 0f;
         gameEnded = false;
         
         // Retrieve the selected character index from PlayerPrefs
         int selectedCharacterIndex = PlayerPrefs.GetInt("SelectedCharacter", 0);    // Default to first character
+
+        if (characterPrefabs == null || characterPrefabs.Length == 0)
+        {
+            Debug.LogError("No character prefabs assigned to GameManager.");
+            return;
+        }
+
+        selectedCharacterIndex = Mathf.Clamp(selectedCharacterIndex, 0, characterPrefabs.Length - 1);
 
         // Instantiate the selected character
         playerCharacter = Instantiate(characterPrefabs[selectedCharacterIndex], Vector3.zero, Quaternion.identity);
@@ -54,7 +63,10 @@ public class GameManager : MonoBehaviour
             int seconds = Mathf.FloorToInt(survivalTime % 60);
 
             // Update the UI with the survival time
-            survivalTimeText.text = string.Format("Survived Time: {0:00}:{1:00}", minutes, seconds);
+            if (survivalTimeText != null)
+            {
+                survivalTimeText.text = string.Format("Survived Time: {0:00}:{1:00}", minutes, seconds);
+            }
 
             // Check if 20 minutes have passed
             if (survivalTime >= targetGameTime)
@@ -69,7 +81,10 @@ public class GameManager : MonoBehaviour
         gameEnded = true;
 
         // Show the Game Over UI
-        gameOverPanel.SetActive(true);
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+        }
 
         // Pause the game in background
         Time.timeScale = 0f;
