@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody2D rb;
     private Vector2 movement;
+    private Vector2 lastMoveDirection = Vector2.right;
     private bool isDashing = false;
     private float dashCooldownTimer = 0f;
     private float lastFireTime = 0f; // Timestamp of the last shot
@@ -55,15 +56,15 @@ public class PlayerController : MonoBehaviour
         // Get input from the player (arrow keys or WASD)
         movement.x = Input.GetAxisRaw("Horizontal");  // Left/Right movement
         movement.y = Input.GetAxisRaw("Vertical");    // Up/Down movement
+        if (movement.sqrMagnitude > 0f)
+        {
+            lastMoveDirection = movement.normalized;
+        }
 
         // Detect dash input
         if(Input.GetKeyDown(KeyCode.Space) && !isDashing && dashCooldownTimer <= 0f)
         {
-            StartCoroutine(Dash());
-            if (dashCooldownIndicator != null)
-            {
-                dashCooldownIndicator.StartCooldown(dashCooldown);
-            }
+            StartDash();
         }
 
         // Detect fire input
@@ -103,37 +104,47 @@ public class PlayerController : MonoBehaviour
         }
     }
     
-    IEnumerator Dash()
+    private void StartDash()
+    {
+        Vector2 dashDirection = movement.sqrMagnitude > 0f ? movement.normalized : lastMoveDirection;
+        if (dashDirection == Vector2.zero)
+        {
+            return;
+        }
+
+        dashCooldownTimer = dashCooldown;
+        if (dashCooldownIndicator != null)
+        {
+            dashCooldownIndicator.StartCooldown(dashCooldown);
+        }
+
+        StartCoroutine(Dash(dashDirection));
+    }
+
+    IEnumerator Dash(Vector2 dashDirection)
     {
         //start Dash
         isDashing = true;
-        Vector2 dashDirection = movement.normalized; // Direction of the dash based on current movement
-        if (dashDirection == Vector2.zero)
-        {
-            isDashing = false;
-            dashCooldownTimer = dashCooldown;
-            yield break;
-        }
 
-        float startTime = Time.time;
+        float elapsedTime = 0f;
 
         // Keep moving in dash direction for dash Duration
-        while (Time.time < startTime + dashDuration)
+        while (elapsedTime < dashDuration)
         {
             // calculate the new position
-            Vector2 newPosition = rb.position + dashDirection * dashSpeed * Time.deltaTime * cameraSizeFactor;
+            Vector2 newPosition = rb.position + dashDirection * dashSpeed * Time.fixedDeltaTime * cameraSizeFactor;
 
             // Clamp position to screeen bounds
             newPosition = ClampToScreenBound(newPosition);
 
             // move to new position
             rb.MovePosition(newPosition);
-            yield return null; // wait for the nextg frame
+            elapsedTime += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
         }
 
-        // End dashing and start cooldown
+        // End dashing
         isDashing = false;
-        dashCooldownTimer = dashCooldown;
     }
 
     Vector2 ClampToScreenBound(Vector2 targetPosition)
