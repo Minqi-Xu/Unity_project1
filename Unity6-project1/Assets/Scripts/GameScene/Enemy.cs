@@ -16,6 +16,7 @@ public class Enemy : MonoBehaviour
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
     private Camera mainCamera;
     private CameraScaler cameraScaler;
+    private bool loggedMissingPlayer;
 
     void Start()
     {
@@ -28,6 +29,7 @@ public class Enemy : MonoBehaviour
         else
         {
             Debug.LogError("Player not found! Make sure the player is tagged as 'Player'.");
+            loggedMissingPlayer = true;
         }
 
         // Set initial health
@@ -55,14 +57,18 @@ public class Enemy : MonoBehaviour
             // Increase damage overtime
             currentDamage += damageIncreaseRate * Time.deltaTime;
         }
+        else
+        {
+            TryFindPlayer();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if(collision.CompareTag("Player")) // if the player is "touch" by enemy
         {
-            PlayerHealth playerHealth = collision.GetComponent<PlayerHealth>();
-            PlayerController playerController = collision.GetComponent<PlayerController>();
+            PlayerHealth playerHealth = collision.GetComponentInParent<PlayerHealth>();
+            PlayerController playerController = collision.GetComponentInParent<PlayerController>();
             if(playerHealth != null)
             {
                 //Debug.Log($"Enemy deal {Mathf.Min(currentDamage * damageMultiplier, maxDamage)} dmg");
@@ -92,9 +98,28 @@ public class Enemy : MonoBehaviour
         // Death effects, and destroy
 
         // Drop experience
-        Instantiate(experiencePrefab, transform.position, Quaternion.identity);
+        if (experiencePrefab != null)
+        {
+            Instantiate(experiencePrefab, transform.position, Quaternion.identity);
+        }
 
         Destroy(gameObject);
+    }
+
+    private void TryFindPlayer()
+    {
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+            return;
+        }
+
+        if (!loggedMissingPlayer)
+        {
+            Debug.LogError("Player not found! Make sure the player is tagged as 'Player'.");
+            loggedMissingPlayer = true;
+        }
     }
 
     private float GetCameraSizeFactor()

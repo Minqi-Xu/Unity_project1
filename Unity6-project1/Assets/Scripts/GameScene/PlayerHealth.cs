@@ -16,6 +16,7 @@ public class PlayerHealth : MonoBehaviour
     public GameObject gameOverUI;  // Reference to the player's PriteRenderer component
 
     private SpriteRenderer playerSprite;    // Reference to the player's SpriteRenderer component
+    private Coroutine flashCoroutine;
 
     void Start()
     {
@@ -37,12 +38,15 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float damage, PlayerController player)
     {
-        float final_damage = damage * (damageMultiplier + damageReceiveIncreasingRate * player.gameTime);
+        PlayerController playerController = player != null ? player : GetComponent<PlayerController>();
+        float playerGameTime = playerController != null ? playerController.gameTime : 0f;
+        float final_damage = damage * (damageMultiplier + damageReceiveIncreasingRate * playerGameTime);
         final_damage = Mathf.Min(final_damage, maxReceivingDmg);
         // Debug.Log($"Player receives {final_damage} damage");
         currentHealth -= final_damage; // Reduce health by damage amount
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Ensure health doesn't go below 0
         UpdateHealthUI();
+        LogPlayerStatusChanged(playerController, final_damage);
 
         if (currentHealth <= 0)
         {
@@ -51,32 +55,58 @@ public class PlayerHealth : MonoBehaviour
         else
         {
             // Start flashing effect when player receives damage
-            StartCoroutine(FlashOnDamage());
+            if (playerSprite != null)
+            {
+                if (flashCoroutine != null)
+                {
+                    StopCoroutine(flashCoroutine);
+                }
+
+                flashCoroutine = StartCoroutine(FlashOnDamage());
+            }
         }
+    }
+
+    private void LogPlayerStatusChanged(PlayerController playerController, float enemyDamage)
+    {
+        if (playerController != null)
+        {
+            playerController.DebugLogPlayerStatus("Take Damage", enemyDamage);
+            return;
+        }
+
+        Debug.Log($"[PlayerStatus] Take Damage | PlayerDMG: N/A | PlayerHP: {currentHealth:0.##} | EnemyDMG: {enemyDamage:0.##}");
     }
 
     private void UpdateHealthUI()
     {
+        float healthFraction = maxHealth > 0f ? currentHealth / maxHealth : 0f;
+
         // Update health bar and percent text
         if (healthBar != null)
         {
-            healthBar.fillAmount = currentHealth / maxHealth; // Update health bar
+            healthBar.fillAmount = healthFraction; // Update health bar
         }
 
         if (healthPercentText != null)
         {
-            healthPercentText.text = $"{(currentHealth / maxHealth) * 100:0}%"; // Update health percentage text
+            healthPercentText.text = $"{healthFraction * 100:0}%"; // Update health percentage text
         }
 
         // Update damage overlay
         if (damageOverlay != null)
         {
-            damageOverlay.fillAmount = 1 - (currentHealth / maxHealth); // Red cover over the health bar
+            damageOverlay.fillAmount = 1 - healthFraction; // Red cover over the health bar
         }
     }
 
     private IEnumerator FlashOnDamage()
     {
+        if (playerSprite == null)
+        {
+            yield break;
+        }
+
         float flashDuration = 1.5f; // Duration of the flashing effect
         float flashInterval = 0.1f; // Interval at which the player will appear/disappear
         float elapsedTime = 0f;
@@ -94,6 +124,7 @@ public class PlayerHealth : MonoBehaviour
 
         // Finally let player visible
         playerSprite.enabled = true;
+        flashCoroutine = null;
     }
 
     private void Die()

@@ -257,6 +257,7 @@ public class PlayerController : MonoBehaviour
     {
         // increase player level
         currentExperience  += amount;
+        bool leveledUp = false;
 
         // check if current experience meets the threshold
         if(currentExperience >= experienceThreshold)
@@ -264,6 +265,7 @@ public class PlayerController : MonoBehaviour
             // level up
             level++;
             damageMultiplier += 0.1f;   // increase damage multiplier
+            leveledUp = true;
 
             // Reset experience
             currentExperience -= experienceThreshold;
@@ -271,6 +273,35 @@ public class PlayerController : MonoBehaviour
         }
 
         UpdateLevelText();
+
+        if (leveledUp)
+        {
+            DebugLogPlayerStatus("Level Up", 0f);
+        }
+    }
+
+    public void DebugLogPlayerStatus(string reason, float enemyDamage)
+    {
+        PlayerHealth playerHealth = GetComponent<PlayerHealth>();
+        float currentHealth = playerHealth != null ? playerHealth.currentHealth : 0f;
+
+        Debug.Log(
+            $"[PlayerStatus] {reason} | PlayerDMG: {GetCurrentPlayerDamage():0.##} | PlayerHP: {currentHealth:0.##} | EnemyDMG: {enemyDamage:0.##}"
+        );
+    }
+
+    private float GetCurrentPlayerDamage()
+    {
+        if (bulletPrefab != null)
+        {
+            Bullet bullet = bulletPrefab.GetComponent<Bullet>();
+            if (bullet != null)
+            {
+                return bullet.baseDamage * damageMultiplier;
+            }
+        }
+
+        return damageMultiplier;
     }
 
     private void UpdateLevelText()

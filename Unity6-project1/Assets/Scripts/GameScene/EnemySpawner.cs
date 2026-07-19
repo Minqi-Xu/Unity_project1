@@ -11,13 +11,27 @@ public class EnemySpawner : MonoBehaviour
     public float healIncreaseTime = 30f; // How long will it cost for enemy increase their heal to next level
 
     private float currentSpawnRate;
-    private float gameStartTime;
     private float gameTime = 0f;    // Game timer records game time (exclude pause)
+    private Camera mainCamera;
 
     void Start()
     {
-        currentSpawnRate = spawnRate;
-        gameStartTime = Time.time; // get the start time of the game
+        if (enemyPrefab == null)
+        {
+            Debug.LogError("EnemySpawner has no enemy prefab assigned.");
+            enabled = false;
+            return;
+        }
+
+        mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            Debug.LogError("EnemySpawner cannot find a camera tagged MainCamera.");
+            enabled = false;
+            return;
+        }
+
+        currentSpawnRate = Mathf.Max(0.1f, spawnRate);
         StartCoroutine(SpawnEnemies());
     }
 
@@ -40,9 +54,18 @@ public class EnemySpawner : MonoBehaviour
 
     void SpawnEnemy()
     {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                return;
+            }
+        }
+
         // Get screen bounds in world coordinates
-        Vector3 minScreenBounds = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, 0));
-        Vector3 maxScreenBounds = Camera.main.ViewportToWorldPoint(new Vector3(1, 1, 0));
+        Vector3 minScreenBounds = mainCamera.ViewportToWorldPoint(new Vector3(0, 0, 0));
+        Vector3 maxScreenBounds = mainCamera.ViewportToWorldPoint(new Vector3(1, 1, 0));
 
         Vector2 spawnPosition;
 
@@ -74,7 +97,9 @@ public class EnemySpawner : MonoBehaviour
         if(enemyScript != null)
         {
             // calculate the base health
-            float additionalHealth = Mathf.Floor(gameTime / healIncreaseTime) * healIncreaseRate; // increase heal every setting time
+            float additionalHealth = healIncreaseTime > 0f
+                ? Mathf.Floor(gameTime / healIncreaseTime) * healIncreaseRate
+                : 0f; // increase heal every setting time
 
             enemyScript.maxHealth += additionalHealth;
             enemyScript.currentHealth = enemyScript.maxHealth;

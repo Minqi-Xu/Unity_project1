@@ -7,14 +7,28 @@ public class CooldownIndicator : MonoBehaviour
     public float cooldownTime; // Duration of the cooldown
     private float cooldownStartTime;
     private bool isCooldownActive;
+    private RectTransform cooldownCoverTransform;
 
-    private void Start()
+    private void Awake()
     {
+        if (cooldownCover == null)
+        {
+            Debug.LogError($"{name} has no cooldown cover assigned.");
+            enabled = false;
+            return;
+        }
+
+        cooldownCoverTransform = cooldownCover.GetComponent<RectTransform>();
         cooldownCover.gameObject.SetActive(false); // Start hidden
     }
 
     public void StartCooldown(float duration)
     {
+        if (cooldownCover == null || cooldownCoverTransform == null || duration <= 0f)
+        {
+            return;
+        }
+
         cooldownTime = duration;
         cooldownStartTime = Time.time;
         isCooldownActive = true;
@@ -41,21 +55,25 @@ public class CooldownIndicator : MonoBehaviour
         }
         else
         {
-            cooldownCover.gameObject.SetActive(false);
+            if (cooldownCover != null)
+            {
+                cooldownCover.gameObject.SetActive(false);
+            }
         }
     }
 
     private void UpdateCooldownCover()
     {
+        if (cooldownCoverTransform == null)
+        {
+            return;
+        }
+
         // Adjust the cover's height based on remaining cooldown
-        RectTransform coverTransform = cooldownCover.GetComponent<RectTransform>();
         float remainingTime = (cooldownStartTime + cooldownTime) - Time.time; // Calculate remaining time
-        float fillAmount = remainingTime / cooldownTime; // Calculate remaining cooldown fraction
+        float fillAmount = Mathf.Clamp01(remainingTime / cooldownTime); // Calculate remaining cooldown fraction
 
-        if(fillAmount < 0)
-            fillAmount = 0;
-
-        coverTransform.localScale = new Vector3(1, fillAmount, 1); // Scale height from bottom to top
+        cooldownCoverTransform.localScale = new Vector3(1, fillAmount, 1); // Scale height from bottom to top
         //Debug.Log($"Remaining cooldown: {remainingTime} seconds, Fill amount: {fillAmount}");
     }
 }

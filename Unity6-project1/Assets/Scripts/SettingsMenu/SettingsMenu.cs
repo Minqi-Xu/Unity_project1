@@ -14,6 +14,13 @@ public class SettingsMenu : MonoBehaviour
 
     void Start()
     {
+        if (resolutionDropdown == null || fullscreenToggle == null)
+        {
+            Debug.LogError("SettingsMenu is missing required UI references.");
+            enabled = false;
+            return;
+        }
+
         // Fetch available resolutions
         availableResolutions = new Resolution[]
         {
@@ -66,14 +73,15 @@ public class SettingsMenu : MonoBehaviour
 
     public void SetResolution()
     {
-        int resolutionIndex = resolutionDropdown.value;
+        int resolutionIndex = Mathf.Clamp(resolutionDropdown.value, 0, availableResolutions.Length - 1);
         Resolution resolution = availableResolutions[resolutionIndex];
         bool isFullscreen = fullscreenToggle.isOn;
         Screen.SetResolution(resolution.width, resolution.height, isFullscreen);
         Debug.Log($"Setting resolution to: {resolution.width} x {resolution.height}, Fullscreen: {isFullscreen}");
 
         // Adjust the camera size after the resolution change
-        CameraScaler cameraScaler = Camera.main.GetComponent<CameraScaler>();
+        Camera mainCamera = Camera.main;
+        CameraScaler cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
         if(cameraScaler != null)
         {
             cameraScaler.OnResolutionChanged();
@@ -83,6 +91,11 @@ public class SettingsMenu : MonoBehaviour
 
     public void SetFullscreen()
     {
+        if (fullscreenToggle == null)
+        {
+            return;
+        }
+
         Screen.fullScreen = fullscreenToggle.isOn;
         Debug.Log($"Setting fullscreen: {fullscreenToggle.isOn}");
     }
