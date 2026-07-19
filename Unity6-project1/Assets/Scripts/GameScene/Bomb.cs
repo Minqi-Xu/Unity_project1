@@ -66,7 +66,7 @@ public class Bomb: MonoBehaviour
             if(enemy != null)
             {
                 // calculate damage with the damage multiplier
-                float currentDamage = basedamage * (playerController != null ? playerController.damageMultiplier : 1f);
+                float currentDamage = basedamage * (playerController != null ? playerController.GetDamageMultiplier() : 1f);
                 enemy.TakeDamage(currentDamage);
             }
         }

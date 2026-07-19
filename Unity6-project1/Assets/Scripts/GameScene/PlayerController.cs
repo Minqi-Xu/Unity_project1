@@ -21,6 +21,7 @@ public class PlayerController : MonoBehaviour
     public CooldownIndicator dashCooldownIndicator; // Dash cooldown indicator
     public CooldownIndicator bombCooldownIndicator; // Bomb cooldown indicator
     public float gameTime = 0f;    // gameTimer, will stop when pause
+    public PlayerStats Stats { get; private set; }
 
     private Rigidbody2D rb;
     private Vector2 movement;
@@ -36,6 +37,12 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        Stats = GetComponent<PlayerStats>();
+        if (Stats == null)
+        {
+            Stats = gameObject.AddComponent<PlayerStats>();
+        }
+
         // Get the Rigidbody2D component attached to the player
         rb = GetComponent<Rigidbody2D>();
         mainCamera = Camera.main;
@@ -94,7 +101,7 @@ public class PlayerController : MonoBehaviour
         if(!isDashing)
         {
             // calculate the new position
-            Vector2 newPosition = rb.position + movement * moveSpeed * Time.fixedDeltaTime * cameraSizeFactor;
+            Vector2 newPosition = rb.position + movement * GetMoveSpeed() * Time.fixedDeltaTime * cameraSizeFactor;
 
             // Clamp position to screeen bounds
             newPosition = ClampToScreenBound(newPosition);
@@ -112,10 +119,11 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        dashCooldownTimer = dashCooldown;
+        float currentDashCooldown = GetDashCooldown();
+        dashCooldownTimer = currentDashCooldown;
         if (dashCooldownIndicator != null)
         {
-            dashCooldownIndicator.StartCooldown(dashCooldown);
+            dashCooldownIndicator.StartCooldown(currentDashCooldown);
         }
 
         StartCoroutine(Dash(dashDirection));
@@ -132,7 +140,7 @@ public class PlayerController : MonoBehaviour
         while (elapsedTime < dashDuration)
         {
             // calculate the new position
-            Vector2 newPosition = rb.position + dashDirection * dashSpeed * Time.fixedDeltaTime * cameraSizeFactor;
+            Vector2 newPosition = rb.position + dashDirection * GetDashSpeed() * Time.fixedDeltaTime * cameraSizeFactor;
 
             // Clamp position to screeen bounds
             newPosition = ClampToScreenBound(newPosition);
@@ -172,11 +180,12 @@ public class PlayerController : MonoBehaviour
 
     void FireBullet()
     {
-        if (Time.time >= lastFireTime + fireCooldown)
+        float currentFireCooldown = GetFireCooldown();
+        if (Time.time >= lastFireTime + currentFireCooldown)
         {
             if (bulletCooldownIndicator != null)
             {
-                bulletCooldownIndicator.StartCooldown(fireCooldown);
+                bulletCooldownIndicator.StartCooldown(currentFireCooldown);
             }
 
             if (bulletPrefab == null || mainCamera == null)
@@ -218,11 +227,12 @@ public class PlayerController : MonoBehaviour
 
     void FireBomb()
     {
-        if(Time.time >= lastBombTime + bombCooldown)
+        float currentBombCooldown = GetBombCooldown();
+        if(Time.time >= lastBombTime + currentBombCooldown)
         {
             if (bombCooldownIndicator != null)
             {
-                bombCooldownIndicator.StartCooldown(bombCooldown);
+                bombCooldownIndicator.StartCooldown(currentBombCooldown);
             }
 
             if (bombPrefab == null || mainCamera == null)
@@ -256,28 +266,23 @@ public class PlayerController : MonoBehaviour
     public void CollectExperience(int amount)
     {
         // increase player level
-        currentExperience  += amount;
-        bool leveledUp = false;
+        currentExperience += Mathf.Max(0, amount);
+
+        if (experienceThreshold <= 0)
+        {
+            Debug.LogWarning("Experience threshold must be greater than 0. Resetting to 1.");
+            experienceThreshold = 1;
+        }
 
         // check if current experience meets the threshold
-        if(currentExperience >= experienceThreshold)
+        while(currentExperience >= experienceThreshold)
         {
-            // level up
-            level++;
-            damageMultiplier += 0.1f;   // increase damage multiplier
-            leveledUp = true;
-
             // Reset experience
             currentExperience -= experienceThreshold;
-
+            LevelUp();
         }
 
         UpdateLevelText();
-
-        if (leveledUp)
-        {
-            DebugLogPlayerStatus("Level Up", 0f);
-        }
     }
 
     public void DebugLogPlayerStatus(string reason, float enemyDamage)
@@ -297,11 +302,58 @@ public class PlayerController : MonoBehaviour
             Bullet bullet = bulletPrefab.GetComponent<Bullet>();
             if (bullet != null)
             {
-                return bullet.baseDamage * damageMultiplier;
+                return bullet.baseDamage * GetDamageMultiplier();
             }
         }
 
-        return damageMultiplier;
+        return GetDamageMultiplier();
+    }
+
+    private void LevelUp()
+    {
+        level++;
+        bool rewardApplied = UpgradeManager.Instance != null && UpgradeManager.Instance.TryOfferLevelUpRewards(this);
+        if (!rewardApplied)
+        {
+            damageMultiplier += 0.1f;
+        }
+
+        DebugLogPlayerStatus(rewardApplied ? "Level Up Reward" : "Level Up", 0f);
+    }
+
+    public float GetDamageMultiplier()
+    {
+        return Stats != null ? Stats.GetDamageMultiplier(damageMultiplier) : damageMultiplier;
+    }
+
+    public float GetPickupRadius(float basePickupRadius)
+    {
+        return Stats != null ? Stats.GetPickupRadius(basePickupRadius) : basePickupRadius;
+    }
+
+    private float GetMoveSpeed()
+    {
+        return Stats != null ? Stats.GetMoveSpeed(moveSpeed) : moveSpeed;
+    }
+
+    private float GetDashSpeed()
+    {
+        return Stats != null ? Stats.GetDashSpeed(dashSpeed) : dashSpeed;
+    }
+
+    private float GetFireCooldown()
+    {
+        return Stats != null ? Stats.GetFireCooldown(fireCooldown) : fireCooldown;
+    }
+
+    private float GetBombCooldown()
+    {
+        return Stats != null ? Stats.GetBombCooldown(bombCooldown) : bombCooldown;
+    }
+
+    private float GetDashCooldown()
+    {
+        return Stats != null ? Stats.GetDashCooldown(dashCooldown) : dashCooldown;
     }
 
     private void UpdateLevelText()

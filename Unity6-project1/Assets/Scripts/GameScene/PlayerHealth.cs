@@ -41,6 +41,12 @@ public class PlayerHealth : MonoBehaviour
         PlayerController playerController = player != null ? player : GetComponent<PlayerController>();
         float playerGameTime = playerController != null ? playerController.gameTime : 0f;
         float final_damage = damage * (damageMultiplier + damageReceiveIncreasingRate * playerGameTime);
+        PlayerStats stats = playerController != null ? playerController.Stats : GetComponent<PlayerStats>();
+        if (stats != null)
+        {
+            final_damage *= stats.GetIncomingDamageMultiplier();
+        }
+
         final_damage = Mathf.Min(final_damage, maxReceivingDmg);
         // Debug.Log($"Player receives {final_damage} damage");
         currentHealth -= final_damage; // Reduce health by damage amount
@@ -65,6 +71,34 @@ public class PlayerHealth : MonoBehaviour
                 flashCoroutine = StartCoroutine(FlashOnDamage());
             }
         }
+    }
+
+    public void IncreaseMaxHealth(float amount, bool healBySameAmount)
+    {
+        if (amount <= 0f)
+        {
+            return;
+        }
+
+        maxHealth += amount;
+        if (healBySameAmount)
+        {
+            currentHealth += amount;
+        }
+
+        currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
+        UpdateHealthUI();
+    }
+
+    public void Heal(float amount)
+    {
+        if (amount <= 0f)
+        {
+            return;
+        }
+
+        currentHealth = Mathf.Clamp(currentHealth + amount, 0f, maxHealth);
+        UpdateHealthUI();
     }
 
     private void LogPlayerStatusChanged(PlayerController playerController, float enemyDamage)

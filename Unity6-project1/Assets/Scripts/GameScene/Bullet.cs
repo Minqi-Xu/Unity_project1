@@ -45,7 +45,7 @@ public class Bullet : MonoBehaviour
             if(enemy != null)
             {
                 // increase damage over time
-                float currentDamage = baseDamage * (playerController != null ? playerController.damageMultiplier : 1f);
+                float currentDamage = baseDamage * (playerController != null ? playerController.GetDamageMultiplier() : 1f);
 
                 // Deal damage to enemy hit
                 enemy.TakeDamage(currentDamage);

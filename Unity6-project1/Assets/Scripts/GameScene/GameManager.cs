@@ -32,6 +32,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        EnsureCoreSystems();
         Time.timeScale = 1f;
         survivalTime = 0f;
         gameEnded = false;
@@ -49,6 +50,21 @@ public class GameManager : MonoBehaviour
 
         // Instantiate the selected character
         playerCharacter = Instantiate(characterPrefabs[selectedCharacterIndex], Vector3.zero, Quaternion.identity);
+    }
+
+    private void EnsureCoreSystems()
+    {
+        if (UpgradeManager.Instance == null)
+        {
+            GameObject upgradeManagerObject = new GameObject("UpgradeManager");
+            upgradeManagerObject.AddComponent<UpgradeManager>();
+        }
+
+        if (RewardManager.Instance == null)
+        {
+            GameObject rewardManagerObject = new GameObject("RewardManager");
+            rewardManagerObject.AddComponent<RewardManager>();
+        }
     }
 
     void Update()
