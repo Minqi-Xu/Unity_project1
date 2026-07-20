@@ -1,19 +1,37 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Spawns enemies outside the camera view and increases pressure over time.
+/// </summary>
 public class EnemySpawner : MonoBehaviour
 {
+    /// <summary>Enemy prefab to spawn.</summary>
     public GameObject enemyPrefab;  // The enemy prefab to spawn
+
+    /// <summary>Delay before the first enemy spawn.</summary>
     public float initialSpawnDelay = 2f; // Initial delay between spawns
+
+    /// <summary>Initial interval between enemy spawns.</summary>
     public float spawnRate = 5f; // Rate at which enemies spawn
+
+    /// <summary>Amount subtracted from spawn interval after each spawn.</summary>
     public float spawnIncreaseRate = 0.1f; // How fast the spawn rate increases
+
+    /// <summary>Health added to new enemies at each health-scaling step.</summary>
     public float healIncreaseRate = 20f; // How much enemy heal increases over time
+
+    /// <summary>Seconds between enemy health-scaling steps.</summary>
     public float healIncreaseTime = 30f; // How long will it cost for enemy increase their heal to next level
 
+    // Runtime spawn pacing state.
     private float currentSpawnRate;
     private float gameTime = 0f;    // Game timer records game time (exclude pause)
     private Camera mainCamera;
 
+    /// <summary>
+    /// Validates required references and starts the spawn loop.
+    /// </summary>
     void Start()
     {
         if (enemyPrefab == null)
@@ -35,11 +53,17 @@ public class EnemySpawner : MonoBehaviour
         StartCoroutine(SpawnEnemies());
     }
 
+    /// <summary>
+    /// Tracks elapsed game time for enemy scaling.
+    /// </summary>
     void Update()
     {
         gameTime += Time.deltaTime;
     }
 
+    /// <summary>
+    /// Repeatedly spawns enemies and reduces spawn interval down to a minimum.
+    /// </summary>
     IEnumerator SpawnEnemies()
     {
         yield return new WaitForSeconds(initialSpawnDelay);
@@ -52,6 +76,9 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Chooses an off-screen position, spawns one enemy, and applies health scaling.
+    /// </summary>
     void SpawnEnemy()
     {
         if (mainCamera == null)

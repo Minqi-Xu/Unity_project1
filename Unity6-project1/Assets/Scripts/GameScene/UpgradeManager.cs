@@ -2,18 +2,32 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Generates level-up upgrade choices, applies selected upgrades, and tracks upgrade levels.
+/// </summary>
 public class UpgradeManager : MonoBehaviour
 {
+    /// <summary>Active upgrade manager instance for the current scene.</summary>
     public static UpgradeManager Instance { get; private set; }
 
+    /// <summary>Configured upgrade pool. If empty, runtime prototype upgrades are created.</summary>
     public UpgradeDefinition[] availableUpgrades;
+
+    /// <summary>Number of upgrade options offered per level-up.</summary>
     public int choicesPerLevel = 3;
+
+    /// <summary>Automatically applies the first choice until a selection UI exists.</summary>
     public bool autoPickFirstChoiceForPrototype = true;
 
+    /// <summary>Event raised when upgrade choices are generated for a player.</summary>
     public event Action<PlayerController, IReadOnlyList<UpgradeDefinition>> OnUpgradeChoicesOffered;
 
+    /// <summary>Applied level count for each upgrade key during this run.</summary>
     private readonly Dictionary<string, int> upgradeLevels = new Dictionary<string, int>();
 
+    /// <summary>
+    /// Initializes the singleton and creates prototype upgrades if no pool is configured.
+    /// </summary>
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -30,6 +44,9 @@ public class UpgradeManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Builds level-up choices for a player and optionally auto-applies one during prototype mode.
+    /// </summary>
     public bool TryOfferLevelUpRewards(PlayerController player)
     {
         if (player == null)
@@ -54,6 +71,9 @@ public class UpgradeManager : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Applies one upgrade to a player if the upgrade has not reached max level.
+    /// </summary>
     public bool ApplyUpgrade(UpgradeDefinition upgrade, PlayerController player)
     {
         if (upgrade == null || player == null)
@@ -82,6 +102,9 @@ public class UpgradeManager : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Randomly picks unique upgrade choices from currently available upgrades.
+    /// </summary>
     private List<UpgradeDefinition> PickUpgradeChoices()
     {
         List<UpgradeDefinition> candidates = GetAvailableUpgrades();
@@ -98,6 +121,9 @@ public class UpgradeManager : MonoBehaviour
         return choices;
     }
 
+    /// <summary>
+    /// Returns upgrades that still have remaining levels available.
+    /// </summary>
     private List<UpgradeDefinition> GetAvailableUpgrades()
     {
         List<UpgradeDefinition> candidates = new List<UpgradeDefinition>();
@@ -124,6 +150,9 @@ public class UpgradeManager : MonoBehaviour
         return candidates;
     }
 
+    /// <summary>
+    /// Returns a stable tracking key for an upgrade definition.
+    /// </summary>
     private string GetUpgradeKey(UpgradeDefinition upgrade)
     {
         if (!string.IsNullOrWhiteSpace(upgrade.upgradeId))
@@ -134,6 +163,9 @@ public class UpgradeManager : MonoBehaviour
         return !string.IsNullOrWhiteSpace(upgrade.name) ? upgrade.name : upgrade.DisplayName;
     }
 
+    /// <summary>
+    /// Formats upgrade choices for debug logging.
+    /// </summary>
     private string FormatChoices(IReadOnlyList<UpgradeDefinition> choices)
     {
         List<string> names = new List<string>();
@@ -145,6 +177,9 @@ public class UpgradeManager : MonoBehaviour
         return string.Join(", ", names);
     }
 
+    /// <summary>
+    /// Creates a small runtime upgrade pool so level-up rewards work before asset setup exists.
+    /// </summary>
     private UpgradeDefinition[] CreatePrototypeUpgradePool()
     {
         return new UpgradeDefinition[]
@@ -208,6 +243,9 @@ public class UpgradeManager : MonoBehaviour
         };
     }
 
+    /// <summary>
+    /// Creates one runtime-only upgrade definition for the prototype pool.
+    /// </summary>
     private UpgradeDefinition CreateRuntimeUpgrade(
         string upgradeId,
         string displayName,

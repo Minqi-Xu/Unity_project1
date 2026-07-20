@@ -4,14 +4,24 @@ using TMPro; // for TextMeshPro
 using System.Collections.Generic;
 using UnityEngine.SceneManagement; // Required for List<>
 
+/// <summary>
+/// Controls resolution and fullscreen settings UI.
+/// </summary>
 public class SettingsMenu : MonoBehaviour
 {
+    /// <summary>Dropdown listing supported resolution choices.</summary>
     public TMP_Dropdown resolutionDropdown;
+
+    /// <summary>Toggle used to apply fullscreen mode.</summary>
     public Toggle fullscreenToggle;
 
+    // Supported resolutions and selected index.
     private Resolution[] availableResolutions;
     private int currentResolutionIndex = 0;
 
+    /// <summary>
+    /// Validates UI references, populates resolution options, and reflects current settings.
+    /// </summary>
     void Start()
     {
         if (resolutionDropdown == null || fullscreenToggle == null)
@@ -46,6 +56,9 @@ public class SettingsMenu : MonoBehaviour
         LoadCurrentSettings();
     }
 
+    /// <summary>
+    /// Reflect the current game settings in the dropdown and toggle.
+    /// </summary>
     // Reflect the current game settings in the dropdown and toggle
     void LoadCurrentSettings()
     {
@@ -58,6 +71,9 @@ public class SettingsMenu : MonoBehaviour
         fullscreenToggle.isOn = Screen.fullScreen;
     }
 
+    /// <summary>
+    /// Finds the dropdown index matching the current screen resolution.
+    /// </summary>
     // Method to find the index of the current screen resolution
     int GetCurrentResolutionIndex()
     {
@@ -71,6 +87,9 @@ public class SettingsMenu : MonoBehaviour
         return 0; // Default to the first resolution if no match found
     }
 
+    /// <summary>
+    /// Applies selected resolution and notifies camera/object scalers.
+    /// </summary>
     public void SetResolution()
     {
         int resolutionIndex = Mathf.Clamp(resolutionDropdown.value, 0, availableResolutions.Length - 1);
@@ -89,6 +108,9 @@ public class SettingsMenu : MonoBehaviour
         BroadcastResolutionChange();
     }
 
+    /// <summary>
+    /// Applies fullscreen toggle state.
+    /// </summary>
     public void SetFullscreen()
     {
         if (fullscreenToggle == null)
@@ -100,6 +122,9 @@ public class SettingsMenu : MonoBehaviour
         Debug.Log($"Setting fullscreen: {fullscreenToggle.isOn}");
     }
 
+    /// <summary>
+    /// Returns to the scene that opened the settings menu.
+    /// </summary>
     public void BackToPreviousMenu()
     {
         string previousScene = PlayerPrefs.GetString("PreviousScene", "StartMenu"); // Default to start menu if not found
@@ -107,6 +132,9 @@ public class SettingsMenu : MonoBehaviour
         SceneManager.LoadScene(previousScene);
     }
 
+    /// <summary>
+    /// Notifies active ObjectScaler components after a resolution change.
+    /// </summary>
     void BroadcastResolutionChange()
     {
         // Send a message to all objects that have an ObjectScaler to adjust their size

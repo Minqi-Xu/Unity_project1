@@ -1,17 +1,30 @@
 using UnityEngine;
 
+/// <summary>
+/// Moves a bullet projectile and applies player-scaled damage when it hits an enemy.
+/// </summary>
 public class Bullet : MonoBehaviour
 {
+    /// <summary>Projectile movement speed before camera scaling.</summary>
     public float bulletSpeed = 25f; // Speed of the bullet
+
+    /// <summary>Base damage before player damage modifiers.</summary>
     public float baseDamage = 8f;
+
+    // Runtime projectile state.
     private Vector2 direction;
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to the PlayerController
+
+    // Camera references used for resolution-aware projectile movement.
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
     private Camera mainCamera;
     private CameraScaler cameraScaler;
 
 
+    /// <summary>
+    /// Initializes projectile direction and owner after instantiation.
+    /// </summary>
     // This method is called when the bullet is instantiated
     public void Initialize(Vector2 dir, PlayerController controller)
     {
@@ -22,6 +35,9 @@ public class Bullet : MonoBehaviour
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
 
+    /// <summary>
+    /// Moves the bullet forward and destroys it after it travels too far.
+    /// </summary>
     void Update()
     {
         // get the camera's orthographic size
@@ -36,6 +52,9 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Damages an enemy on contact and then destroys the bullet.
+    /// </summary>
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Enemy"))
@@ -55,6 +74,9 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns projectile movement scale based on current camera size.
+    /// </summary>
     private float GetCameraSizeFactor()
     {
         if (mainCamera == null)

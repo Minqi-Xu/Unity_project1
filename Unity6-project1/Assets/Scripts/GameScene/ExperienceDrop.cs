@@ -1,15 +1,28 @@
 using UnityEngine;
 
+/// <summary>
+/// Experience pickup that moves toward the player when close and grants experience on collection.
+/// </summary>
 public class ExperienceDrop: MonoBehaviour
 {
+    /// <summary>Seconds before the pickup is destroyed if not collected.</summary>
     public float lifespan = 60f;    // time before it disappears
+
+    /// <summary>Movement speed while attracted toward the player.</summary>
     public float moveSpeed = 1f;    // Speed of moving towards the player
+
+    // Cached player references used for attraction and reward delivery.
     private Transform player;
     private PlayerController playerController;
+
+    // Camera references used for resolution-aware pickup movement.
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
     private Camera mainCamera;
     private CameraScaler cameraScaler;
 
+    /// <summary>
+    /// Finds the player, caches camera references, and schedules pickup despawn.
+    /// </summary>
     void Start()
     {
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
@@ -22,10 +35,13 @@ public class ExperienceDrop: MonoBehaviour
         mainCamera = Camera.main;
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
 
-        // destory after lifespan
+        // Destroy after lifespan.
         Destroy(gameObject, lifespan);
     }
 
+    /// <summary>
+    /// Moves toward the player when inside the current pickup attraction radius.
+    /// </summary>
     void Update()
     {
         // get the camera's orthographic size
@@ -44,6 +60,9 @@ public class ExperienceDrop: MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Grants experience to the player and destroys the pickup on collection.
+    /// </summary>
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
@@ -65,6 +84,9 @@ public class ExperienceDrop: MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns movement scale based on current camera size.
+    /// </summary>
     private float GetCameraSizeFactor()
     {
         if (mainCamera == null)

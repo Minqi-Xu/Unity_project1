@@ -1,20 +1,33 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Handles character preview, selection, and confirmation before entering the game scene.
+/// </summary>
 public class CharacterSelectionManager : MonoBehaviour
 {
+    /// <summary>Available character prefabs shown in selection and spawned in game.</summary>
     public GameObject[] characters; // Assign character prefabs in the Inspector
+
+    /// <summary>Preview anchor used to position the selected character preview.</summary>
     public Transform previewPosition;  // Assign the preview position
 
+    // Runtime character selection state.
     private int selectedCharacterIndex = 0; // Index of the selected character
     private GameObject currentPreviewCharacter; // Stores the currently previewed character
 
+    /// <summary>
+    /// Displays the default selected character at scene start.
+    /// </summary>
     void Start()
     {
         // Optionally, display the first character as selected by default
         DisplaySelectedCharacter();
     }
 
+    /// <summary>
+    /// Selects a character index and refreshes the preview.
+    /// </summary>
     public void SelectCharacter(int index)
     {
         if (characters == null || characters.Length == 0)
@@ -28,6 +41,9 @@ public class CharacterSelectionManager : MonoBehaviour
         DisplaySelectedCharacter();
     }
 
+    /// <summary>
+    /// Saves selected character index and loads the game scene.
+    /// </summary>
     public void ConfirmSelection()
     {
         // Store the selected character index using PlayerPrefs so it's available in the game scene
@@ -37,6 +53,9 @@ public class CharacterSelectionManager : MonoBehaviour
         SceneManager.LoadScene("GameScene");
     }
 
+    /// <summary>
+    /// Rebuilds the preview object for the currently selected character.
+    /// </summary>
     void DisplaySelectedCharacter()
     {
         if (characters == null || characters.Length == 0 || previewPosition == null)

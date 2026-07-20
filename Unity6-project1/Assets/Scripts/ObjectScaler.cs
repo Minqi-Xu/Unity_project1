@@ -1,8 +1,16 @@
 using UnityEngine;
+
+/// <summary>
+/// Scales an object relative to current screen resolution.
+/// </summary>
 public class ObjectScaler : MonoBehaviour
 {
+    /// <summary>Initial local scale captured before resolution scaling is applied.</summary>
     private Vector3 baseScale;  // Store the initial scale of the object
 
+    /// <summary>
+    /// Captures original scale and applies initial resolution scaling.
+    /// </summary>
     void Start()
     {
         // Store the original size of the object
@@ -12,6 +20,9 @@ public class ObjectScaler : MonoBehaviour
         AdjustScale();
     }
 
+    /// <summary>
+    /// Applies uniform scaling using the smaller screen-size ratio.
+    /// </summary>
     void AdjustScale()
     {
         // Define your base resolution (for example 1920x1080)
@@ -27,6 +38,9 @@ public class ObjectScaler : MonoBehaviour
         transform.localScale = baseScale * scaleMultiplier;
     }
 
+    /// <summary>
+    /// Recalculates scale after runtime resolution changes.
+    /// </summary>
     public void OnResolutionChanged()
     {
         // Adjust the scale whenever resolution is changed

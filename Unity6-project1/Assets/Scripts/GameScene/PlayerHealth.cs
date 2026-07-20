@@ -3,21 +3,45 @@ using UnityEngine.UI; // For UI elements
 using TMPro;
 using System.Collections; // For TextMeshPro
 
+/// <summary>
+/// Tracks player health, applies incoming damage scaling, updates health UI, and handles death.
+/// </summary>
 public class PlayerHealth : MonoBehaviour
 {
+    /// <summary>Maximum player health before max-health upgrades.</summary>
     public float maxHealth = 100f; // Set maximum health
-    public float currentHealth; // Current health
-    public Image healthBar; // Reference to the health bar UI
-    public Image damageOverlay; // Reference to the damageOverlay UI
-    public TextMeshProUGUI healthPercentText; // Reference to the health percent text UI
-    public float damageReceiveIncreasingRate = 0.005f; // player damage receiving increasing rate over time
-    public float damageMultiplier = 1f;
-    public float maxReceivingDmg = 80f;
-    public GameObject gameOverUI;  // Reference to the player's PriteRenderer component
 
+    /// <summary>Current player health.</summary>
+    public float currentHealth; // Current health
+
+    /// <summary>UI fill image that displays remaining health.</summary>
+    public Image healthBar; // Reference to the health bar UI
+
+    /// <summary>UI fill image that displays missing health as damage overlay.</summary>
+    public Image damageOverlay; // Reference to the damageOverlay UI
+
+    /// <summary>UI text that displays health as a percentage.</summary>
+    public TextMeshProUGUI healthPercentText; // Reference to the health percent text UI
+
+    /// <summary>Rate at which incoming damage increases with player survival time.</summary>
+    public float damageReceiveIncreasingRate = 0.005f; // player damage receiving increasing rate over time
+
+    /// <summary>Base incoming damage multiplier before time scaling and stat reduction.</summary>
+    public float damageMultiplier = 1f;
+
+    /// <summary>Maximum damage the player can receive from one hit.</summary>
+    public float maxReceivingDmg = 80f;
+
+    /// <summary>Game over UI shown when the player dies.</summary>
+    public GameObject gameOverUI;  // Reference to the game-over UI shown when the player dies
+
+    // Cached damage-feedback state.
     private SpriteRenderer playerSprite;    // Reference to the player's SpriteRenderer component
     private Coroutine flashCoroutine;
 
+    /// <summary>
+    /// Initializes health, UI references, and the sprite used for damage flashing.
+    /// </summary>
     void Start()
     {
         healthBar = FindComponentByName<Image>("HealthBar");
@@ -36,6 +60,9 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Applies enemy damage after time scaling, player stat reduction, and max-hit clamping.
+    /// </summary>
     public void TakeDamage(float damage, PlayerController player)
     {
         PlayerController playerController = player != null ? player : GetComponent<PlayerController>();
@@ -73,6 +100,9 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Increases maximum health and optionally heals by the same amount.
+    /// </summary>
     public void IncreaseMaxHealth(float amount, bool healBySameAmount)
     {
         if (amount <= 0f)
@@ -90,6 +120,9 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthUI();
     }
 
+    /// <summary>
+    /// Restores health without exceeding max health.
+    /// </summary>
     public void Heal(float amount)
     {
         if (amount <= 0f)
@@ -101,6 +134,9 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthUI();
     }
 
+    /// <summary>
+    /// Logs player status after health changes.
+    /// </summary>
     private void LogPlayerStatusChanged(PlayerController playerController, float enemyDamage)
     {
         if (playerController != null)
@@ -112,6 +148,9 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log($"[PlayerStatus] Take Damage | PlayerDMG: N/A | PlayerHP: {currentHealth:0.##} | EnemyDMG: {enemyDamage:0.##}");
     }
 
+    /// <summary>
+    /// Updates health bar, percent text, and damage overlay UI.
+    /// </summary>
     private void UpdateHealthUI()
     {
         float healthFraction = maxHealth > 0f ? currentHealth / maxHealth : 0f;
@@ -134,6 +173,9 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Flashes the player sprite briefly after taking damage.
+    /// </summary>
     private IEnumerator FlashOnDamage()
     {
         if (playerSprite == null)
@@ -161,6 +203,9 @@ public class PlayerHealth : MonoBehaviour
         flashCoroutine = null;
     }
 
+    /// <summary>
+    /// Shows game-over UI and pauses the game.
+    /// </summary>
     private void Die()
     {
         // Handle player death (e.g., restart game, show game over screen, etc.)
@@ -172,6 +217,9 @@ public class PlayerHealth : MonoBehaviour
         Time.timeScale = 0f;    // Pause the game
     }
 
+    /// <summary>
+    /// Finds a component on a scene object by object name.
+    /// </summary>
     private static T FindComponentByName<T>(string objectName) where T : Component
     {
         GameObject target = GameObject.Find(objectName);

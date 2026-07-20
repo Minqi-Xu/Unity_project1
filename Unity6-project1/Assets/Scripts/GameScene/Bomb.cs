@@ -1,20 +1,38 @@
 using UnityEngine;
 
+/// <summary>
+/// Moves a thrown bomb and applies area damage when it hits an enemy or reaches max range.
+/// </summary>
 public class Bomb: MonoBehaviour
 {
+    /// <summary>Bomb movement speed before camera scaling.</summary>
     public float bombSpeed = 10f;   // speed of throwing the bomb
+
+    /// <summary>Radius used to find enemies damaged by the explosion.</summary>
     public float explosionRadius = 3f;  // explosion radius
+
+    /// <summary>Optional visual effect prefab spawned when the bomb explodes.</summary>
     public GameObject explossionEffectprefab; // link to explosion effect prefab in the inspector
+
+    /// <summary>Maximum travel distance before auto-explosion.</summary>
     public float maxDistance = 10f;     // max distance flying before explode
+
+    /// <summary>Base explosion damage before player damage modifiers.</summary>
     public float basedamage = 50f;      // damage dealt when explode
 
+    // Runtime projectile state.
     private Vector2 direction;
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to playerController
+
+    // Camera references used for resolution-aware projectile movement.
     private float cameraSizeFactor;     // Since camera size changed due to resolution change, the speed related should also changed accordingly
     private Camera mainCamera;
     private CameraScaler cameraScaler;
 
+    /// <summary>
+    /// Initializes projectile direction and owner after instantiation.
+    /// </summary>
     public void Initialize(Vector2 dir, PlayerController controller)
     {
         direction = dir.normalized;
@@ -24,6 +42,9 @@ public class Bomb: MonoBehaviour
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
 
+    /// <summary>
+    /// Moves the bomb and triggers explosion once max travel distance is reached.
+    /// </summary>
     void Update()
     {
         // get the camera's orthographic size
@@ -40,6 +61,9 @@ public class Bomb: MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Explodes immediately when colliding with an enemy.
+    /// </summary>
     void OnTriggerEnter2D(Collider2D other)
     {
         if(other.CompareTag("Enemy"))
@@ -49,6 +73,9 @@ public class Bomb: MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Spawns explosion effects, damages enemies in radius, and destroys the bomb.
+    /// </summary>
     void Explode()
     {
         // Instantiate the explosion effect
@@ -74,6 +101,9 @@ public class Bomb: MonoBehaviour
         Destroy(gameObject);
     }
 
+    /// <summary>
+    /// Returns projectile movement scale based on current camera size.
+    /// </summary>
     private float GetCameraSizeFactor()
     {
         if (mainCamera == null)
@@ -91,6 +121,9 @@ public class Bomb: MonoBehaviour
             : 1f;
     }
 
+    /// <summary>
+    /// Draws explosion radius in the Unity Scene view.
+    /// </summary>
     void OnDrawGizmosSelected()
     {
         // Show the explosion radius in the scene view
