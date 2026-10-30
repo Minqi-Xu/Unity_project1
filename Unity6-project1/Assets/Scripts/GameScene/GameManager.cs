@@ -28,6 +28,12 @@ public class GameManager : MonoBehaviour
     private bool gameEnded = false;
     private GameObject playerCharacter;
     private static GameManager instance;
+    private EnemySpawner enemySpawner;
+    private bool finalBossDefeated;
+    private bool finalRewardClaimed;
+    public bool FinalBossDefeated => finalBossDefeated;
+    public void NotifyFinalBossDefeated() => finalBossDefeated = true;
+    public void NotifyFinalRewardClaimed() => finalRewardClaimed = true;
 
     // Initializes singleton instance and removes duplicate managers.
     void Awake()
@@ -47,6 +53,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         EnsureCoreSystems();
+        enemySpawner = FindAnyObjectByType<EnemySpawner>();
         Time.timeScale = 1f;
         survivalTime = 0f;
         gameEnded = false;
@@ -120,7 +127,12 @@ public class GameManager : MonoBehaviour
             }
 
             // Check if 20 minutes have passed
-            if (survivalTime >= targetGameTime)
+            bool requiresBoss = enemySpawner != null && enemySpawner.RequiresFinalBoss;
+            bool rewardResolved = finalBossDefeated && finalRewardClaimed &&
+                (UpgradeManager.Instance == null || !UpgradeManager.Instance.IsSelecting);
+            PlayerHealth health = playerCharacter != null ? playerCharacter.GetComponent<PlayerHealth>() : null;
+            if (survivalTime >= targetGameTime && (!requiresBoss || rewardResolved) &&
+                (health == null || health.currentHealth > 0f))
             {
                 EndGame();
             }

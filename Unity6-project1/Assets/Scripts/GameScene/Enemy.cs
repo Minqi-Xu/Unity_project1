@@ -38,6 +38,48 @@ public class Enemy : MonoBehaviour
     // Prevent multiple projectiles or explosions from granting duplicate death rewards.
     private bool dead;
     public bool IsAlive => !dead && currentHealth > 0f;
+    public EnemyRank Rank { get; private set; }
+    public EnemyAffix Affixes { get; private set; }
+    public string DisplayName { get; private set; } = "Chaser";
+    private EnemyDefinition definition;
+    private float nextAttack;
+    private float nextDash = 5f;
+    private float dashUntil;
+    private float dashStarts;
+    private Vector2 dashDirection;
+    private float auraUntil;
+    private float nextAura;
+    private float nextContact;
+    private float nextBossAttack = 4f;
+    private bool initialized;
+    private SpriteRenderer sprite;
+
+    public void Configure(EnemyDefinition data, EnemyRank rank, EnemyAffix affixes, float extraHealth)
+    {
+        definition = data;
+        Rank = rank;
+        Affixes = affixes;
+        DisplayName = data.displayName;
+        float rankHealth = rank == EnemyRank.FinalBoss ? 35f : rank == EnemyRank.MiniBoss ? 16f : rank == EnemyRank.Elite ? 7f : 1f;
+        float rankSize = rank == EnemyRank.FinalBoss ? 3.5f : rank == EnemyRank.MiniBoss ? 2.7f : rank == EnemyRank.Elite ? 1.8f : 1f;
+        maxHealth = (maxHealth + Mathf.Max(0f, extraHealth)) * data.healthMultiplier * rankHealth * (Has(EnemyAffix.Healthy) ? 1.8f : 1f);
+        currentHealth = maxHealth;
+        speed *= data.speedMultiplier * (Has(EnemyAffix.Swift) ? 1.5f : 1f);
+        baseDamage *= data.damageMultiplier * (rank == EnemyRank.Normal ? 1f : 1.5f);
+        transform.localScale *= data.sizeMultiplier * rankSize;
+        sprite = GetComponent<SpriteRenderer>();
+        if (sprite != null) sprite.color = rank == EnemyRank.Normal ? data.tint : rank == EnemyRank.Elite ? new Color(1f,.5f,.1f) : new Color(1f,.15f,.5f);
+        nextAttack = Time.time + 2f;
+        nextDash = Time.time + 5f;
+        nextBossAttack = Time.time + 4f;
+        initialized = true;
+    }
+
+    private bool Has(EnemyAffix affix) => (Affixes & affix) != 0;
+    public void SetEncounterTitle(string title)
+    {
+        if (!string.IsNullOrWhiteSpace(title)) DisplayName = gameObject.name = title;
+    }
 
     // Initializes target lookup, health, damage, and camera references.
     void Start()
@@ -55,7 +97,7 @@ public class Enemy : MonoBehaviour
         }
 
         // Set initial health
-        currentHealth = maxHealth;
+        if (!initialized) currentHealth = maxHealth;
 
         // Set initial damage
         currentDamage = baseDamage;
@@ -67,13 +109,13 @@ public class Enemy : MonoBehaviour
     // Moves toward the player and increases contact damage while alive.
     void Update()
     {
+        if (dead || Time.deltaTime <= 0f) return;
         // get the camera's orthographic size
         cameraSizeFactor = GetCameraSizeFactor();
         if (player != null)
         {
             // Move towards the player's position
-            Vector2 direction = (player.position - transform.position).normalized;
-            transform.position = Vector2.MoveTowards(transform.position, player.position, speed * Time.deltaTime * cameraSizeFactor);
+            MoveAndAttack();
 
             // Debug.Log($"Enemy moving towards player. Position: {transform.position}, Direction: {direction}");
 
@@ -89,8 +131,15 @@ public class Enemy : MonoBehaviour
     // Damages the player on contact and destroys this enemy without dropping experience.
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (dead) return;
-        if(collision.CompareTag("Player")) // if the player is "touch" by enemy
+        Contact(collision);
+    }
+
+    private void OnTriggerStay2D(Collider2D collision) => Contact(collision);
+
+    private void Contact(Collider2D collision)
+    {
+        if (dead || Time.timeScale <= 0f || Time.time < nextContact) return;
+        if(collision.GetComponentInParent<PlayerHealth>() != null)
         {
             PlayerHealth playerHealth = collision.GetComponentInParent<PlayerHealth>();
             PlayerController playerController = collision.GetComponentInParent<PlayerController>();
@@ -101,8 +150,12 @@ public class Enemy : MonoBehaviour
             }
 
             // Destroy the enemy (without exp drop)
-            dead = true;
-            Destroy(gameObject);
+            nextContact = Time.time + 1f;
+            if (Rank == EnemyRank.Normal)
+            {
+                dead = true;
+                Destroy(gameObject);
+            }
         }
     }
 
@@ -134,7 +187,78 @@ public class Enemy : MonoBehaviour
             Instantiate(experiencePrefab, transform.position, Quaternion.identity);
         }
 
+        if (Has(EnemyAffix.DeathBlast))
+            EnemyHazard.Blast(transform.position, 2.8f * GetCameraSizeFactor(), baseDamage * 1.5f, .9f);
+        if (Rank != EnemyRank.Normal && RewardManager.Instance != null)
+            RewardManager.Instance.DropEnemyChest(transform.position, sprite != null ? sprite : GetComponent<SpriteRenderer>(), Rank);
+        if (Rank == EnemyRank.FinalBoss && GameManager.Instance != null)
+            GameManager.Instance.NotifyFinalBossDefeated();
+
         Destroy(gameObject);
+    }
+
+    private void MoveAndAttack()
+    {
+        Vector2 offset = player.position - transform.position;
+        float scale = cameraSizeFactor;
+        Vector2 direction = offset.normalized;
+        float move = speed * (Time.time < auraUntil ? 1.35f : 1f) * scale;
+        if (Has(EnemyAffix.PeriodicDash) && Time.time >= nextDash)
+        {
+            dashDirection = direction;
+            dashStarts = Time.time + .7f;
+            dashUntil = dashStarts + .5f;
+            nextDash = Time.time + 6f;
+            EnemyHazard.WarnDirection(transform.position, dashDirection, move * 3.5f * .5f, .7f);
+        }
+        if (Time.time < dashUntil)
+        {
+            if (Time.time >= dashStarts) transform.position += (Vector3)(dashDirection * move * 3.5f * Time.deltaTime);
+        }
+        else if (definition != null && definition.kind == EnemyKind.Ranged)
+        {
+            float range = definition.preferredRange * scale;
+            if (offset.magnitude > range * 1.1f) transform.position += (Vector3)(direction * move * Time.deltaTime);
+            else if (offset.magnitude < range * .7f) transform.position -= (Vector3)(direction * move * Time.deltaTime);
+            if (Time.time >= nextAttack && offset.magnitude < range * 1.8f)
+            {
+                EnemyHazard.Shot(transform.position, direction, definition.projectileSpeed * scale, baseDamage, .45f);
+                nextAttack = Time.time + definition.attackInterval;
+            }
+        }
+        else transform.position = Vector2.MoveTowards(transform.position, player.position, move * Time.deltaTime);
+
+        if (Has(EnemyAffix.HasteAura) && Time.time >= nextAura)
+        {
+            nextAura = Time.time + .5f;
+            foreach (Collider2D hit in Physics2D.OverlapCircleAll(transform.position, 4f * scale))
+            {
+                Enemy ally = hit.GetComponentInParent<Enemy>();
+                if (ally != null && ally != this && ally.Rank == EnemyRank.Normal && ally.IsAlive) ally.auraUntil = Time.time + .65f;
+            }
+            WeaponVisuals.Pulse(transform.position, 4f * scale, new Color(1f,.6f,.1f,.4f));
+        }
+        if (Rank >= EnemyRank.MiniBoss && Time.time >= nextBossAttack)
+        {
+            // Lock the target position during the warning, allowing the player to dodge.
+            EnemyHazard.Blast(player.position, (Rank == EnemyRank.FinalBoss ? 3f : 2f) * scale, baseDamage * 1.5f, 1.2f);
+            nextBossAttack = Time.time + (Rank == EnemyRank.FinalBoss ? 3.5f : 5f);
+        }
+    }
+
+    private void OnGUI()
+    {
+        if (Rank == EnemyRank.Normal || !IsAlive || Camera.main == null) return;
+        Vector3 screen = Camera.main.WorldToScreenPoint(transform.position);
+        if (screen.z < 0f) return;
+        float x = screen.x - 110f, y = Screen.height - screen.y - 65f;
+        GUI.Box(new Rect(x, y, 220f, 24f), DisplayName + " | " + Rank);
+        GUI.Box(new Rect(x, y + 24f, 220f, 20f), "");
+        Color previous = GUI.color;
+        GUI.color = Color.red;
+        GUI.DrawTexture(new Rect(x + 2f, y + 26f, 216f * Mathf.Clamp01(currentHealth / maxHealth), 16f), Texture2D.whiteTexture);
+        GUI.color = previous;
+        if (Affixes != EnemyAffix.None) GUI.Label(new Rect(x, y + 45f, 300f, 24f), Affixes.ToString());
     }
 
     // Retries player lookup without logging every frame while the player is not spawned yet.

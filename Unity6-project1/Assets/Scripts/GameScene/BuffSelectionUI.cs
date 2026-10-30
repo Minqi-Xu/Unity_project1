@@ -18,7 +18,7 @@ public class BuffSelectionUI : MonoBehaviour
     private int openedFrame;
 
     // Builds the window lazily and pauses gameplay until a choice is made.
-    public void Show(IReadOnlyList<UpgradeDefinition> choices, int level, Action<UpgradeDefinition> onSelected)
+    public void Show(IReadOnlyList<UpgradeDefinition> choices, int level, Action<UpgradeDefinition> onSelected, string rewardTitle = null)
     {
         if (canvasRoot == null)
         {
@@ -33,7 +33,7 @@ public class BuffSelectionUI : MonoBehaviour
 
         Time.timeScale = 0f;
         canvasRoot.SetActive(true);
-        title.text = "Level " + (level - 1) + " -> Level " + level;
+        title.text = rewardTitle ?? ("Level " + (level - 1) + " -> Level " + level);
         foreach (Transform child in content)
         {
             child.gameObject.SetActive(false);

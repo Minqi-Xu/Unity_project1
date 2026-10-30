@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d797147487984adca6d4de54aaba38a7, type: 3}
+  m_Name: Runner
+  m_EditorClassIdentifier:
+  displayName: Runner
+  kind: 1
+  unlockTime: 60
+  weight: 1
+  healthMultiplier: 0.45
+  speedMultiplier: 1.65
+  damageMultiplier: 1
+  sizeMultiplier: 0.75
+  tint: {r: 1, g: 0.8, b: 0.2, a: 1}
+  preferredRange: 6
+  attackInterval: 3
+  projectileSpeed: 5

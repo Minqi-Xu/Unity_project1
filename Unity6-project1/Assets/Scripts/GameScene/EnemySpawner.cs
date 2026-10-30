@@ -26,6 +26,16 @@ public class EnemySpawner : MonoBehaviour
     private float currentSpawnRate;
     private float gameTime = 0f;    // Game timer records game time (exclude pause)
     private Camera mainCamera;
+    [Header("Enemy roster and timed encounters")]
+    public EnemyDefinition[] enemyTypes;
+    public EnemyEncounter[] encounters = EnemyEncounter.Defaults();
+    [Min(0f)] public float encounterWarningTime = 2f;
+    public bool finalBossRequired = true;
+    private bool[] encounterSpawned;
+    private bool ownsCatalog;
+    public float ElapsedTime => gameTime;
+    public bool RequiresFinalBoss => enabled && finalBossRequired && encounters != null &&
+        System.Array.Exists(encounters, item => item != null && item.rank == EnemyRank.FinalBoss);
 
     // Validates required references and starts the spawn loop.
     void Start()
@@ -46,6 +56,17 @@ public class EnemySpawner : MonoBehaviour
         }
 
         currentSpawnRate = Mathf.Max(0.1f, spawnRate);
+        if (enemyTypes == null || enemyTypes.Length == 0)
+        {
+            enemyTypes = Resources.LoadAll<EnemyDefinition>("Enemies");
+            if (enemyTypes.Length == 0)
+            {
+                enemyTypes = EnemyCatalog.CreateDefaults();
+                ownsCatalog = true;
+            }
+        }
+        if (encounters == null) encounters = EnemyEncounter.Defaults();
+        encounterSpawned = new bool[encounters.Length];
         StartCoroutine(SpawnEnemies());
     }
 
@@ -53,6 +74,13 @@ public class EnemySpawner : MonoBehaviour
     void Update()
     {
         gameTime += Time.deltaTime;
+        for (int i = 0; i < encounters.Length; i++)
+        {
+            EnemyEncounter entry = encounters[i];
+            if (entry == null || encounterSpawned[i] || !entry.IsDue(gameTime)) continue;
+            encounterSpawned[i] = true;
+            SpawnEnemy(entry);
+        }
     }
 
     // Repeatedly spawns enemies and reduces spawn interval down to a minimum.
@@ -69,7 +97,7 @@ public class EnemySpawner : MonoBehaviour
     }
 
     // Chooses an off-screen position, spawns one enemy, and applies health scaling.
-    void SpawnEnemy()
+    void SpawnEnemy(EnemyEncounter encounter = null)
     {
         if (mainCamera == null)
         {
@@ -118,9 +146,53 @@ public class EnemySpawner : MonoBehaviour
                 ? Mathf.Floor(gameTime / healIncreaseTime) * healIncreaseRate
                 : 0f; // increase heal every setting time
 
-            enemyScript.maxHealth += additionalHealth;
-            enemyScript.currentHealth = enemyScript.maxHealth;
+            EnemyDefinition type = encounter == null ? PickNormalType(gameTime) : FindType(encounter.kind);
+            if (type != null)
+                enemyScript.Configure(type, encounter != null ? encounter.rank : EnemyRank.Normal,
+                    encounter != null ? encounter.affixes : EnemyAffix.None, additionalHealth);
+            if (encounter != null) enemyScript.SetEncounterTitle(encounter.title);
             //Debug.Log($"Spawned enemy with {enemyScript.maxHealth} HP");
         }
+    }
+
+    public EnemyDefinition PickNormalType(float elapsed)
+    {
+        float total = 0f;
+        foreach (EnemyDefinition type in enemyTypes)
+            if (type != null && type.unlockTime <= elapsed) total += Mathf.Max(0f, type.weight);
+        float roll = Random.value * total;
+        foreach (EnemyDefinition type in enemyTypes)
+        {
+            if (type == null || type.unlockTime > elapsed || type.weight <= 0f) continue;
+            roll -= type.weight;
+            if (roll <= 0f) return type;
+        }
+        return FindType(EnemyKind.Chaser);
+    }
+
+    private EnemyDefinition FindType(EnemyKind kind)
+    {
+        foreach (EnemyDefinition type in enemyTypes) if (type != null && type.kind == kind) return type;
+        foreach (EnemyDefinition type in enemyTypes) if (type != null) return type;
+        return null;
+    }
+
+    private void OnGUI()
+    {
+        if (encounterSpawned == null) return;
+        for (int i = 0; i < encounters.Length; i++)
+        {
+            EnemyEncounter entry = encounters[i];
+            if (entry == null || encounterSpawned[i] || !entry.IsWarning(gameTime, encounterWarningTime)) continue;
+            GUI.Box(new Rect(Screen.width * .2f, 65f, Screen.width * .6f, 45f),
+                entry.title + " incoming: " + Mathf.CeilToInt(entry.time - gameTime) + "s");
+            break;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (ownsCatalog && enemyTypes != null)
+            foreach (EnemyDefinition type in enemyTypes) if (type != null) Destroy(type);
     }
 }

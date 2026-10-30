@@ -4,6 +4,11 @@ using UnityEngine;
 // Central entry point for granting experience, upgrades, healing, and future rewards.
 public class RewardManager : MonoBehaviour
 {
+    public const int EliteChestBuffCount = 2;
+    public const int BossChestBuffCount = 3;
+    public static int GetEnemyChestBuffCount(EnemyRank rank) =>
+        rank == EnemyRank.Elite ? EliteChestBuffCount :
+        rank == EnemyRank.MiniBoss || rank == EnemyRank.FinalBoss ? BossChestBuffCount : 0;
     // Active reward manager instance for the current scene.
     public static RewardManager Instance { get; private set; }
 
@@ -20,6 +25,41 @@ public class RewardManager : MonoBehaviour
         }
 
         Instance = this;
+    }
+
+    public void DropEnemyChest(Vector2 position, SpriteRenderer source, EnemyRank rank)
+    {
+        if (GetEnemyChestBuffCount(rank) == 0) return;
+        GameObject chest = new GameObject("Elite Treasure Chest");
+        chest.transform.position = position;
+        SpriteRenderer visual = chest.AddComponent<SpriteRenderer>();
+        if (source != null)
+        {
+            visual.sprite = source.sprite;
+            visual.sharedMaterial = source.sharedMaterial;
+            chest.transform.localScale = Vector3.one * .55f;
+        }
+        visual.color = new Color(1f, .8f, .15f);
+        visual.sortingOrder = 10;
+        chest.AddComponent<RewardChest>().enemyRank = rank;
+    }
+
+    public bool GrantEnemyChest(PlayerController player, EnemyRank rank)
+    {
+        if (player == null || UpgradeManager.Instance == null) return false;
+        int count = GetEnemyChestBuffCount(rank);
+        if (count == 0) return false;
+        for (int i = 1; i <= count; i++)
+            UpgradeManager.Instance.TryOfferRareRewards(player, i, count);
+        return true;
+    }
+
+    public void GrantExhaustedChestReward(PlayerController player)
+    {
+        // Each exhausted roll has a fallback, including rolls already in the selection queue.
+        PlayerHealth health = player != null ? player.GetComponent<PlayerHealth>() : null;
+        if (health != null) HealPlayer(health, health.maxHealth * .5f);
+        Debug.Log("[Reward] Rare upgrade pool exhausted; chest roll restores 50% max health.");
     }
 
     // Grants experience to a player after applying experience multipliers.

@@ -27,7 +27,14 @@ public class UpgradeManager : MonoBehaviour
     public int GetAutonomousMisses(PlayerController player) => autonomousMisses.TryGetValue(player, out int value) ? value : 0;
 
     // Pending level-ups are resolved one at a time using a fresh upgrade pool.
-    private readonly Queue<KeyValuePair<PlayerController, int>> pendingPlayers = new Queue<KeyValuePair<PlayerController, int>>();
+    private struct PendingReward
+    {
+        public PlayerController player;
+        public int level;
+        public bool rare;
+        public string title;
+    }
+    private readonly Queue<PendingReward> pendingPlayers = new Queue<PendingReward>();
     private BuffSelectionUI selectionUI;
     private PlayerController selectingPlayer;
     private List<UpgradeDefinition> activeChoices;
@@ -70,7 +77,13 @@ public class UpgradeManager : MonoBehaviour
     }
 
     // Capture the earned level so queued rewards show the correct transition after multi-level gains.
-    private bool OfferLevelUpRewards(PlayerController player, int earnedLevel)
+    private bool OfferLevelUpRewards(PlayerController player, int earnedLevel) => OfferRewards(player, earnedLevel, false);
+
+    public bool TryOfferRareRewards(PlayerController player, int rewardIndex = 1, int rewardCount = 1) =>
+        player != null && OfferRewards(player, player.level, true,
+            $"Treasure Chest {rewardIndex}/{rewardCount} | Choose a Rare Upgrade");
+
+    private bool OfferRewards(PlayerController player, int earnedLevel, bool rare, string rewardTitle = null)
     {
         if (player == null)
         {
@@ -79,13 +92,14 @@ public class UpgradeManager : MonoBehaviour
 
         if (IsSelecting)
         {
-            pendingPlayers.Enqueue(new KeyValuePair<PlayerController, int>(player, earnedLevel));
+            pendingPlayers.Enqueue(new PendingReward { player = player, level = earnedLevel, rare = rare, title = rewardTitle });
             return true;
         }
 
-        List<UpgradeDefinition> choices = PickLevelUpChoices(player);
+        List<UpgradeDefinition> choices = rare ? PickRareChoices(player) : PickLevelUpChoices(player);
         if (choices.Count == 0)
         {
+            if (rare && RewardManager.Instance != null) RewardManager.Instance.GrantExhaustedChestReward(player);
             return false;
         }
 
@@ -97,7 +111,7 @@ public class UpgradeManager : MonoBehaviour
 
         selectingPlayer = player;
         activeChoices = choices;
-        selectionUI.Show(choices, earnedLevel, SelectUpgrade);
+        selectionUI.Show(choices, earnedLevel, SelectUpgrade, rewardTitle);
         OnUpgradeChoicesOffered?.Invoke(player, choices);
         return true;
     }
@@ -120,8 +134,8 @@ public class UpgradeManager : MonoBehaviour
         activeChoices = null;
         while (pendingPlayers.Count > 0)
         {
-            KeyValuePair<PlayerController, int> nextReward = pendingPlayers.Dequeue();
-            if (nextReward.Key != null && OfferLevelUpRewards(nextReward.Key, nextReward.Value))
+            PendingReward nextReward = pendingPlayers.Dequeue();
+            if (nextReward.player != null && OfferRewards(nextReward.player, nextReward.level, nextReward.rare, nextReward.title) && IsSelecting)
             {
                 return;
             }
@@ -204,6 +218,14 @@ public class UpgradeManager : MonoBehaviour
         if (weaponOffered) choices.Insert(UnityEngine.Random.Range(0, choices.Count + 1), weapons[UnityEngine.Random.Range(0, weapons.Count)]);
         if (weapons.Count > 0 && choices.Count > 0) autonomousMisses[player] = weaponOffered ? 0 : misses + 1;
         return choices;
+    }
+
+    private List<UpgradeDefinition> PickRareChoices(PlayerController player)
+    {
+        WeaponInventory inventory = WeaponInventory.Ensure(player);
+        return PickWeightedChoices(GetAvailableUpgrades().FindAll(item => item.rarity >= UpgradeRarity.Rare &&
+            (item.grantedWeapon == null || inventory.CanAcquire(item.grantedWeapon)) &&
+            (!item.weaponSpecific || inventory.Find(item.targetWeapon) != null) && IsUsefulForLoadout(item, inventory)), 2);
     }
 
     private static bool IsUsefulForLoadout(UpgradeDefinition upgrade, WeaponInventory inventory)
