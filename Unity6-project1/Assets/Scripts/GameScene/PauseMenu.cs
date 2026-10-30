@@ -18,6 +18,7 @@ public class PauseMenu : MonoBehaviour
     // Runtime pause state.
     private bool isPaused = false;  // Flag to track if game is paused
     private bool isCountDown = false;   // Flag to track if countdown is in progress
+    private PauseBuffListUI buffList;
 
     // Toggles pause when Escape is pressed.
     void Update()
@@ -54,6 +55,7 @@ public class PauseMenu : MonoBehaviour
     // Counts down in unscaled time, hides pause UI, and restores normal timeScale.
     private IEnumerator CountdownAndResume()
     {
+        if (buffList != null) buffList.Hide();
         pauseText.gameObject.SetActive(false);  // hide the PAUSED text
         countdownText.gameObject.SetActive(true);   // show countdown
         isCountDown = true;
@@ -82,6 +84,10 @@ public class PauseMenu : MonoBehaviour
         countdownText.gameObject.SetActive(false);  // Hide the countdown
         Time.timeScale = 0f;    // Freeze time
         isPaused = true;
+        if (buffList == null) buffList = gameObject.AddComponent<PauseBuffListUI>();
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        PlayerController player = playerObject != null ? playerObject.GetComponent<PlayerController>() : null;
+        buffList.Show(pauseMenuUI.transform, player != null ? PlayerBuffCollection.Ensure(player) : null);
     }
 
     // Restarts the current scene from the pause menu.

@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22d33072305c5178a80f72dbaeeac058, type: 3}
   m_Name: Sword
   m_EditorClassIdentifier: 
-  displayName: Whirlwind
-  description: Automatic area strike around you.
-  cooldown: 0.85
-  damage: 30
-  radius: 2.2
+  displayName: Whirlwind Guard
+  description: Automatic defensive pulse every 1.25s; 12 damage in radius 1.8 with innate 0.60-unit knockback.
+  cooldown: 1.25
+  damage: 12
+  radius: 1.8
+  knockback: 0.6
   kind: 3
   tint: {r: 0.9, g: 0.55, b: 0.3, a: 1}

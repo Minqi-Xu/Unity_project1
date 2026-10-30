@@ -24,9 +24,7 @@ public class WeaponInventory : MonoBehaviour
 
     public bool CanAcquire(WeaponDefinition definition)
     {
-        return definition != null && auxiliary.Count < auxiliarySlots && Find(definition.kind) == null
-            && (definition.kind == WeaponKind.Drone || definition.kind == WeaponKind.Creature
-                || definition.kind == WeaponKind.FireOrb || definition.kind == WeaponKind.Lightning);
+        return definition != null && definition.IsAuxiliary && auxiliary.Count < auxiliarySlots && Find(definition.kind) == null;
     }
 
     public bool Acquire(WeaponDefinition definition)

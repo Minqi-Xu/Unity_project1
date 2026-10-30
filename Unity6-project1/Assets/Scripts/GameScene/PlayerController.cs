@@ -235,6 +235,7 @@ public class PlayerController : MonoBehaviour
         if (weapon != null && weapon.Definition != null)
         {
             if (weapon.Definition.Automatic) return;
+            if (weapon.Definition.kind == WeaponKind.Axe && !Input.GetMouseButtonDown(0)) return;
             Vector2 aim = mainCamera != null
                 ? (Vector2)(mainCamera.ScreenToWorldPoint(Input.mousePosition) - transform.position)
                 : lastMoveDirection;

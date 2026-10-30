@@ -29,7 +29,7 @@ public static class WeaponRewardSmokeTests
             WeaponInventory inventory = WeaponInventory.Ensure(player);
             manager = root.AddComponent<UpgradeManager>();
             typeof(UpgradeManager).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(manager, null);
-            Check(manager.availableUpgrades.Count(x => x.grantedWeapon != null) == 4, "Four auxiliary unlocks");
+            Check(manager.availableUpgrades.Count(x => x.grantedWeapon != null) == 5, "Five auxiliary unlocks");
             Check(manager.availableUpgrades.Count(x => x.weaponSpecific) >= 40, "Weapon-specific buff catalog");
             AutonomousOfferPolicy policy = new AutonomousOfferPolicy();
             Near(policy.Chance(0), .4f, "Initial forty percent");

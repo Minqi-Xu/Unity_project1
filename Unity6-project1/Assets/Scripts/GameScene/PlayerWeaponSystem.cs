@@ -12,6 +12,8 @@ public partial class PlayerWeaponSystem : MonoBehaviour
 
     public void Configure(PlayerController player, WeaponDefinition definition)
     {
+        StopAllCoroutines();
+        axeBusy = false;
         foreach (SummonedUnit unit in summons) if (unit != null) Destroy(unit.gameObject);
         summons.Clear();
         owner = player;
@@ -46,12 +48,16 @@ public partial class PlayerWeaponSystem : MonoBehaviour
 
     public bool TryAttack(Vector2 direction)
     {
-        if (Definition == null || owner == null || owner.Stats == null || Time.timeScale <= 0f || Time.time < nextAttack)
+        if (Definition == null || owner == null || owner.Stats == null || Time.timeScale <= 0f || Time.time < nextAttack || axeBusy)
             return false;
         if (Definition.kind == WeaponKind.Drone || Definition.kind == WeaponKind.Creature) return false;
         if (!ReadyToDraw()) return false;
         if (direction.sqrMagnitude < 0.001f) direction = Vector2.right;
-        if (Definition.kind == WeaponKind.Melee)
+        if (Definition.kind == WeaponKind.Axe)
+        {
+            StartCoroutine(AxeAttack(direction.normalized));
+        }
+        else if (Definition.kind == WeaponKind.Melee)
         {
             StartCoroutine(MeleeAttack());
         }

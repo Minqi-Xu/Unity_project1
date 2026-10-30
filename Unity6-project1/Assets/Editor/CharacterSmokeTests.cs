@@ -16,6 +16,8 @@ public static class CharacterSmokeTests
         Check(roster.Select(x => x.startingWeapon.kind).Distinct().Count() == 6, "Six starting weapon behaviors");
         Check(roster.All(x => x.startingWeapon.kind != WeaponKind.Drone && x.startingWeapon.kind != WeaponKind.Creature),
             "Autonomous summons are rewards, not starting classes");
+        Check(roster.All(x => !x.startingWeapon.IsAuxiliary), "No autonomous weapon is used as a primary");
+        Check(roster.Single(x => x.characterId == "01_warrior").startingWeapon.kind == WeaponKind.Axe, "Warrior starts with the active axe");
         foreach (CharacterDefinition character in roster)
         {
             Check(CharacterCatalog.Resolve(roster, character.characterId, 0) == character, "ID resolves across scenes");

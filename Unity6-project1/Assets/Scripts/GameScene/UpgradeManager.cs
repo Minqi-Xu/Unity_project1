@@ -178,6 +178,7 @@ public class UpgradeManager : MonoBehaviour
         }
         stats.ApplyUpgrade(upgrade, health);
         upgradeLevels[upgradeKey] = currentLevel + 1;
+        PlayerBuffCollection.Ensure(player).Record(upgrade, upgradeKey);
 
         Debug.Log($"[Upgrade] Applied {upgrade.DisplayName} ({upgradeLevels[upgradeKey]}/{upgrade.maxLevel})");
         return true;
@@ -218,7 +219,7 @@ public class UpgradeManager : MonoBehaviour
             {
                 bool useful = false;
                 foreach (WeaponKind kind in Enum.GetValues(typeof(WeaponKind)))
-                    if (kind != WeaponKind.Bomb && inventory.Find(kind) != null) { useful = true; break; }
+                    if (kind != WeaponKind.Bomb && kind != WeaponKind.Axe && inventory.Find(kind) != null) { useful = true; break; }
                 if (!useful) return false;
             }
         }

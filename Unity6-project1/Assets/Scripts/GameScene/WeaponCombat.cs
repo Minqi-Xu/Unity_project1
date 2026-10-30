@@ -90,13 +90,19 @@ public partial class PlayerWeaponSystem
         }
         if (Definition.kind == WeaponKind.Bow)
             multiplier += Get(WeaponBuffEffect.BowPierceDamage) * pierced + Get(WeaponBuffEffect.BowCharge);
+        if (Definition.kind == WeaponKind.Axe && enemy.currentHealth <= enemy.maxHealth * .3f)
+            multiplier += Get(WeaponBuffEffect.AxeExecute);
         float characterScale = Definition.kind == WeaponKind.Bomb ? 1f : CharacterDamageMultiplier;
         float damage = owner.Stats.CalculateDamage(baseDamage * multiplier * scale * characterScale, owner.damageMultiplier,
             IsPrimaryWeapon);
         enemy.TakeDamage(damage);
         bool killed = !enemy.IsAlive;
-        if (Definition.kind == WeaponKind.Melee && !killed)
-            enemy.transform.position += (enemy.transform.position - owner.transform.position).normalized * Get(WeaponBuffEffect.MeleeKnockback);
+        if ((Definition.kind == WeaponKind.Melee || Definition.kind == WeaponKind.Axe) && !killed)
+        {
+            Vector2 away = (Vector2)(enemy.transform.position - owner.transform.position);
+            if (away.sqrMagnitude < .0001f) away = Vector2.right;
+            enemy.transform.position += (Vector3)away.normalized * (Definition.knockback + Get(WeaponBuffEffect.MeleeKnockback));
+        }
         if (!procs) return;
         if (Definition.kind == WeaponKind.Creature && !killed && Get(WeaponBuffEffect.CreatureBleed) > 0f)
         {

@@ -10,5 +10,6 @@ public enum WeaponBuffEffect
     TurretLifetime, TurretDistance, TurretDeployment, TurretLink, TurretExpiry,
     DroneOrbit, DroneFocus, DroneIndependent, DroneBurst, DroneOverload,
     CreatureSpeed, CreatureReach, CreaturePounce, CreatureBleed, CreatureBreed,
-    LightningRepeat
+    LightningRepeat,
+    AxeArc, AxeWindup, AxeExecute
 }

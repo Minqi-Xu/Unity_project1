@@ -8,8 +8,7 @@ public static class WeaponUpgradeCatalog
         List<UpgradeDefinition> result = new List<UpgradeDefinition>();
         foreach (WeaponDefinition weapon in Resources.LoadAll<WeaponDefinition>("Weapons"))
         {
-            if (weapon.kind != WeaponKind.Drone && weapon.kind != WeaponKind.Creature &&
-                weapon.kind != WeaponKind.FireOrb && weapon.kind != WeaponKind.Lightning) continue;
+            if (!weapon.IsAuxiliary) continue;
             UpgradeDefinition unlock = ScriptableObject.CreateInstance<UpgradeDefinition>();
             unlock.upgradeId = "unlock_" + weapon.kind;
             unlock.displayName = "Acquire: " + weapon.displayName;
@@ -32,9 +31,17 @@ public static class WeaponUpgradeCatalog
         Add(result, WeaponKind.Bow, WeaponBuffEffect.BowCharge, "Heavy Draw", "Each shot requires 0.35s of drawing and gains +60% weapon damage per level. Release early to cancel.", .6f, 2);
         Add(result, WeaponKind.Bow, WeaponBuffEffect.BowReturn, "Returning Arrow", "Arrows return after 0.45s or exhausting pierce. May hit each enemy once again on return.", 1f, 1, UpgradeRarity.Epic);
         Add(result, WeaponKind.Melee, WeaponBuffEffect.Radius, "Long Reach", "Increase attack radius by 15% of base per level.", .15f, 3);
-        Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeKnockback, "Repulse", "Push struck enemies 0.35 units away per level.", .35f, 3);
-        Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeCombo, "Chain Slash", "Add 1 strike per cycle per level; strikes are separated by 0.12s.", 1f, 2);
-        Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeHeal, "Blood Harvest", "Melee kills heal 1 HP per level, at most 5 HP per attack cycle.", 1f, 3);
+        Add(result, WeaponKind.Melee, WeaponBuffEffect.Damage, "Whirlwind Force", "Automatic whirlwind damage +20% of base per level.", .2f, 3);
+        Add(result, WeaponKind.Melee, WeaponBuffEffect.Cooldown, "Whirlwind Rhythm", "Automatic whirlwind interval -10% of base per level.", .1f, 3);
+        Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeKnockback, "Repulse", "Add 0.25 units to the whirlwind's innate knockback per level.", .25f, 3);
+        Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeCombo, "Echo Pulse", "Add 1 automatic pulse per cycle per level; pulses are separated by 0.12s.", 1f, 2);
+        Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeHeal, "Blood Harvest", "Whirlwind kills heal 1 HP per level, at most 5 HP per pulse cycle.", 1f, 3);
+        Add(result, WeaponKind.Axe, WeaponBuffEffect.Damage, "Heavy Edge", "Axe damage +20% of base per level.", .2f, 3);
+        Add(result, WeaponKind.Axe, WeaponBuffEffect.Radius, "Long Haft", "Axe forward reach and side reach +15% of base per level.", .15f, 3);
+        Add(result, WeaponKind.Axe, WeaponBuffEffect.AxeArc, "Wide Cleave", "Axe arc +10 degrees per level, capped at 170 degrees.", 10f, 2);
+        Add(result, WeaponKind.Axe, WeaponBuffEffect.AxeWindup, "Ready Stance", "Windup -15% of base per level; base attack interval stays unchanged.", .15f, 3);
+        Add(result, WeaponKind.Axe, WeaponBuffEffect.MeleeKnockback, "Crushing Blow", "Axe knockback +0.2 units per level.", .2f, 3);
+        Add(result, WeaponKind.Axe, WeaponBuffEffect.AxeExecute, "Executioner", "Gain +35% axe damage per level against enemies at or below 30% HP.", .35f, 2, UpgradeRarity.Epic);
         Add(result, WeaponKind.Bomb, WeaponBuffEffect.BombCluster, "Cluster Bomb", "After explosion, create 3 small blasts per level, each dealing 20% damage in radius 1.", 3f, 2, UpgradeRarity.Epic);
         Add(result, WeaponKind.Bomb, WeaponBuffEffect.BombRepeat, "Aftershock", "Repeat the explosion after 0.6s for 40% damage per level.", .4f, 2, UpgradeRarity.Epic);
         Add(result, WeaponKind.Bomb, WeaponBuffEffect.BombBurn, "Scorched Ground", "Leave fire for 3s, dealing 10% weapon damage per level every 0.5s.", .1f, 3);

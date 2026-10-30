@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22d33072305c5178a80f72dbaeeac058, type: 3}
+  m_Name: Axe
+  m_EditorClassIdentifier:
+  displayName: Heavy Axe
+  description: Click LMB for a committed 150-degree elliptical cleave. 0.18s windup, 0.12s swing, 0.50s recovery.
+  kind: 10
+  damage: 50
+  cooldown: 0.8
+  radius: 2.8
+  knockback: 0.3
+  meleeArc: 150
+  meleeSideScale: 0.72
+  windup: 0.18
+  swingDuration: 0.12
+  recovery: 0.5
+  tint: {r: 1, g: 0.7, b: 0.3, a: 1}

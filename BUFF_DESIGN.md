@@ -2,7 +2,7 @@
 
 The default runtime catalog contains 20 basic families (80 rarity variants), plus
 14 universal/synergy variants. It is used when UpgradeManager.availableUpgrades
-is empty. Weapon unlocks and 44 dedicated weapon buffs are appended to the default
+is empty. Weapon unlocks and 52 dedicated weapon buffs are appended to the default
 or configured pool. See [WEAPON_BUFF_DESIGN.md](WEAPON_BUFF_DESIGN.md).
 
 ## Basic buffs (Common values)
@@ -71,6 +71,24 @@ Each synergy family can be acquired once regardless of rarity.
 - Fortune Bundle grants are reported in the Console with name and rarity.
 
 ## Validation
+
+The pause menu now includes an acquired-buff list. Each family has one named row
+with its acquired level; hover or keyboard focus shows the exact rarity stacks
+and each stack's per-pick description. Long lists and descriptions scroll
+independently. Bundle rewards and auxiliary unlocks are included, failed grants
+are excluded, and the list starts empty on each new run. The most recently
+inspected detail remains visible so it can be scrolled. This is an acquisition
+history, including instant rewards, rather than a recalculated live stat sheet.
+The panel leaves the top HUD band clear for survival time. Names and edge accents
+use the highest acquired rarity: Common green, Rare blue, Epic purple, Legendary
+gold; acquired auxiliary weapon names override rarity with red, while their buffs
+retain their rarity colors. Hover details retain the actual mixed-rarity breakdown. New auxiliary weapon
+choices use red titles, red badges/borders and a dark red card background.
+
+Run `Tools > Buffs > Run Acquired List Smoke Tests` outside Play Mode for mixed
+rarity grouping, snapshot descriptions, cap rejection and bundle acquisition
+tracking. Play Mode checks still needed: open pause with no buffs, acquire mixed
+rarities, hover names, scroll both panes, resume/count down, and restart the run.
 
 Run Unity menu `Tools > Buffs > Run Smoke Tests` outside Play Mode to check the
 catalog, rarity scaling, damage and critical formulas, growth, cooldowns,

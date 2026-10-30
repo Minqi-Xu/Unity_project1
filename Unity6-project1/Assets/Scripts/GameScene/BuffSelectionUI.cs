@@ -127,8 +127,16 @@ public class BuffSelectionUI : MonoBehaviour
     // Creates an equal-width card with separate text regions that cannot resize its layout.
     private Button CreateOption(UpgradeDefinition upgrade)
     {
-        Color rarityColor = RarityColor(upgrade.rarity);
-        RectTransform row = Panel(upgrade.DisplayName, content, new Color(0.15f, 0.17f, 0.2f));
+        bool newWeapon = upgrade.grantedWeapon != null;
+        Color rarityColor = newWeapon ? UpgradeUIColors.NewWeapon : UpgradeUIColors.ForRarity(upgrade.rarity);
+        RectTransform row = Panel(upgrade.DisplayName, content,
+            newWeapon ? new Color(.24f, .07f, .08f) : new Color(.15f, .17f, .2f));
+        if (newWeapon)
+        {
+            Outline border = row.gameObject.AddComponent<Outline>();
+            border.effectColor = UpgradeUIColors.NewWeapon;
+            border.effectDistance = new Vector2(2f, -2f);
+        }
         LayoutElement size = row.gameObject.AddComponent<LayoutElement>();
         size.minWidth = 0f;
         size.preferredWidth = 0f;
@@ -141,7 +149,8 @@ public class BuffSelectionUI : MonoBehaviour
         string category = upgrade.grantedWeapon != null ? "NEW AUXILIARY" : upgrade.weaponSpecific ? upgrade.targetWeapon.ToString() : upgrade.category.ToString();
         TextMeshProUGUI rarity = Label("Rarity", row, upgrade.rarity.ToString().ToUpperInvariant() + " | " + category, 14f, rarityColor);
         FitCardText(rarity, 0.85f, 0.95f, 14f);
-        TextMeshProUGUI nameLabel = Label("Name", row, upgrade.DisplayName, 23f, Color.white);
+        TextMeshProUGUI nameLabel = Label("Name", row, upgrade.DisplayName, 23f,
+            newWeapon ? UpgradeUIColors.NewWeapon : Color.white);
         nameLabel.fontStyle = FontStyles.Bold;
         FitCardText(nameLabel, 0.62f, 0.82f, 23f);
         TextMeshProUGUI detail = Label("Description", row, upgrade.description, 17f, new Color(0.83f, 0.86f, 0.89f));
@@ -197,15 +206,4 @@ public class BuffSelectionUI : MonoBehaviour
         rect.offsetMax = new Vector2(-right, -top);
     }
 
-    // Rarity uses both a written label and color so meaning does not depend on color alone.
-    private static Color RarityColor(UpgradeRarity rarity)
-    {
-        switch (rarity)
-        {
-            case UpgradeRarity.Rare: return new Color(0.3f, 0.75f, 1f);
-            case UpgradeRarity.Epic: return new Color(0.8f, 0.52f, 1f);
-            case UpgradeRarity.Legendary: return new Color(1f, 0.76f, 0.25f);
-            default: return new Color(0.65f, 0.87f, 0.7f);
-        }
-    }
 }

@@ -24,8 +24,8 @@ public static class WeaponBalanceSmokeTests
             PlayerWeaponSystem primary = root.AddComponent<PlayerWeaponSystem>();
             primary.Configure(player, Resources.Load<WeaponDefinition>("Weapons/Pistol"));
             WeaponInventory inventory = WeaponInventory.Ensure(player);
-            inventory.auxiliarySlots = 4;
-            foreach (WeaponKind kind in new[] { WeaponKind.Drone, WeaponKind.Creature, WeaponKind.FireOrb, WeaponKind.Lightning })
+            inventory.auxiliarySlots = 5;
+            foreach (WeaponKind kind in new[] { WeaponKind.Drone, WeaponKind.Creature, WeaponKind.FireOrb, WeaponKind.Lightning, WeaponKind.Melee })
                 Check(inventory.Acquire(weaponBuffs.First(x => x.grantedWeapon != null && x.grantedWeapon.kind == kind).grantedWeapon), "Acquire auxiliary");
             primaryBuff.effects = new[] { new UpgradeEffect(UpgradeEffectType.PrimaryWeaponDamageMultiplier, .1f),
                 new UpgradeEffect(UpgradeEffectType.PrimaryWeaponAttackSpeed, .08f) };
@@ -39,7 +39,7 @@ public static class WeaponBalanceSmokeTests
             enemy.currentHealth = 5000f;
             primary.Hit(enemy, 8f, Vector2.zero);
             Near(5000f - enemy.currentHealth, 8.8f, "Primary damage applies");
-            foreach (WeaponKind kind in new[] { WeaponKind.Drone, WeaponKind.Creature, WeaponKind.FireOrb, WeaponKind.Lightning })
+            foreach (WeaponKind kind in new[] { WeaponKind.Drone, WeaponKind.Creature, WeaponKind.FireOrb, WeaponKind.Lightning, WeaponKind.Melee })
             {
                 PlayerWeaponSystem auxiliary = inventory.Find(kind);
                 Near(auxiliary.Cooldown, auxiliary.Definition.cooldown, "Primary speed cannot leak into " + kind);

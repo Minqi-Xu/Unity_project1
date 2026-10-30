@@ -15,10 +15,10 @@ MonoBehaviour:
   characterId: 01_warrior
   displayName: Warrior
   passive: 160 starting HP; 10% damage reduction.
-  limitation: Slow movement; primary attacks only hit nearby enemies.
+  limitation: Slow movement; committed frontal swings leave your rear exposed.
   difficulty: Easy
   playerPrefab: {fileID: 1452042375935165516, guid: 196fa64bf2df54047a7416e7c68229a1, type: 3}
-  startingWeapon: {fileID: 11400000, guid: 966fa6e9d70e5eb7989d77bcb8510658, type: 2}
+  startingWeapon: {fileID: 11400000, guid: f421f0f92b0c5c39b21b7135552c231a, type: 2}
   tint: {r: 0.9, g: 0.55, b: 0.3, a: 1}
   maxHealth: 160
   moveSpeed: 4

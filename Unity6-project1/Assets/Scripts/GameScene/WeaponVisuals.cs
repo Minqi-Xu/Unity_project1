@@ -5,6 +5,21 @@ public static class WeaponVisuals
 {
     private static Material lineMaterial;
 
+    public static LineRenderer Stroke(string name, Transform parent, Color color, float width, int points)
+    {
+        GameObject obj = new GameObject(name);
+        obj.transform.SetParent(parent, false);
+        LineRenderer line = obj.AddComponent<LineRenderer>();
+        if (lineMaterial == null) lineMaterial = new Material(Shader.Find("Sprites/Default"));
+        line.sharedMaterial = lineMaterial;
+        line.useWorldSpace = false;
+        line.positionCount = points;
+        line.startWidth = line.endWidth = width;
+        line.startColor = line.endColor = color;
+        line.sortingOrder = 15;
+        return line;
+    }
+
     public static void Lightning(Vector2 position, Color color)
     {
         GameObject effect = new GameObject("LightningStrike");
