@@ -17,6 +17,8 @@ public class SummonedUnit : MonoBehaviour
     private float pounceUntil;
     public bool IsTemporary { get; private set; }
     public Enemy Target => target;
+    public float AttackCooldownRemaining => Mathf.Max(0f, nextAttack - Time.time);
+    public float AttackCooldownDuration { get; private set; }
     public void MakeTemporary(float lifetime) { IsTemporary = true; expires = Time.time + lifetime; }
 
     public void Initialize(PlayerController player, PlayerWeaponSystem system, int index)
@@ -27,6 +29,7 @@ public class SummonedUnit : MonoBehaviour
         slot = index;
         expires = Time.time + definition.summonLifetime;
         born = Time.time;
+        AttackCooldownDuration = weapon.Cooldown;
         WeaponVisuals.AddUnitSprite(gameObject, player, definition.tint, definition.kind);
     }
 
@@ -76,7 +79,8 @@ public class SummonedUnit : MonoBehaviour
             WeaponVisuals.Pulse(transform.position, weapon.SummonReach, definition.tint);
         }
         else weapon.FireSummon(this, target.transform.position - transform.position);
-        nextAttack = Time.time + weapon.Cooldown;
+        AttackCooldownDuration = weapon.Cooldown;
+        nextAttack = Time.time + AttackCooldownDuration;
     }
 
     public static Enemy FindTarget(Vector2 position, float range, HashSet<Enemy> excluded = null)

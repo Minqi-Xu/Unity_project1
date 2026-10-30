@@ -12,6 +12,7 @@ public class WeaponInventory : MonoBehaviour
     private GameObject hud;
     private TextMeshProUGUI loadoutText;
     public int AuxiliaryCount => auxiliary.Count;
+    public IReadOnlyList<PlayerWeaponSystem> AuxiliaryWeapons => auxiliary;
 
     public PlayerWeaponSystem Find(WeaponKind kind)
     {

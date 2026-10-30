@@ -66,6 +66,13 @@ public class PlayerController : MonoBehaviour
     // Cooldown timestamps and experience bookkeeping.
     private float lastFireTime = 0f; // Timestamp of the last shot
     private float lastBombTime = -100f; // Timestamp of the last bomb
+    private float lastDashCooldownDuration;
+    public float DashCooldownRemaining => Mathf.Max(0f, dashCooldownTimer);
+    public float DashCooldownDuration => lastDashCooldownDuration > 0f ? lastDashCooldownDuration : GetDashCooldown();
+    public float BombCooldownRemaining => Mathf.Max(0f, lastBombTime + GetBombCooldown() - Time.time);
+    public float BombCooldownDuration => GetBombCooldown();
+    public float PrimaryCooldownRemaining => Mathf.Max(0f, lastFireTime + GetPrimaryWeaponCooldown() - Time.time);
+    public float PrimaryCooldownDuration => GetPrimaryWeaponCooldown();
     private int currentExperience = 0;  // current experience collected
 
     // Camera references used for screen bounds and resolution-aware movement scaling.
@@ -91,6 +98,7 @@ public class PlayerController : MonoBehaviour
         bulletCooldownIndicator = FindComponentByName<CooldownIndicator>("BulletCooldownIndicator");
         dashCooldownIndicator = FindComponentByName<CooldownIndicator>("DashCooldownIndicator");
         bombCooldownIndicator = FindComponentByName<CooldownIndicator>("BombCooldownIndicator");
+        if (GetComponent<AbilityCooldownHUD>() == null) gameObject.AddComponent<AbilityCooldownHUD>();
         UpdateLevelText();
     }
 
@@ -167,6 +175,7 @@ public class PlayerController : MonoBehaviour
         }
 
         float currentDashCooldown = GetDashCooldown();
+        lastDashCooldownDuration = currentDashCooldown;
         dashCooldownTimer = currentDashCooldown;
         if (dashCooldownIndicator != null)
         {

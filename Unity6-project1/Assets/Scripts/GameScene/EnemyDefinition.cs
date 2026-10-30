@@ -15,6 +15,10 @@ public class EnemyDefinition : ScriptableObject
     [Min(.01f)] public float weight = 1f;
     [Min(.01f)] public float healthMultiplier = 1f;
     [Min(.01f)] public float speedMultiplier = 1f;
+    [Header("Elite / Boss movement")]
+    [Range(.1f, 1f)] public float eliteSpeedMultiplier = .65f;
+    [Range(.1f, 1f)] public float bossSpeedMultiplier = .6f;
+    [Min(1f)] public float bossDashSpeedMultiplier = 2f;
     [Min(.01f)] public float damageMultiplier = 1f;
     [Min(.1f)] public float sizeMultiplier = 1f;
     public Color tint = new Color(.85f, .28f, .28f);
@@ -31,6 +35,9 @@ public class EnemyEncounter
     public EnemyRank rank = EnemyRank.Elite;
     public EnemyKind kind;
     public EnemyAffix affixes;
+    [Header("Per-encounter Boss movement")]
+    [Min(.1f)] public float bossMovementMultiplier = 1f;
+    [Range(.1f, 1.2f)] public float bossRelativeSpeedLimit = 1.05f;
     public bool IsDue(float elapsed) => elapsed >= time;
     public bool IsWarning(float elapsed, float warningTime) => elapsed >= time - Mathf.Max(0f, warningTime) && elapsed < time;
     public static EnemyEncounter[] Defaults() => new[]
@@ -39,10 +46,12 @@ public class EnemyEncounter
         At(300, "Elite: War Banner", EnemyRank.Elite, EnemyKind.Tank, EnemyAffix.Healthy | EnemyAffix.HasteAura),
         At(480, "Mini Boss: Ravager", EnemyRank.MiniBoss, EnemyKind.Chaser, EnemyAffix.PeriodicDash),
         At(600, "Elite: Volatile Archer", EnemyRank.Elite, EnemyKind.Ranged, EnemyAffix.DeathBlast),
-        At(900, "Mini Boss: Siege Beast", EnemyRank.MiniBoss, EnemyKind.Tank, EnemyAffix.Healthy | EnemyAffix.DeathBlast),
+        At(900, "Mini Boss: Siege Beast", EnemyRank.MiniBoss, EnemyKind.Tank, EnemyAffix.Healthy | EnemyAffix.DeathBlast, 1.25f, 1.15f),
         At(1080, "Elite: Storm Leader", EnemyRank.Elite, EnemyKind.Runner, EnemyAffix.Swift | EnemyAffix.HasteAura | EnemyAffix.PeriodicDash),
-        At(1200, "Final Boss: Overlord", EnemyRank.FinalBoss, EnemyKind.Ranged, EnemyAffix.Healthy | EnemyAffix.PeriodicDash)
+        At(1200, "Final Boss: Overlord", EnemyRank.FinalBoss, EnemyKind.Ranged, EnemyAffix.Healthy | EnemyAffix.PeriodicDash, 1.35f, 1.2f)
     };
-    private static EnemyEncounter At(float time, string title, EnemyRank rank, EnemyKind kind, EnemyAffix affixes) =>
-        new EnemyEncounter { time = time, title = title, rank = rank, kind = kind, affixes = affixes };
+    private static EnemyEncounter At(float time, string title, EnemyRank rank, EnemyKind kind, EnemyAffix affixes,
+        float movementMultiplier = 1f, float relativeSpeedLimit = 1.05f) =>
+        new EnemyEncounter { time = time, title = title, rank = rank, kind = kind, affixes = affixes,
+            bossMovementMultiplier = movementMultiplier, bossRelativeSpeedLimit = relativeSpeedLimit };
 }

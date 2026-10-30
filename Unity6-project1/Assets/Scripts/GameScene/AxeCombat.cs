@@ -20,6 +20,7 @@ public partial class PlayerWeaponSystem
         float windupEnds = Time.time + windup;
         float swingEnds = windupEnds + active;
         float recoveryEnds = swingEnds + recovery;
+        axeRecoveryEnds = recoveryEnds;
         float reach = Radius;
         float sideReach = reach * Definition.meleeSideScale;
         float arc = AxeArc;

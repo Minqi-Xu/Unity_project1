@@ -31,7 +31,16 @@ public static class BuffSmokeTests
             Call(manager, "Awake");
             UpgradeDefinition[] pool = manager.availableUpgrades.Where(x => !x.weaponSpecific && x.grantedWeapon == null).ToArray();
             Check(pool.Count(x => x.rarity == UpgradeRarity.Common) == 20, "Twenty common basics");
-            Check(pool.Length == 94, "All basic and special rarity variants");
+            Check(pool.Length == 126, "All basic, special and twelve new compound families");
+            string[] newFamilies = { "vanguard_provisions", "mobile_gunnery", "demolition_kit", "survivor_instinct", "field_scholar", "salvage_engine", "renewing_potential", "dash_logistics",
+                "battle_medic", "critical_engine", "arcane_overdrive", "growth_core" };
+            foreach (string id in newFamilies)
+            {
+                UpgradeDefinition[] variants = pool.Where(x => x.upgradeId == id).OrderBy(x => x.rarity).ToArray();
+                Check(variants.Length >= 2 && variants.All(x => x.effects.Length >= 2 && x.rarity >= UpgradeRarity.Rare), "Compound buffs have multiple effects and high-rarity variants");
+                Check(variants.Last().rarity == UpgradeRarity.Legendary && variants.Last().effects[0].value > variants.First().effects[0].value, "Compound legendary variants are stronger");
+                Check(variants.All(x => x.effects.All(e => e.effectType != UpgradeEffectType.ProjectileCount)), "Compound buffs cannot leak extra projectiles into auxiliary weapons");
+            }
             foreach (var family in pool.Where(x => x.category != UpgradeCategory.Universal).GroupBy(x => x.upgradeId))
             {
                 var variants = family.OrderBy(x => x.rarity).ToArray();

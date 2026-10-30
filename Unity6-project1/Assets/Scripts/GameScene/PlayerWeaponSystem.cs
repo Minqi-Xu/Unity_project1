@@ -8,6 +8,9 @@ public partial class PlayerWeaponSystem : MonoBehaviour
     public WeaponDefinition Definition { get; private set; }
     private PlayerController owner;
     private float nextAttack;
+    private float lightningSearchRetryUntil;
+    private float activeCooldownDuration;
+    private float axeRecoveryEnds;
     private readonly List<SummonedUnit> summons = new List<SummonedUnit>();
 
     public void Configure(PlayerController player, WeaponDefinition definition)
@@ -25,9 +28,48 @@ public partial class PlayerWeaponSystem : MonoBehaviour
         lastShot = -100f;
         drawStarted = -1f;
         nextAttack = Time.time;
+        lightningSearchRetryUntil = Time.time;
+        activeCooldownDuration = 0f;
+        axeRecoveryEnds = Time.time;
     }
 
     public float Cooldown => GetWeaponCooldown();
+    public bool IsDrawing => Definition != null && Definition.kind == WeaponKind.Bow && drawStarted >= 0f;
+    public float DrawProgress => IsDrawing ? Mathf.Clamp01((Time.time - drawStarted) / .35f) : 0f;
+    public bool UsesSummonAttacks => Definition != null && (Definition.kind == WeaponKind.Drone || Definition.kind == WeaponKind.Creature);
+    public int ActiveSummonCount
+    {
+        get { int count = 0; foreach (SummonedUnit unit in summons) if (unit != null && !unit.IsTemporary) count++; return count; }
+    }
+    public int ReadySummonCount
+    {
+        get { int count = 0; foreach (SummonedUnit unit in summons) if (unit != null && !unit.IsTemporary && unit.AttackCooldownRemaining <= 0f) count++; return count; }
+    }
+    public float CooldownRemaining
+    {
+        get
+        {
+            if (!UsesSummonAttacks) return Mathf.Max(0f, Mathf.Max(nextAttack, axeBusy ? axeRecoveryEnds : 0f) - Time.time);
+            SummonedUnit unit = NextReadySummon();
+            return unit != null ? unit.AttackCooldownRemaining : 0f;
+        }
+    }
+    public float CooldownDuration
+    {
+        get
+        {
+            if (!UsesSummonAttacks) return Mathf.Max(.02f, activeCooldownDuration);
+            SummonedUnit unit = NextReadySummon();
+            return unit != null ? unit.AttackCooldownDuration : Cooldown;
+        }
+    }
+    private SummonedUnit NextReadySummon()
+    {
+        SummonedUnit next = null;
+        foreach (SummonedUnit unit in summons)
+            if (unit != null && !unit.IsTemporary && (next == null || unit.AttackCooldownRemaining < next.AttackCooldownRemaining)) next = unit;
+        return next;
+    }
 
     private void Update()
     {
@@ -38,7 +80,7 @@ public partial class PlayerWeaponSystem : MonoBehaviour
         if (Definition.kind == WeaponKind.Drone || Definition.kind == WeaponKind.Creature)
         {
             summons.RemoveAll(unit => unit == null);
-            int count = Mathf.Clamp(Definition.summonCount + owner.Stats.GetProjectileCount() - 1, 1, 12);
+            int count = SummonCount;
             int permanent = 0;
             foreach (SummonedUnit unit in summons) if (!unit.IsTemporary) permanent++;
             while (permanent < count) { SpawnSummon(transform.position, permanent); permanent++; }
@@ -48,7 +90,8 @@ public partial class PlayerWeaponSystem : MonoBehaviour
 
     public bool TryAttack(Vector2 direction)
     {
-        if (Definition == null || owner == null || owner.Stats == null || Time.timeScale <= 0f || Time.time < nextAttack || axeBusy)
+        if (Definition == null || owner == null || owner.Stats == null || Time.timeScale <= 0f || Time.time < nextAttack || axeBusy ||
+            (Definition.kind == WeaponKind.Lightning && Time.time < lightningSearchRetryUntil))
             return false;
         if (Definition.kind == WeaponKind.Drone || Definition.kind == WeaponKind.Creature) return false;
         if (!ReadyToDraw()) return false;
@@ -64,7 +107,7 @@ public partial class PlayerWeaponSystem : MonoBehaviour
         else if (Definition.kind == WeaponKind.Turret)
         {
             summons.RemoveAll(unit => unit == null);
-            int limit = Mathf.Clamp(Definition.summonCount + owner.Stats.GetProjectileCount() - 1, 1, 12);
+            int limit = SummonCount;
             if (summons.Count >= limit)
             {
                 SummonedUnit oldest = summons[0];
@@ -97,7 +140,8 @@ public partial class PlayerWeaponSystem : MonoBehaviour
         else if (Definition.kind == WeaponKind.FireOrb) CastFireballs();
         else if (Definition.kind == WeaponKind.Lightning)
         {
-            if (!CastLightning()) { nextAttack = Time.time + .15f; return false; }
+            // Searching is throttled separately; only a successful strike consumes the visible cooldown.
+            if (!CastLightning()) { lightningSearchRetryUntil = Time.time + .15f; return false; }
         }
         else
         {
@@ -108,6 +152,7 @@ public partial class PlayerWeaponSystem : MonoBehaviour
         float actionCooldown = Definition.kind == WeaponKind.Turret
             ? owner.Stats.GetPrimaryWeaponCooldown(Definition.deploymentCooldown * CharacterCooldownMultiplier * Mathf.Max(.4f, 1f - Get(WeaponBuffEffect.TurretDeployment))) : Cooldown;
         nextAttack = Time.time + actionCooldown;
+        activeCooldownDuration = actionCooldown;
         if (gameObject == owner.gameObject) owner.bulletCooldownIndicator?.StartCooldown(actionCooldown);
         return true;
     }
@@ -115,9 +160,7 @@ public partial class PlayerWeaponSystem : MonoBehaviour
     public void FireProjectiles(Vector2 position, Vector2 direction, float scale = 1f, bool procs = true, int shotCountOverride = 0)
     {
         if (owner.bulletPrefab == null) return;
-        bool summon = Definition.kind == WeaponKind.Turret || Definition.kind == WeaponKind.Drone;
-        int count = Mathf.Clamp(Definition.projectiles + Mathf.RoundToInt(Get(WeaponBuffEffect.Count)) +
-            (summon ? 0 : owner.Stats.GetProjectileCount() - 1), 1, 64);
+        int count = ProjectileCount;
         if (shotCountOverride > 0) count = Mathf.Clamp(shotCountOverride, 1, 64);
         float fan = Definition.kind == WeaponKind.Shotgun ? Definition.spread : Mathf.Min(60f, Definition.spread * (count - 1));
         if (Definition.kind == WeaponKind.Shotgun) fan = Mathf.Max(10f, fan * (1f - Get(WeaponBuffEffect.ShotgunChoke)));

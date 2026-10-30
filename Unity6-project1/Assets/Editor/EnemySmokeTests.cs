@@ -30,6 +30,8 @@ public static class EnemySmokeTests
         if (EditorApplication.isPlaying) throw new InvalidOperationException("Run outside Play Mode.");
         BuffSmokeTests.Run();
         WeaponRewardSmokeTests.Run();
+        WeaponBalanceSmokeTests.Run();
+        AbilityUiSmokeTests.Run();
         SessionState.SetBool(Running, true);
         EditorSceneManager.OpenScene("Assets/Scenes/GameScene.unity");
         EditorApplication.EnterPlaymode();
@@ -75,16 +77,47 @@ public static class EnemySmokeTests
         Enemy sample = probe.AddComponent<Enemy>();
         sample.Configure(chaser, EnemyRank.Elite, EnemyAffix.Swift | EnemyAffix.Healthy, 20f);
         Near(sample.maxHealth, 120f * 7f * 1.8f, "Health scaling with affix");
-        Near(sample.speed, 4.5f, "Swift affix");
+        Near(sample.speed, 4.5f * chaser.eliteSpeedMultiplier, "Elite slowdown includes Swift affix");
         Check(sample.IsAlive, "Configured enemy alive before Start");
         Call(sample, "Contact", player.GetComponentInChildren<Collider2D>());
         Check(sample.IsAlive, "Elite survives player contact");
         UnityEngine.Object.DestroyImmediate(probe);
+        CharacterDefinition[] roster = Resources.LoadAll<CharacterDefinition>("Characters");
+        float referenceSpeed = CharacterCatalog.GetStartingAverageMoveSpeed(roster);
+        Near(referenceSpeed, roster.Where(x => x.availableAtStart).Average(x => x.moveSpeed), "Only starting characters determine the speed reference");
+        Near(spawner.StartingCharacterAverageSpeed, referenceSpeed, "Spawner caches starting roster average");
+        foreach (EnemyDefinition type in spawner.enemyTypes)
+            foreach (EnemyRank rank in new[] { EnemyRank.Elite, EnemyRank.MiniBoss, EnemyRank.FinalBoss })
+            {
+                GameObject capProbe = new GameObject("SpeedCapProbe");
+                Enemy enemy = capProbe.AddComponent<Enemy>();
+                enemy.Configure(type, rank, EnemyAffix.Swift | EnemyAffix.PeriodicDash, 0f, referenceSpeed);
+                Check(enemy.speed <= referenceSpeed * 1.05f, "Swift cannot bypass the special-enemy speed cap");
+                Check(enemy.GetLimitedMovementSpeed(100f) <= referenceSpeed * 1.05f, "Dash and extra multipliers cannot bypass the speed cap");
+                UnityEngine.Object.DestroyImmediate(capProbe);
+            }
+        foreach (EnemyRank rank in new[] { EnemyRank.MiniBoss, EnemyRank.FinalBoss })
+        {
+            GameObject bossProbe = new GameObject("BossSpeedProbe");
+            Enemy boss = bossProbe.AddComponent<Enemy>();
+            boss.Configure(chaser, rank, EnemyAffix.PeriodicDash, 0f);
+            Near(boss.speed, 3f * chaser.speedMultiplier * .6f, "Boss movement reduced by 40%");
+            Near(chaser.bossDashSpeedMultiplier, 2f, "Boss dash multiplier reduced to two");
+            UnityEngine.Object.DestroyImmediate(bossProbe);
+        }
 
         Set(spawner, "gameTime", 1200f);
         Call(spawner, "Update");
         Enemy[] enemies = UnityEngine.Object.FindObjectsByType<Enemy>();
         Check(enemies.Length == 7, "All seven timed encounters spawn");
+        foreach (EnemyEncounter encounter in spawner.encounters.Where(x => x.rank >= EnemyRank.MiniBoss))
+        {
+            Enemy boss = enemies.Single(x => x.DisplayName == encounter.title);
+            EnemyDefinition type = spawner.enemyTypes.First(x => x.kind == encounter.kind);
+            float expected = spawner.enemyPrefab.GetComponent<Enemy>().speed * type.speedMultiplier * type.bossSpeedMultiplier * encounter.bossMovementMultiplier;
+            Near(boss.speed, Mathf.Min(expected, referenceSpeed * encounter.bossRelativeSpeedLimit), "Timed boss receives its own movement settings");
+            Near(boss.GetLimitedMovementSpeed(100f), referenceSpeed * encounter.bossRelativeSpeedLimit, "Timed boss dash respects its encounter cap");
+        }
         Call(spawner, "Update");
         Check(UnityEngine.Object.FindObjectsByType<Enemy>().Length == 7, "No duplicate timed spawn");
         foreach (Enemy enemy in enemies) enemy.enabled = false;

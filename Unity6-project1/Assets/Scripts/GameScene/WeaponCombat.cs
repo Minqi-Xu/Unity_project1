@@ -20,6 +20,11 @@ public partial class PlayerWeaponSystem
     public float CharacterDamageMultiplier { get; set; } = 1f;
     public float CharacterCooldownMultiplier { get; set; } = 1f;
     public bool IsPrimaryWeapon => owner != null && gameObject == owner.gameObject;
+    private int PrimaryProjectileBonus => IsPrimaryWeapon && owner.Stats != null ? owner.Stats.GetProjectileCount() - 1 : 0;
+    public int ProjectileCount => Mathf.Clamp(Definition.projectiles + Mathf.RoundToInt(Get(WeaponBuffEffect.Count)) +
+        (Definition.kind == WeaponKind.Turret || Definition.kind == WeaponKind.Drone ? 0 : PrimaryProjectileBonus), 1, 64);
+    public int SummonCount => Mathf.Clamp(Definition.summonCount + PrimaryProjectileBonus + Mathf.RoundToInt(Get(WeaponBuffEffect.SummonCount)), 1, 12);
+    public int MeleePulseCount => Mathf.Clamp(1 + PrimaryProjectileBonus + Mathf.RoundToInt(Get(WeaponBuffEffect.MeleeCombo)), 1, 32);
 
     public float Get(WeaponBuffEffect effect) => buffs.TryGetValue(effect, out float value) ? value : 0f;
     public float Radius => Definition.radius * (1f + Get(WeaponBuffEffect.Radius));
@@ -158,7 +163,7 @@ public partial class PlayerWeaponSystem
     private IEnumerator MeleeAttack()
     {
         WeaponAttackContext context = new WeaponAttackContext();
-        int strikes = Mathf.Clamp(owner.Stats.GetProjectileCount() + Mathf.RoundToInt(Get(WeaponBuffEffect.MeleeCombo)), 1, 32);
+        int strikes = MeleePulseCount;
         for (int i = 0; i < strikes; i++)
         {
             if (owner == null || owner.GetComponent<PlayerHealth>().currentHealth <= 0f) yield break;
@@ -212,7 +217,7 @@ public partial class PlayerWeaponSystem
     private void CastFireballs()
     {
         if (owner.bombPrefab == null) return;
-        int count = Mathf.Clamp(Definition.projectiles + owner.Stats.GetProjectileCount() - 1 + Mathf.RoundToInt(Get(WeaponBuffEffect.Count)), 1, 32);
+        int count = Mathf.Min(ProjectileCount, 32);
         for (int i = 0; i < count; i++)
         {
             float angle = i * Mathf.PI * 2f / count + Time.time;
@@ -243,7 +248,7 @@ public partial class PlayerWeaponSystem
             targets.Add(enemy);
         }
         targets.Sort((a, b) => (a.transform.position - transform.position).sqrMagnitude.CompareTo((b.transform.position - transform.position).sqrMagnitude));
-        int count = Mathf.Clamp(Definition.projectiles + owner.Stats.GetProjectileCount() - 1 + Mathf.RoundToInt(Get(WeaponBuffEffect.Count)), 1, 32);
+        int count = Mathf.Min(ProjectileCount, 32);
         if (targets.Count > count) targets.RemoveRange(count, targets.Count - count);
         if (targets.Count == 0) return false;
         foreach (Enemy target in targets)

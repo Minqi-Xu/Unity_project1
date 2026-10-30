@@ -11,10 +11,12 @@ public class EnemySpawner : MonoBehaviour
     public float initialSpawnDelay = 2f; // Initial delay between spawns
 
     // Initial interval between enemy spawns.
-    public float spawnRate = 5f; // Rate at which enemies spawn
+    public float spawnRate = 4f; // Seconds between early-game enemy spawns
 
     // Amount subtracted from spawn interval after each spawn.
     public float spawnIncreaseRate = 0.1f; // How fast the spawn rate increases
+
+    [Min(.1f)] public float minimumSpawnInterval = .8f;
 
     // Health added to new enemies at each health-scaling step.
     public float healIncreaseRate = 20f; // How much enemy heal increases over time
@@ -33,6 +35,7 @@ public class EnemySpawner : MonoBehaviour
     public bool finalBossRequired = true;
     private bool[] encounterSpawned;
     private bool ownsCatalog;
+    public float StartingCharacterAverageSpeed { get; private set; } = 5f;
     public float ElapsedTime => gameTime;
     public bool RequiresFinalBoss => enabled && finalBossRequired && encounters != null &&
         System.Array.Exists(encounters, item => item != null && item.rank == EnemyRank.FinalBoss);
@@ -55,7 +58,10 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        currentSpawnRate = Mathf.Max(0.1f, spawnRate);
+        currentSpawnRate = Mathf.Max(Mathf.Max(.1f, minimumSpawnInterval), spawnRate);
+        CharacterDefinition[] roster = GameManager.Instance != null ? GameManager.Instance.characterDefinitions : null;
+        if (roster == null || roster.Length == 0) roster = CharacterCatalog.Load();
+        StartingCharacterAverageSpeed = CharacterCatalog.GetStartingAverageMoveSpeed(roster);
         if (enemyTypes == null || enemyTypes.Length == 0)
         {
             enemyTypes = Resources.LoadAll<EnemyDefinition>("Enemies");
@@ -92,7 +98,7 @@ public class EnemySpawner : MonoBehaviour
         {
             SpawnEnemy();
             yield return new WaitForSeconds(currentSpawnRate);
-            currentSpawnRate = Mathf.Max(1f, currentSpawnRate - spawnIncreaseRate); // Decrease spawn time, limit it to 1 second minimum
+            currentSpawnRate = Mathf.Max(Mathf.Max(.1f, minimumSpawnInterval), currentSpawnRate - spawnIncreaseRate);
         }
     }
 
@@ -149,7 +155,8 @@ public class EnemySpawner : MonoBehaviour
             EnemyDefinition type = encounter == null ? PickNormalType(gameTime) : FindType(encounter.kind);
             if (type != null)
                 enemyScript.Configure(type, encounter != null ? encounter.rank : EnemyRank.Normal,
-                    encounter != null ? encounter.affixes : EnemyAffix.None, additionalHealth);
+                    encounter != null ? encounter.affixes : EnemyAffix.None, additionalHealth, StartingCharacterAverageSpeed,
+                    encounter != null ? encounter.bossMovementMultiplier : 1f, encounter != null ? encounter.bossRelativeSpeedLimit : 1.05f);
             if (encounter != null) enemyScript.SetEncounterTitle(encounter.title);
             //Debug.Log($"Spawned enemy with {enemyScript.maxHealth} HP");
         }

@@ -53,18 +53,28 @@ public class Enemy : MonoBehaviour
     private float nextBossAttack = 4f;
     private bool initialized;
     private SpriteRenderer sprite;
+    private float startingCharacterAverageSpeed = 5f;
+    private float relativeSpeedLimit = EnemyMovementBalance.MaximumRelativeSpeed;
 
-    public void Configure(EnemyDefinition data, EnemyRank rank, EnemyAffix affixes, float extraHealth)
+    public float GetLimitedMovementSpeed(float multiplier = 1f) =>
+        EnemyMovementBalance.LimitSpeed(speed * multiplier, startingCharacterAverageSpeed, Rank, relativeSpeedLimit);
+
+    public void Configure(EnemyDefinition data, EnemyRank rank, EnemyAffix affixes, float extraHealth, float startingAverageSpeed = 5f,
+        float bossMovementMultiplier = 1f, float bossRelativeSpeedLimit = EnemyMovementBalance.MaximumRelativeSpeed)
     {
         definition = data;
         Rank = rank;
         Affixes = affixes;
         DisplayName = data.displayName;
+        startingCharacterAverageSpeed = startingAverageSpeed;
+        relativeSpeedLimit = bossRelativeSpeedLimit;
         float rankHealth = rank == EnemyRank.FinalBoss ? 35f : rank == EnemyRank.MiniBoss ? 16f : rank == EnemyRank.Elite ? 7f : 1f;
         float rankSize = rank == EnemyRank.FinalBoss ? 3.5f : rank == EnemyRank.MiniBoss ? 2.7f : rank == EnemyRank.Elite ? 1.8f : 1f;
         maxHealth = (maxHealth + Mathf.Max(0f, extraHealth)) * data.healthMultiplier * rankHealth * (Has(EnemyAffix.Healthy) ? 1.8f : 1f);
         currentHealth = maxHealth;
-        speed *= data.speedMultiplier * (Has(EnemyAffix.Swift) ? 1.5f : 1f);
+        speed *= data.speedMultiplier * (Has(EnemyAffix.Swift) ? 1.5f : 1f) *
+            (rank >= EnemyRank.MiniBoss ? data.bossSpeedMultiplier * Mathf.Max(.1f, bossMovementMultiplier) : rank == EnemyRank.Elite ? data.eliteSpeedMultiplier : 1f);
+        speed = GetLimitedMovementSpeed();
         baseDamage *= data.damageMultiplier * (rank == EnemyRank.Normal ? 1f : 1.5f);
         transform.localScale *= data.sizeMultiplier * rankSize;
         sprite = GetComponent<SpriteRenderer>();
@@ -202,18 +212,21 @@ public class Enemy : MonoBehaviour
         Vector2 offset = player.position - transform.position;
         float scale = cameraSizeFactor;
         Vector2 direction = offset.normalized;
-        float move = speed * (Time.time < auraUntil ? 1.35f : 1f) * scale;
+        float auraMultiplier = Time.time < auraUntil ? 1.35f : 1f;
+        float move = GetLimitedMovementSpeed(auraMultiplier) * scale;
+        float dashMultiplier = Rank >= EnemyRank.MiniBoss && definition != null ? definition.bossDashSpeedMultiplier : 3.5f;
+        float dashMove = GetLimitedMovementSpeed(auraMultiplier * dashMultiplier) * scale;
         if (Has(EnemyAffix.PeriodicDash) && Time.time >= nextDash)
         {
             dashDirection = direction;
             dashStarts = Time.time + .7f;
             dashUntil = dashStarts + .5f;
             nextDash = Time.time + 6f;
-            EnemyHazard.WarnDirection(transform.position, dashDirection, move * 3.5f * .5f, .7f);
+            EnemyHazard.WarnDirection(transform.position, dashDirection, dashMove * .5f, .7f);
         }
         if (Time.time < dashUntil)
         {
-            if (Time.time >= dashStarts) transform.position += (Vector3)(dashDirection * move * 3.5f * Time.deltaTime);
+            if (Time.time >= dashStarts) transform.position += (Vector3)(dashDirection * dashMove * Time.deltaTime);
         }
         else if (definition != null && definition.kind == EnemyKind.Ranged)
         {

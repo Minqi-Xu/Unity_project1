@@ -11,5 +11,6 @@ public enum WeaponBuffEffect
     DroneOrbit, DroneFocus, DroneIndependent, DroneBurst, DroneOverload,
     CreatureSpeed, CreatureReach, CreaturePounce, CreatureBleed, CreatureBreed,
     LightningRepeat,
-    AxeArc, AxeWindup, AxeExecute
+    AxeArc, AxeWindup, AxeExecute,
+    SummonCount
 }

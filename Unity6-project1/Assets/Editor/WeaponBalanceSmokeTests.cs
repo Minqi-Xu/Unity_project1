@@ -39,9 +39,33 @@ public static class WeaponBalanceSmokeTests
             enemy.currentHealth = 5000f;
             primary.Hit(enemy, 8f, Vector2.zero);
             Near(5000f - enemy.currentHealth, 8.8f, "Primary damage applies");
+            stats.projectileCount = 5;
+            Check(primary.ProjectileCount == primary.Definition.projectiles + 4, "Basic multishot applies to the default weapon");
             foreach (WeaponKind kind in new[] { WeaponKind.Drone, WeaponKind.Creature, WeaponKind.FireOrb, WeaponKind.Lightning, WeaponKind.Melee })
             {
                 PlayerWeaponSystem auxiliary = inventory.Find(kind);
+                Check(auxiliary.ProjectileCount == auxiliary.Definition.projectiles, "Basic multishot cannot increase auxiliary projectiles: " + kind);
+                Check(auxiliary.SummonCount == auxiliary.Definition.summonCount, "Basic multishot cannot increase auxiliary summons: " + kind);
+                Check(auxiliary.MeleePulseCount == 1, "Basic multishot cannot increase auxiliary pulses: " + kind);
+                WeaponBuffEffect countEffect = kind == WeaponKind.Melee ? WeaponBuffEffect.MeleeCombo :
+                    kind == WeaponKind.Creature ? WeaponBuffEffect.SummonCount : WeaponBuffEffect.Count;
+                UpgradeDefinition countBuff = weaponBuffs.Single(x => x.weaponSpecific && x.targetWeapon == kind && x.weaponEffect == countEffect);
+                Check(countBuff.rarity >= UpgradeRarity.Epic, "Auxiliary count upgrades require Epic or higher: " + kind);
+                auxiliary.ApplyBuff(countBuff.weaponEffect, countBuff.weaponValue);
+                int upgradedCount = kind == WeaponKind.Melee ? auxiliary.MeleePulseCount :
+                    kind == WeaponKind.Creature ? auxiliary.SummonCount : auxiliary.ProjectileCount;
+                int originalCount = kind == WeaponKind.Melee ? 1 : kind == WeaponKind.Creature ? auxiliary.Definition.summonCount : auxiliary.Definition.projectiles;
+                Check(upgradedCount == originalCount + 1, "Dedicated count upgrade only affects its weapon: " + kind);
+                if (kind == WeaponKind.Drone)
+                {
+                    Check(auxiliary.SummonCount == auxiliary.Definition.summonCount, "Drone multishot does not add drones");
+                    UpgradeDefinition wing = weaponBuffs.Single(x => x.weaponSpecific && x.targetWeapon == kind && x.weaponEffect == WeaponBuffEffect.SummonCount);
+                    Check(wing.rarity >= UpgradeRarity.Epic, "Additional drones require Epic or higher");
+                    auxiliary.ApplyBuff(wing.weaponEffect, wing.weaponValue);
+                    Check(auxiliary.SummonCount == auxiliary.Definition.summonCount + 1 && auxiliary.ProjectileCount == auxiliary.Definition.projectiles + 1,
+                        "Drone population and volley upgrades stay independent");
+                }
+                Check(primary.ProjectileCount == primary.Definition.projectiles + 4, "Auxiliary count upgrade leaves default weapon unchanged");
                 Near(auxiliary.Cooldown, auxiliary.Definition.cooldown, "Primary speed cannot leak into " + kind);
                 enemy.currentHealth = 5000f;
                 auxiliary.Hit(enemy, auxiliary.Definition.damage, Vector2.zero);
@@ -52,6 +76,7 @@ public static class WeaponBalanceSmokeTests
                 auxiliary.Hit(enemy, auxiliary.Definition.damage, Vector2.zero);
                 Near(5000f - enemy.currentHealth, auxiliary.Definition.damage * 1.2f, "Dedicated auxiliary damage applies");
             }
+            stats.projectileCount = 1;
             Near(stats.CalculateDamage(100f, 1f, false), 100f, "RMB bomb unaffected by primary damage");
             primary.Configure(player, Resources.Load<WeaponDefinition>("Weapons/BombLauncher"));
             Near(primary.Definition.radius, 1.8f, "Reduced launcher radius");

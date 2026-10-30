@@ -18,6 +18,9 @@ MonoBehaviour:
   weight: 1
   healthMultiplier: 0.45
   speedMultiplier: 1.65
+  eliteSpeedMultiplier: 0.65
+  bossSpeedMultiplier: 0.6
+  bossDashSpeedMultiplier: 2
   damageMultiplier: 1
   sizeMultiplier: 0.75
   tint: {r: 1, g: 0.8, b: 0.2, a: 1}

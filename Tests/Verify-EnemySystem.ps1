@@ -27,7 +27,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Editor compilation failed' }
 $core = Join-Path $UnityEditor 'Data/Managed/UnityEngine/UnityEngine.CoreModule.dll'
 $checksRsp = Join-Path $output 'checks.rsp'
 @('-nologo'; '-target:exe'; '-nostdlib+'; '-langversion:9'; ('-out:"' + $output + '/EnemyScheduleChecks.dll"'); $references;
-    ('"' + $project + '/Assets/Scripts/GameScene/EnemyDefinition.cs"'); ('"' + $PSScriptRoot + '/EnemyScheduleChecks.cs"')) | Set-Content $checksRsp
+    ('"' + $project + '/Assets/Scripts/GameScene/EnemyDefinition.cs"');
+    ('"' + $project + '/Assets/Scripts/GameScene/EnemyMovementBalance.cs"'); ('"' + $PSScriptRoot + '/EnemyScheduleChecks.cs"')) | Set-Content $checksRsp
 & dotnet $compiler ('@' + $checksRsp)
 if ($LASTEXITCODE -ne 0) { throw 'Schedule check compilation failed' }
 Copy-Item -LiteralPath $core -Destination $output -Force

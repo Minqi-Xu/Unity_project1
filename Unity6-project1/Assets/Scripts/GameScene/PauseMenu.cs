@@ -2,6 +2,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
+using System.Collections.Generic;
 
 // Handles pause UI, countdown resume, restart, settings navigation, and returning to the start menu.
 public class PauseMenu : MonoBehaviour
@@ -19,6 +21,25 @@ public class PauseMenu : MonoBehaviour
     private bool isPaused = false;  // Flag to track if game is paused
     private bool isCountDown = false;   // Flag to track if countdown is in progress
     private PauseBuffListUI buffList;
+    private readonly List<GameObject> countdownHiddenButtons = new List<GameObject>();
+
+    private void HideCountdownButtons()
+    {
+        countdownHiddenButtons.Clear();
+        if (pauseMenuUI == null) return;
+        foreach (Button button in pauseMenuUI.GetComponentsInChildren<Button>(true))
+            if (button.gameObject.activeSelf)
+            {
+                countdownHiddenButtons.Add(button.gameObject);
+                button.gameObject.SetActive(false);
+            }
+    }
+
+    private void RestoreCountdownButtons()
+    {
+        foreach (GameObject button in countdownHiddenButtons) if (button != null) button.SetActive(true);
+        countdownHiddenButtons.Clear();
+    }
 
     // Toggles pause when Escape is pressed.
     void Update()
@@ -56,6 +77,7 @@ public class PauseMenu : MonoBehaviour
     private IEnumerator CountdownAndResume()
     {
         if (buffList != null) buffList.Hide();
+        HideCountdownButtons();
         pauseText.gameObject.SetActive(false);  // hide the PAUSED text
         countdownText.gameObject.SetActive(true);   // show countdown
         isCountDown = true;
@@ -79,6 +101,8 @@ public class PauseMenu : MonoBehaviour
     // Shows pause UI and freezes gameplay.
     public void Pause()
     {
+        if (isCountDown) return;
+        RestoreCountdownButtons();
         pauseMenuUI.SetActive(true);
         pauseText.gameObject.SetActive(true);   // Show PAUSED text
         countdownText.gameObject.SetActive(false);  // Hide the countdown

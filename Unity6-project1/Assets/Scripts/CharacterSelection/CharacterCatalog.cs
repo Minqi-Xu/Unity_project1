@@ -6,6 +6,20 @@ public static class CharacterCatalog
 {
     public const string SelectionKey = "SelectedCharacterId";
 
+    public static float GetStartingAverageMoveSpeed(CharacterDefinition[] entries)
+    {
+        float total = 0f;
+        int count = 0;
+        if (entries != null)
+            foreach (CharacterDefinition entry in entries)
+                if (entry != null && entry.availableAtStart && entry.moveSpeed > 0f)
+                {
+                    total += entry.moveSpeed;
+                    count++;
+                }
+        return count > 0 ? total / count : 5f;
+    }
+
     public static CharacterDefinition[] Load()
     {
         CharacterDefinition[] entries = Resources.LoadAll<CharacterDefinition>("Characters")

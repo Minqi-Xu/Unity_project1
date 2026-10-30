@@ -34,7 +34,7 @@ public static class WeaponUpgradeCatalog
         Add(result, WeaponKind.Melee, WeaponBuffEffect.Damage, "Whirlwind Force", "Automatic whirlwind damage +20% of base per level.", .2f, 3);
         Add(result, WeaponKind.Melee, WeaponBuffEffect.Cooldown, "Whirlwind Rhythm", "Automatic whirlwind interval -10% of base per level.", .1f, 3);
         Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeKnockback, "Repulse", "Add 0.25 units to the whirlwind's innate knockback per level.", .25f, 3);
-        Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeCombo, "Echo Pulse", "Add 1 automatic pulse per cycle per level; pulses are separated by 0.12s.", 1f, 2);
+        Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeCombo, "Echo Pulse", "Add 1 automatic pulse per cycle per level; pulses are separated by 0.12s.", 1f, 2, UpgradeRarity.Epic);
         Add(result, WeaponKind.Melee, WeaponBuffEffect.MeleeHeal, "Blood Harvest", "Whirlwind kills heal 1 HP per level, at most 5 HP per pulse cycle.", 1f, 3);
         Add(result, WeaponKind.Axe, WeaponBuffEffect.Damage, "Heavy Edge", "Axe damage +20% of base per level.", .2f, 3);
         Add(result, WeaponKind.Axe, WeaponBuffEffect.Radius, "Long Haft", "Axe forward reach and side reach +15% of base per level.", .15f, 3);
@@ -64,13 +64,16 @@ public static class WeaponUpgradeCatalog
         Add(result, WeaponKind.Creature, WeaponBuffEffect.CreatureBleed, "Rending Claws", "Hits apply a 3s bleed: 20% weapon damage per level each second. Up to 3 stacks per enemy.", .2f, 3);
         Add(result, WeaponKind.Creature, WeaponBuffEffect.CreatureBreed, "Spirit Echo", "Kills summon a temporary spirit for 8s. At most 2 extra spirits; they cannot reproduce.", 1f, 1, UpgradeRarity.Epic);
         Add(result, WeaponKind.FireOrb, WeaponBuffEffect.Damage, "Hotter Flames", "Fireball damage +20% of base per level.", .2f, 3);
-        Add(result, WeaponKind.FireOrb, WeaponBuffEffect.Count, "Flame Ring", "Add 1 radial fireball per cast per level.", 1f, 3);
+        Add(result, WeaponKind.FireOrb, WeaponBuffEffect.Count, "Flame Ring", "Add 1 radial fireball per cast per level.", 1f, 3, UpgradeRarity.Epic);
         Add(result, WeaponKind.FireOrb, WeaponBuffEffect.Radius, "Spreading Flame", "Explosion radius +15% of base per level.", .15f, 3);
         Add(result, WeaponKind.FireOrb, WeaponBuffEffect.Cooldown, "Ember Cycle", "Fireball cooldown -10% of base per level.", .1f, 3);
         Add(result, WeaponKind.Lightning, WeaponBuffEffect.Damage, "High Voltage", "Lightning damage +20% of base per level.", .2f, 3);
-        Add(result, WeaponKind.Lightning, WeaponBuffEffect.Count, "Storm Front", "Strike 1 additional distinct visible enemy per cast per level.", 1f, 3);
+        Add(result, WeaponKind.Lightning, WeaponBuffEffect.Count, "Storm Front", "Strike 1 additional distinct visible enemy per cast per level.", 1f, 3, UpgradeRarity.Epic);
         Add(result, WeaponKind.Lightning, WeaponBuffEffect.LightningRepeat, "Thunder Echo", "Strike the same targets again after 0.3s for 50% damage. Dead targets are skipped.", .5f, 1, UpgradeRarity.Epic);
         Add(result, WeaponKind.Lightning, WeaponBuffEffect.Cooldown, "Gathering Storm", "Lightning cooldown -10% of base per level.", .1f, 3);
+        Add(result, WeaponKind.Drone, WeaponBuffEffect.Count, "Split Cannons", "Add 1 projectile per drone volley per level; does not add drones.", 1f, 2, UpgradeRarity.Epic);
+        Add(result, WeaponKind.Drone, WeaponBuffEffect.SummonCount, "Cannon Wing", "Add 1 permanent drone per level; does not increase projectiles per drone.", 1f, 2, UpgradeRarity.Epic);
+        Add(result, WeaponKind.Creature, WeaponBuffEffect.SummonCount, "Spirit Pack", "Add 1 permanent spirit per level.", 1f, 2, UpgradeRarity.Epic);
         return result.ToArray();
     }
 

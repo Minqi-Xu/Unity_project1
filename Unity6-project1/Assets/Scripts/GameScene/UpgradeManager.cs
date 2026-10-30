@@ -239,10 +239,9 @@ public class UpgradeManager : MonoBehaviour
                 return false;
             if (effect.effectType == UpgradeEffectType.ProjectileCount)
             {
-                bool useful = false;
-                foreach (WeaponKind kind in Enum.GetValues(typeof(WeaponKind)))
-                    if (kind != WeaponKind.Bomb && kind != WeaponKind.Axe && inventory.Find(kind) != null) { useful = true; break; }
-                if (!useful) return false;
+                PlayerWeaponSystem primary = inventory.GetComponent<PlayerWeaponSystem>();
+                if (primary == null || primary.Definition == null || primary.Definition.kind == WeaponKind.Bomb || primary.Definition.kind == WeaponKind.Axe)
+                    return false;
             }
         }
         return true;
@@ -436,6 +435,31 @@ public class UpgradeManager : MonoBehaviour
             bundle.category = UpgradeCategory.Universal;
             pool.Add(bundle);
         }
+        AddSpecial(pool, "vanguard_provisions", "Vanguard Provisions", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.MaxHealth, 20f), new UpgradeEffect(UpgradeEffectType.Regeneration, .5f));
+        AddSpecial(pool, "mobile_gunnery", "Mobile Gunnery", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.PrimaryWeaponDamageMultiplier, .08f), new UpgradeEffect(UpgradeEffectType.MoveSpeedMultiplier, .06f));
+        AddSpecial(pool, "demolition_kit", "Demolition Kit", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.ExplosionRadiusMultiplier, .15f), new UpgradeEffect(UpgradeEffectType.BombCooldownReduction, .08f));
+        AddSpecial(pool, "survivor_instinct", "Survivor Instinct", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.DamageReduction, .04f), new UpgradeEffect(UpgradeEffectType.HitInvulnerability, .15f));
+        AddSpecial(pool, "field_scholar", "Field Scholar", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.ExperienceGainMultiplier, .1f), new UpgradeEffect(UpgradeEffectType.PickupRadiusMultiplier, .15f));
+        AddSpecial(pool, "salvage_engine", "Salvage Engine", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.PickupSpeedMultiplier, .2f), new UpgradeEffect(UpgradeEffectType.PickupRadiusMultiplier, .15f));
+        AddSpecial(pool, "renewing_potential", "Renewing Potential", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.LevelUpHealing, .05f), new UpgradeEffect(UpgradeEffectType.LevelUpDamage, .01f));
+        AddSpecial(pool, "dash_logistics", "Dash Logistics", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.DashCooldownReduction, .08f), new UpgradeEffect(UpgradeEffectType.DashSpeedMultiplier, .1f));
+        AddSpecial(pool, "battle_medic", "Battle Medic", UpgradeRarity.Epic, 2,
+            new UpgradeEffect(UpgradeEffectType.MaxHealth, 30f), new UpgradeEffect(UpgradeEffectType.Regeneration, 1f),
+            new UpgradeEffect(UpgradeEffectType.LevelUpHealing, .05f));
+        AddSpecial(pool, "critical_engine", "Critical Engine", UpgradeRarity.Epic, 2,
+            new UpgradeEffect(UpgradeEffectType.CriticalChance, .05f), new UpgradeEffect(UpgradeEffectType.CriticalDamageMultiplier, .3f));
+        AddSpecial(pool, "arcane_overdrive", "Arcane Overdrive", UpgradeRarity.Epic, 2,
+            new UpgradeEffect(UpgradeEffectType.GlobalCooldownReduction, .06f), new UpgradeEffect(UpgradeEffectType.DamageMultiplier, .1f));
+        AddSpecial(pool, "growth_core", "Growth Core", UpgradeRarity.Epic, 2,
+            new UpgradeEffect(UpgradeEffectType.ExperienceGainMultiplier, .15f), new UpgradeEffect(UpgradeEffectType.LevelUpDamage, .015f));
         return pool.ToArray();
     }
 
@@ -504,7 +528,7 @@ public class UpgradeManager : MonoBehaviour
             case UpgradeEffectType.ExplosionRadiusMultiplier: return "Explosion radius bonus +" + percent + ".";
             case UpgradeEffectType.MaxHealth: return "Max health +" + value + "; heal the same amount.";
             case UpgradeEffectType.Heal: return "Restore " + value + " health.";
-            case UpgradeEffectType.ProjectileCount: return "Projectiles per shot +" + value + ".";
+            case UpgradeEffectType.ProjectileCount: return "Primary weapon projectiles +" + value + "; excludes auxiliary weapons.";
             case UpgradeEffectType.PierceCount: return "Additional targets pierced +" + value + ".";
             case UpgradeEffectType.CriticalChance: return "Critical chance +" + percent + " (100% cap).";
             case UpgradeEffectType.CriticalDamageMultiplier: return "Critical damage multiplier +" + value + "x.";
