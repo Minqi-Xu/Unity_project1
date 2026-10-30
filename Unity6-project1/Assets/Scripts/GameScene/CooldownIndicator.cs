@@ -1,15 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Displays cooldown progress by shrinking a cover image over an icon.
-/// </summary>
+// Displays cooldown progress by shrinking a cover image over an icon.
 public class CooldownIndicator : MonoBehaviour
 {
-    /// <summary>Cover image scaled vertically while cooldown is active.</summary>
+    // Cover image scaled vertically while cooldown is active.
     public Image cooldownCover; // Assign the cover image in the Inspector
 
-    /// <summary>Duration of the currently displayed cooldown.</summary>
+    // Duration of the currently displayed cooldown.
     public float cooldownTime; // Duration of the cooldown
 
     // Runtime cooldown display state.
@@ -17,9 +15,7 @@ public class CooldownIndicator : MonoBehaviour
     private bool isCooldownActive;
     private RectTransform cooldownCoverTransform;
 
-    /// <summary>
-    /// Validates the cover reference and starts hidden.
-    /// </summary>
+    // Validates the cover reference and starts hidden.
     private void Awake()
     {
         if (cooldownCover == null)
@@ -33,9 +29,7 @@ public class CooldownIndicator : MonoBehaviour
         cooldownCover.gameObject.SetActive(false); // Start hidden
     }
 
-    /// <summary>
-    /// Starts displaying a cooldown for the provided duration.
-    /// </summary>
+    // Starts displaying a cooldown for the provided duration.
     public void StartCooldown(float duration)
     {
         if (cooldownCover == null || cooldownCoverTransform == null || duration <= 0f)
@@ -51,17 +45,13 @@ public class CooldownIndicator : MonoBehaviour
         //Debug.Log($"Cooldown started for {duration} seconds.");
     }
 
-    /// <summary>
-    /// Returns true when the current cooldown has reached its end time.
-    /// </summary>
+    // Returns true when the current cooldown has reached its end time.
     public bool IsCooldownComplete()
     {
         return Time.time >= cooldownStartTime + cooldownTime; // Check if cooldown is complete
     }
 
-    /// <summary>
-    /// Updates or hides the cooldown cover each frame.
-    /// </summary>
+    // Updates or hides the cooldown cover each frame.
     private void Update()
     {
         // Update the cooldown cover to shrink
@@ -82,9 +72,7 @@ public class CooldownIndicator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Scales the cover image to match the remaining cooldown fraction.
-    /// </summary>
+    // Scales the cover image to match the remaining cooldown fraction.
     private void UpdateCooldownCover()
     {
         if (cooldownCoverTransform == null)

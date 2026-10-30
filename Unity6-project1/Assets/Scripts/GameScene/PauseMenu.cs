@@ -3,29 +3,30 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-/// <summary>
-/// Handles pause UI, countdown resume, restart, settings navigation, and returning to the start menu.
-/// </summary>
+// Handles pause UI, countdown resume, restart, settings navigation, and returning to the start menu.
 public class PauseMenu : MonoBehaviour
 {
-    /// <summary>Root pause menu UI object.</summary>
+    // Root pause menu UI object.
     public GameObject pauseMenuUI;
 
-    /// <summary>Countdown text shown before resuming gameplay.</summary>
+    // Countdown text shown before resuming gameplay.
     public TextMeshProUGUI countdownText;  // Reference to a countdown text UI
 
-    /// <summary>Paused label shown while the menu is open.</summary>
+    // Paused label shown while the menu is open.
     public TextMeshProUGUI pauseText;   // Reference to PAUSED text UI
 
     // Runtime pause state.
     private bool isPaused = false;  // Flag to track if game is paused
     private bool isCountDown = false;   // Flag to track if countdown is in progress
 
-    /// <summary>
-    /// Toggles pause when Escape is pressed.
-    /// </summary>
+    // Toggles pause when Escape is pressed.
     void Update()
     {
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsSelecting)
+        {
+            return;
+        }
+
         // Check for ESC key press
         if(Input.GetKeyDown(KeyCode.Escape))
         {
@@ -40,9 +41,7 @@ public class PauseMenu : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Starts the countdown that resumes gameplay.
-    /// </summary>
+    // Starts the countdown that resumes gameplay.
     public void Resume()
     {
         // Only resume if countdown is not active
@@ -52,9 +51,7 @@ public class PauseMenu : MonoBehaviour
         }  
     }
 
-    /// <summary>
-    /// Counts down in unscaled time, hides pause UI, and restores normal timeScale.
-    /// </summary>
+    // Counts down in unscaled time, hides pause UI, and restores normal timeScale.
     private IEnumerator CountdownAndResume()
     {
         pauseText.gameObject.SetActive(false);  // hide the PAUSED text
@@ -77,9 +74,7 @@ public class PauseMenu : MonoBehaviour
         isCountDown = false;
     }
 
-    /// <summary>
-    /// Shows pause UI and freezes gameplay.
-    /// </summary>
+    // Shows pause UI and freezes gameplay.
     public void Pause()
     {
         pauseMenuUI.SetActive(true);
@@ -89,9 +84,7 @@ public class PauseMenu : MonoBehaviour
         isPaused = true;
     }
 
-    /// <summary>
-    /// Restarts the current scene from the pause menu.
-    /// </summary>
+    // Restarts the current scene from the pause menu.
     public void RestartGame()
     {
         Time.timeScale = 1f;    // Resume to normal speed
@@ -99,17 +92,13 @@ public class PauseMenu : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);     // Currently GameScene, but is to restart current scene
     }
 
-    /// <summary>
-    /// Backward-compatible wrapper for the existing scene button typo.
-    /// </summary>
+    // Backward-compatible wrapper for the existing scene button typo.
     public void RestartGmae()
     {
         RestartGame();
     }
 
-    /// <summary>
-    /// Opens settings and records this scene as the return target.
-    /// </summary>
+    // Opens settings and records this scene as the return target.
     public void OpenSettings()
     {
         // Store the current scene before opening settings
@@ -117,9 +106,7 @@ public class PauseMenu : MonoBehaviour
         SceneManager.LoadScene("SettingsMenu");
     }
 
-    /// <summary>
-    /// Returns to the start menu and restores normal timeScale.
-    /// </summary>
+    // Returns to the start menu and restores normal timeScale.
     public void QuitToStartMenu()
     {
         Time.timeScale = 1f;    // Resume to normal speed

@@ -1,20 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Central entry point for granting experience, upgrades, healing, and future rewards.
-/// </summary>
+// Central entry point for granting experience, upgrades, healing, and future rewards.
 public class RewardManager : MonoBehaviour
 {
-    /// <summary>Active reward manager instance for the current scene.</summary>
+    // Active reward manager instance for the current scene.
     public static RewardManager Instance { get; private set; }
 
-    /// <summary>Fractional experience stored per player so small multipliers accumulate correctly.</summary>
+    // Fractional experience stored per player so small multipliers accumulate correctly.
     private readonly Dictionary<PlayerController, float> experienceRemainders = new Dictionary<PlayerController, float>();
 
-    /// <summary>
-    /// Initializes the singleton instance for reward delivery.
-    /// </summary>
+    // Initializes the singleton instance for reward delivery.
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -26,9 +22,7 @@ public class RewardManager : MonoBehaviour
         Instance = this;
     }
 
-    /// <summary>
-    /// Grants experience to a player after applying experience multipliers.
-    /// </summary>
+    // Grants experience to a player after applying experience multipliers.
     public void GrantExperience(PlayerController player, int amount)
     {
         if (player == null)
@@ -50,9 +44,7 @@ public class RewardManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Grants a specific upgrade to a player and logs the resulting player status.
-    /// </summary>
+    // Grants a specific upgrade to a player and logs the resulting player status.
     public void GrantUpgrade(PlayerController player, UpgradeDefinition upgrade)
     {
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.ApplyUpgrade(upgrade, player) && player != null)
@@ -61,9 +53,7 @@ public class RewardManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Heals a player health component and logs status when a PlayerController is present.
-    /// </summary>
+    // Heals a player health component and logs status when a PlayerController is present.
     public void HealPlayer(PlayerHealth health, float amount)
     {
         if (health != null)

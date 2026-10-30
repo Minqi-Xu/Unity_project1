@@ -1,8 +1,6 @@
 using System;
 
-/// <summary>
-/// Rarity bucket for upgrades, intended for future weighting and UI styling.
-/// </summary>
+// Rarity bucket for upgrades, intended for future weighting and UI styling.
 public enum UpgradeRarity
 {
     Common,
@@ -11,9 +9,7 @@ public enum UpgradeRarity
     Legendary
 }
 
-/// <summary>
-/// Gameplay stat bucket affected by an upgrade effect.
-/// </summary>
+// Gameplay stat bucket affected by an upgrade effect.
 public enum UpgradeEffectType
 {
     DamageMultiplier,
@@ -29,21 +25,17 @@ public enum UpgradeEffectType
     ExperienceGainMultiplier
 }
 
-/// <summary>
-/// Serializable data entry describing one stat change in an upgrade.
-/// </summary>
+// Serializable data entry describing one stat change in an upgrade.
 [Serializable]
 public struct UpgradeEffect
 {
-    /// <summary>Stat bucket modified by this effect.</summary>
+    // Stat bucket modified by this effect.
     public UpgradeEffectType effectType;
 
-    /// <summary>Effect amount. Multipliers are additive deltas; cooldown reductions are percentages.</summary>
+    // Effect amount. Multipliers are additive deltas; cooldown reductions are percentages.
     public float value;
 
-    /// <summary>
-    /// Creates an effect with a target stat bucket and numeric value.
-    /// </summary>
+    // Creates an effect with a target stat bucket and numeric value.
     public UpgradeEffect(UpgradeEffectType effectType, float value)
     {
         this.effectType = effectType;

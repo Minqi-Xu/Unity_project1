@@ -2,60 +2,58 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// Handles player input, movement, dash, weapon firing, experience, level-up rewards, and status debug output.
-/// </summary>
+// Handles player input, movement, dash, weapon firing, experience, level-up rewards, and status debug output.
 public class PlayerController : MonoBehaviour
 {
-    /// <summary>Base movement speed before camera scaling and stat modifiers.</summary>
+    // Base movement speed before camera scaling and stat modifiers.
     public float moveSpeed = 5f;  // Speed of the player
 
-    /// <summary>Base dash movement speed before stat modifiers.</summary>
+    // Base dash movement speed before stat modifiers.
     public float dashSpeed = 20f; // Speed during dash
 
-    /// <summary>How long one dash lasts in seconds.</summary>
+    // How long one dash lasts in seconds.
     public float dashDuration = 0.2f; // How long the dash lasts
 
-    /// <summary>Base dash cooldown in seconds before stat modifiers.</summary>
+    // Base dash cooldown in seconds before stat modifiers.
     public float dashCooldown = 5f; // Dash cooldown time
 
-    /// <summary>Bullet prefab spawned when the player fires with left mouse button.</summary>
+    // Bullet prefab spawned when the player fires with left mouse button.
     public GameObject bulletPrefab; // link with the bullet prefab in the Inspector
 
-    /// <summary>Bomb prefab spawned when the player fires with right mouse button.</summary>
+    // Bomb prefab spawned when the player fires with right mouse button.
     public GameObject bombPrefab; // link with the bomb prefab in the Inspector
 
-    /// <summary>Base bullet fire cooldown in seconds before stat modifiers.</summary>
+    // Base bullet fire cooldown in seconds before stat modifiers.
     public float fireCooldown = 0.2f; // Bullet fire cooldown time
 
-    /// <summary>Base bomb fire cooldown in seconds before stat modifiers.</summary>
+    // Base bomb fire cooldown in seconds before stat modifiers.
     public float bombCooldown = 10f; // Bomb cooldown time
 
-    /// <summary>Current player level.</summary>
+    // Current player level.
     public int level = 1; // player level
 
-    /// <summary>Legacy outgoing damage multiplier kept for compatibility with existing gameplay.</summary>
+    // Legacy outgoing damage multiplier kept for compatibility with existing gameplay.
     public float damageMultiplier = 1f; // damage multiplier
 
-    /// <summary>UI text that displays level and experience progress.</summary>
+    // UI text that displays level and experience progress.
     public TextMeshProUGUI levelText; // Link to a UI text element to display level
 
-    /// <summary>Experience required to gain one level.</summary>
+    // Experience required to gain one level.
     public int experienceThreshold = 5;    // How many exp to level up
 
-    /// <summary>Cooldown indicator for bullet firing.</summary>
+    // Cooldown indicator for bullet firing.
     public CooldownIndicator bulletCooldownIndicator; // Bullet cooldown indicator
 
-    /// <summary>Cooldown indicator for dash.</summary>
+    // Cooldown indicator for dash.
     public CooldownIndicator dashCooldownIndicator; // Dash cooldown indicator
 
-    /// <summary>Cooldown indicator for bomb firing.</summary>
+    // Cooldown indicator for bomb firing.
     public CooldownIndicator bombCooldownIndicator; // Bomb cooldown indicator
 
-    /// <summary>Elapsed gameplay time for this player. Stops advancing when timeScale is paused.</summary>
+    // Elapsed gameplay time for this player. Stops advancing when timeScale is paused.
     public float gameTime = 0f;    // gameTimer, will stop when pause
 
-    /// <summary>Runtime stat component used for roguelite upgrades and derived player values.</summary>
+    // Runtime stat component used for roguelite upgrades and derived player values.
     public PlayerStats Stats { get; private set; }
 
     // Cached movement and combat state.
@@ -75,9 +73,7 @@ public class PlayerController : MonoBehaviour
     private Camera mainCamera;
     private CameraScaler cameraScaler;
 
-    /// <summary>
-    /// Initializes player components, camera references, cooldown UI, and level UI.
-    /// </summary>
+    // Initializes player components, camera references, cooldown UI, and level UI.
     void Start()
     {
         Stats = GetComponent<PlayerStats>();
@@ -98,11 +94,14 @@ public class PlayerController : MonoBehaviour
         UpdateLevelText();
     }
 
-    /// <summary>
-    /// Reads input, advances timers, and triggers dash or weapon actions.
-    /// </summary>
+    // Reads input, advances timers, and triggers dash or weapon actions.
     void Update()
     {
+        if (Time.timeScale <= 0f)
+        {
+            return;
+        }
+
         // get the camera's orthographic size
         cameraSizeFactor = GetCameraSizeFactor();
         gameTime += Time.deltaTime;
@@ -140,9 +139,7 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    /// <summary>
-    /// Applies physics movement when the player is not currently dashing.
-    /// </summary>
+    // Applies physics movement when the player is not currently dashing.
     void FixedUpdate()
     {
         // Move the player based on input
@@ -160,9 +157,7 @@ public class PlayerController : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// Starts a dash using current movement direction or the last valid movement direction.
-    /// </summary>
+    // Starts a dash using current movement direction or the last valid movement direction.
     private void StartDash()
     {
         Vector2 dashDirection = movement.sqrMagnitude > 0f ? movement.normalized : lastMoveDirection;
@@ -181,9 +176,7 @@ public class PlayerController : MonoBehaviour
         StartCoroutine(Dash(dashDirection));
     }
 
-    /// <summary>
-    /// Moves the player in dash direction for the configured dash duration.
-    /// </summary>
+    // Moves the player in dash direction for the configured dash duration.
     IEnumerator Dash(Vector2 dashDirection)
     {
         //start Dash
@@ -210,9 +203,7 @@ public class PlayerController : MonoBehaviour
         isDashing = false;
     }
 
-    /// <summary>
-    /// Clamps the target player position to the current camera view.
-    /// </summary>
+    // Clamps the target player position to the current camera view.
     Vector2 ClampToScreenBound(Vector2 targetPosition)
     {
         // Get the screen bounds in world space
@@ -236,9 +227,7 @@ public class PlayerController : MonoBehaviour
         return targetPosition;
     }
 
-    /// <summary>
-    /// Fires a bullet toward the mouse when the bullet cooldown is ready.
-    /// </summary>
+    // Fires a bullet toward the mouse when the bullet cooldown is ready.
     void FireBullet()
     {
         float currentFireCooldown = GetFireCooldown();
@@ -286,9 +275,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Fires a bomb toward the mouse when the bomb cooldown is ready.
-    /// </summary>
+    // Fires a bomb toward the mouse when the bomb cooldown is ready.
     void FireBomb()
     {
         float currentBombCooldown = GetBombCooldown();
@@ -327,9 +314,7 @@ public class PlayerController : MonoBehaviour
         
     }
 
-    /// <summary>
-    /// Adds experience and triggers level-ups while the experience threshold is met.
-    /// </summary>
+    // Adds experience and triggers level-ups while the experience threshold is met.
     public void CollectExperience(int amount)
     {
         // increase player level
@@ -352,9 +337,7 @@ public class PlayerController : MonoBehaviour
         UpdateLevelText();
     }
 
-    /// <summary>
-    /// Prints current player damage, health, and incoming enemy damage for status-change debugging.
-    /// </summary>
+    // Prints current player damage, health, and incoming enemy damage for status-change debugging.
     public void DebugLogPlayerStatus(string reason, float enemyDamage)
     {
         PlayerHealth playerHealth = GetComponent<PlayerHealth>();
@@ -365,9 +348,7 @@ public class PlayerController : MonoBehaviour
         );
     }
 
-    /// <summary>
-    /// Calculates the debug damage display using the current bullet prefab and player damage multiplier.
-    /// </summary>
+    // Calculates the debug damage display using the current bullet prefab and player damage multiplier.
     private float GetCurrentPlayerDamage()
     {
         if (bulletPrefab != null)
@@ -382,9 +363,7 @@ public class PlayerController : MonoBehaviour
         return GetDamageMultiplier();
     }
 
-    /// <summary>
-    /// Increases player level and applies either a roguelite reward or the legacy damage bonus fallback.
-    /// </summary>
+    // Increases player level and applies either a roguelite reward or the legacy damage bonus fallback.
     private void LevelUp()
     {
         level++;
@@ -397,65 +376,49 @@ public class PlayerController : MonoBehaviour
         DebugLogPlayerStatus(rewardApplied ? "Level Up Reward" : "Level Up", 0f);
     }
 
-    /// <summary>
-    /// Returns final outgoing damage multiplier after PlayerStats modifiers are applied.
-    /// </summary>
+    // Returns final outgoing damage multiplier after PlayerStats modifiers are applied.
     public float GetDamageMultiplier()
     {
         return Stats != null ? Stats.GetDamageMultiplier(damageMultiplier) : damageMultiplier;
     }
 
-    /// <summary>
-    /// Returns final pickup attraction radius after PlayerStats modifiers are applied.
-    /// </summary>
+    // Returns final pickup attraction radius after PlayerStats modifiers are applied.
     public float GetPickupRadius(float basePickupRadius)
     {
         return Stats != null ? Stats.GetPickupRadius(basePickupRadius) : basePickupRadius;
     }
 
-    /// <summary>
-    /// Returns final movement speed after PlayerStats modifiers are applied.
-    /// </summary>
+    // Returns final movement speed after PlayerStats modifiers are applied.
     private float GetMoveSpeed()
     {
         return Stats != null ? Stats.GetMoveSpeed(moveSpeed) : moveSpeed;
     }
 
-    /// <summary>
-    /// Returns final dash speed after PlayerStats modifiers are applied.
-    /// </summary>
+    // Returns final dash speed after PlayerStats modifiers are applied.
     private float GetDashSpeed()
     {
         return Stats != null ? Stats.GetDashSpeed(dashSpeed) : dashSpeed;
     }
 
-    /// <summary>
-    /// Returns final bullet cooldown after PlayerStats modifiers are applied.
-    /// </summary>
+    // Returns final bullet cooldown after PlayerStats modifiers are applied.
     private float GetFireCooldown()
     {
         return Stats != null ? Stats.GetFireCooldown(fireCooldown) : fireCooldown;
     }
 
-    /// <summary>
-    /// Returns final bomb cooldown after PlayerStats modifiers are applied.
-    /// </summary>
+    // Returns final bomb cooldown after PlayerStats modifiers are applied.
     private float GetBombCooldown()
     {
         return Stats != null ? Stats.GetBombCooldown(bombCooldown) : bombCooldown;
     }
 
-    /// <summary>
-    /// Returns final dash cooldown after PlayerStats modifiers are applied.
-    /// </summary>
+    // Returns final dash cooldown after PlayerStats modifiers are applied.
     private float GetDashCooldown()
     {
         return Stats != null ? Stats.GetDashCooldown(dashCooldown) : dashCooldown;
     }
 
-    /// <summary>
-    /// Refreshes the level and experience UI text if it exists.
-    /// </summary>
+    // Refreshes the level and experience UI text if it exists.
     private void UpdateLevelText()
     {
         if(levelText != null)
@@ -464,9 +427,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Returns movement scale based on current camera size relative to the base camera size.
-    /// </summary>
+    // Returns movement scale based on current camera size relative to the base camera size.
     private float GetCameraSizeFactor()
     {
         if (mainCamera == null)
@@ -484,9 +445,7 @@ public class PlayerController : MonoBehaviour
             : 1f;
     }
 
-    /// <summary>
-    /// Finds a component on a scene object by object name.
-    /// </summary>
+    // Finds a component on a scene object by object name.
     private static T FindComponentByName<T>(string objectName) where T : Component
     {
         GameObject target = GameObject.Find(objectName);

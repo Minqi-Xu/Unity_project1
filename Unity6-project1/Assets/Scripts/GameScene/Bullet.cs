@@ -1,14 +1,12 @@
 using UnityEngine;
 
-/// <summary>
-/// Moves a bullet projectile and applies player-scaled damage when it hits an enemy.
-/// </summary>
+// Moves a bullet projectile and applies player-scaled damage when it hits an enemy.
 public class Bullet : MonoBehaviour
 {
-    /// <summary>Projectile movement speed before camera scaling.</summary>
+    // Projectile movement speed before camera scaling.
     public float bulletSpeed = 25f; // Speed of the bullet
 
-    /// <summary>Base damage before player damage modifiers.</summary>
+    // Base damage before player damage modifiers.
     public float baseDamage = 8f;
 
     // Runtime projectile state.
@@ -22,9 +20,7 @@ public class Bullet : MonoBehaviour
     private CameraScaler cameraScaler;
 
 
-    /// <summary>
-    /// Initializes projectile direction and owner after instantiation.
-    /// </summary>
+    // Initializes projectile direction and owner after instantiation.
     // This method is called when the bullet is instantiated
     public void Initialize(Vector2 dir, PlayerController controller)
     {
@@ -35,9 +31,7 @@ public class Bullet : MonoBehaviour
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
 
-    /// <summary>
-    /// Moves the bullet forward and destroys it after it travels too far.
-    /// </summary>
+    // Moves the bullet forward and destroys it after it travels too far.
     void Update()
     {
         // get the camera's orthographic size
@@ -52,9 +46,7 @@ public class Bullet : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Damages an enemy on contact and then destroys the bullet.
-    /// </summary>
+    // Damages an enemy on contact and then destroys the bullet.
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Enemy"))
@@ -74,9 +66,7 @@ public class Bullet : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Returns projectile movement scale based on current camera size.
-    /// </summary>
+    // Returns projectile movement scale based on current camera size.
     private float GetCameraSizeFactor()
     {
         if (mainCamera == null)

@@ -1,36 +1,32 @@
 using UnityEngine;
 
-/// <summary>
-/// ScriptableObject data asset that defines one upgrade option and its effects.
-/// </summary>
+// ScriptableObject data asset that defines one upgrade option and its effects.
 [CreateAssetMenu(fileName = "UpgradeDefinition", menuName = "Roguelite/Upgrade Definition")]
 public class UpgradeDefinition : ScriptableObject
 {
-    /// <summary>Stable id used for upgrade level tracking and future save data.</summary>
+    // Stable id used for upgrade level tracking and future save data.
     public string upgradeId;
 
-    /// <summary>Name shown to the player in upgrade UI.</summary>
+    // Name shown to the player in upgrade UI.
     public string displayName;
 
-    /// <summary>Description shown to the player in upgrade UI.</summary>
+    // Description shown to the player in upgrade UI.
     [TextArea]
     public string description;
 
-    /// <summary>Optional icon for future upgrade UI.</summary>
+    // Optional icon for future upgrade UI.
     public Sprite icon;
 
-    /// <summary>Upgrade rarity tier.</summary>
+    // Upgrade rarity tier.
     public UpgradeRarity rarity = UpgradeRarity.Common;
 
-    /// <summary>Maximum times this upgrade can be applied. Use 0 or less for unlimited.</summary>
+    // Maximum times this upgrade can be applied. Use 0 or less for unlimited.
     public int maxLevel = 1;
 
-    /// <summary>Effects applied when this upgrade is selected.</summary>
+    // Effects applied when this upgrade is selected.
     public UpgradeEffect[] effects;
 
-    /// <summary>
-    /// Returns a safe display name even when displayName is empty.
-    /// </summary>
+    // Returns a safe display name even when displayName is empty.
     public string DisplayName
     {
         get

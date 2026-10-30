@@ -2,27 +2,25 @@ using UnityEngine;
 using TMPro; // For TextMeshPro
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Controls game scene lifecycle, survival timer, player spawning, and end-game flow.
-/// </summary>
+// Controls game scene lifecycle, survival timer, player spawning, and end-game flow.
 public class GameManager : MonoBehaviour
 {
-    /// <summary>Active GameManager instance for the current game scene.</summary>
+    // Active GameManager instance for the current game scene.
     public static GameManager Instance { get { return instance; } } // Singleton instance
 
-    /// <summary>UI text showing elapsed survival time.</summary>
+    // UI text showing elapsed survival time.
     public TextMeshProUGUI survivalTimeText; // Assign in Inspector
 
-    /// <summary>Panel shown when survival target time is reached.</summary>
+    // Panel shown when survival target time is reached.
     public GameObject gameOverPanel;    // Assign the survival gameOverPanel here
 
-    /// <summary>Window shown when the player dies.</summary>
+    // Window shown when the player dies.
     public GameObject gameOverWindow;   // Assign the gameOverWindow which display when player die
 
-    /// <summary>Seconds the player needs to survive to complete the run.</summary>
+    // Seconds the player needs to survive to complete the run.
     public float targetGameTime = 1200f;  // Time that player need to survive
 
-    /// <summary>Selectable character prefabs spawned at game start.</summary>
+    // Selectable character prefabs spawned at game start.
     public GameObject[] characterPrefabs;   // Assign the character prefabs
 
     // Runtime scene state.
@@ -31,9 +29,7 @@ public class GameManager : MonoBehaviour
     private GameObject playerCharacter;
     private static GameManager instance;
 
-    /// <summary>
-    /// Initializes singleton instance and removes duplicate managers.
-    /// </summary>
+    // Initializes singleton instance and removes duplicate managers.
     void Awake()
     {
         // Singleton pattern - ensure only one instance of GameManager exists
@@ -47,9 +43,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Resets run state, ensures core systems exist, and spawns the selected player.
-    /// </summary>
+    // Resets run state, ensures core systems exist, and spawns the selected player.
     void Start()
     {
         EnsureCoreSystems();
@@ -72,9 +66,7 @@ public class GameManager : MonoBehaviour
         playerCharacter = Instantiate(characterPrefabs[selectedCharacterIndex], Vector3.zero, Quaternion.identity);
     }
 
-    /// <summary>
-    /// Creates runtime core managers if the scene does not already contain them.
-    /// </summary>
+    // Creates runtime core managers if the scene does not already contain them.
     private void EnsureCoreSystems()
     {
         if (UpgradeManager.Instance == null)
@@ -90,9 +82,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Advances survival timer, updates UI, and checks the survival end condition.
-    /// </summary>
+    // Advances survival timer, updates UI, and checks the survival end condition.
     void Update()
     {
         if (!gameEnded)
@@ -118,9 +108,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Ends the run, shows the survival end UI, and pauses gameplay.
-    /// </summary>
+    // Ends the run, shows the survival end UI, and pauses gameplay.
     void EndGame()
     {
         gameEnded = true;
@@ -135,9 +123,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    /// <summary>
-    /// Restarts the current game scene.
-    /// </summary>
+    // Restarts the current game scene.
     public void RestartGame()
     {
         // Unpause the game
@@ -147,9 +133,7 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    /// <summary>
-    /// Returns to the start menu scene.
-    /// </summary>
+    // Returns to the start menu scene.
     public void ExitToStartMenu()
     {
         // Unpause the game
@@ -159,9 +143,7 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene("StartMenu");
     }
 
-    /// <summary>
-    /// Quits the application.
-    /// </summary>
+    // Quits the application.
     public void QuitGame()
     {
         Debug.Log("Quitting the game...");

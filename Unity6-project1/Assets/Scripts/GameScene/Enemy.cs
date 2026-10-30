@@ -1,30 +1,28 @@
 using UnityEngine;
 
-/// <summary>
-/// Moves toward the player, scales contact damage over time, takes damage, and drops experience on death.
-/// </summary>
+// Moves toward the player, scales contact damage over time, takes damage, and drops experience on death.
 public class Enemy : MonoBehaviour
 {
-    /// <summary>Enemy movement speed before camera scaling.</summary>
+    // Enemy movement speed before camera scaling.
     public float speed = 3f;  // Speed of the enemy
 
-    /// <summary>Maximum enemy health at spawn time.</summary>
+    // Maximum enemy health at spawn time.
     public float maxHealth = 100f; // Max health of the enemy
 
-    /// <summary>Current enemy health. Hidden because it is runtime state.</summary>
+    // Current enemy health. Hidden because it is runtime state.
     [HideInInspector]
     public float currentHealth;
 
-    /// <summary>Experience pickup prefab spawned when this enemy dies.</summary>
+    // Experience pickup prefab spawned when this enemy dies.
     public GameObject experiencePrefab; // link to the exp prefab in the inspector
 
-    /// <summary>Starting contact damage before survival-time scaling.</summary>
+    // Starting contact damage before survival-time scaling.
     public float baseDamage = 10f;  // Base damage of enemy
 
-    /// <summary>Damage added per second while this enemy remains alive.</summary>
+    // Damage added per second while this enemy remains alive.
     public float damageIncreaseRate = 0.1f; // Rate of damage increase within the time enemy survive
 
-    /// <summary>Maximum contact damage this enemy can deal in one hit.</summary>
+    // Maximum contact damage this enemy can deal in one hit.
     public float maxDamage = 100 * 0.4f;   // 100 -> player max hp, 0.4f -> 40% of player's max hp
 
     // Runtime target and combat state.
@@ -38,9 +36,7 @@ public class Enemy : MonoBehaviour
     private CameraScaler cameraScaler;
     private bool loggedMissingPlayer;
 
-    /// <summary>
-    /// Initializes target lookup, health, damage, and camera references.
-    /// </summary>
+    // Initializes target lookup, health, damage, and camera references.
     void Start()
     {
         // Find the player by tag (assuming you tagged the player as "Player")
@@ -65,9 +61,7 @@ public class Enemy : MonoBehaviour
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
 
-    /// <summary>
-    /// Moves toward the player and increases contact damage while alive.
-    /// </summary>
+    // Moves toward the player and increases contact damage while alive.
     void Update()
     {
         // get the camera's orthographic size
@@ -89,9 +83,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Damages the player on contact and destroys this enemy without dropping experience.
-    /// </summary>
+    // Damages the player on contact and destroys this enemy without dropping experience.
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if(collision.CompareTag("Player")) // if the player is "touch" by enemy
@@ -109,9 +101,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Reduces enemy health and kills it when health reaches zero.
-    /// </summary>
+    // Reduces enemy health and kills it when health reaches zero.
     // Run when receive damage
     public void TakeDamage(float damage)
     {
@@ -124,9 +114,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Drops experience if configured and destroys this enemy.
-    /// </summary>
+    // Drops experience if configured and destroys this enemy.
     void Die()
     {
         //Debug.Log("Enemy die!");
@@ -141,9 +129,7 @@ public class Enemy : MonoBehaviour
         Destroy(gameObject);
     }
 
-    /// <summary>
-    /// Retries player lookup without logging every frame while the player is not spawned yet.
-    /// </summary>
+    // Retries player lookup without logging every frame while the player is not spawned yet.
     private void TryFindPlayer()
     {
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
@@ -160,9 +146,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Returns movement scale based on current camera size.
-    /// </summary>
+    // Returns movement scale based on current camera size.
     private float GetCameraSizeFactor()
     {
         if (mainCamera == null)

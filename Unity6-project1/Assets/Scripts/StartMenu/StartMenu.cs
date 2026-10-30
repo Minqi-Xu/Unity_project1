@@ -1,31 +1,23 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Button callbacks for the start menu scene.
-/// </summary>
+// Button callbacks for the start menu scene.
 public class MainMenu : MonoBehaviour
 {
-    /// <summary>
-    /// Loads the game scene.
-    /// </summary>
+    // Loads the game scene.
     public void StartGame()
     {
         // Debug log for start button can be re-enabled when needed.
         SceneManager.LoadScene("GameScene");
     }
 
-    /// <summary>
-    /// Opens the character selection scene.
-    /// </summary>
+    // Opens the character selection scene.
     public void GoToCharacterSelection()
     {
         SceneManager.LoadScene("CharacterSelection");
     }
 
-    /// <summary>
-    /// Opens settings and records the current scene as the return target.
-    /// </summary>
+    // Opens settings and records the current scene as the return target.
     public void OpenSettings()
     {
         // Store the current scene before opening settings.
@@ -33,9 +25,7 @@ public class MainMenu : MonoBehaviour
         SceneManager.LoadScene("SettingsMenu");
     }
 
-    /// <summary>
-    /// Quits the application.
-    /// </summary>
+    // Quits the application.
     public void QuitGame()
     {
         // Debug log for quit button can be re-enabled when needed.
