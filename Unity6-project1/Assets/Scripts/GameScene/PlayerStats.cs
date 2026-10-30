@@ -8,6 +8,14 @@ public class PlayerStats : MonoBehaviour
     // Outgoing damage multiplier applied on top of the legacy player damage multiplier.
     public float damageMultiplier = 1f;
 
+    // Probability of a critical hit; 0.25 means a 25% chance.
+    [Range(0f, 1f)]
+    public float criticalChance = 0f;
+
+    // Total damage multiplier on a critical hit; 2 means double damage.
+    [Min(1f)]
+    public float criticalDamageMultiplier = 2f;
+
     // Multiplier applied to experience rewards before they are granted.
     public float experienceGainMultiplier = 1f;
 
@@ -22,6 +30,14 @@ public class PlayerStats : MonoBehaviour
     public float dashCooldownMultiplier = 1f;
 
     [Header("Weapons")]
+    // Total projectiles fired per attack, including the original projectile.
+    [Min(1)]
+    public int projectileCount = 1;
+
+    // Additional enemies a projectile can hit after its first target; 0 means no piercing.
+    [Min(0)]
+    public int pierceCount = 0;
+
     // Multiplier applied to the player's base bullet fire cooldown.
     public float fireCooldownMultiplier = 1f;
 
@@ -41,6 +57,30 @@ public class PlayerStats : MonoBehaviour
     public float GetDamageMultiplier(float legacyDamageMultiplier)
     {
         return Mathf.Max(0f, legacyDamageMultiplier * damageMultiplier);
+    }
+
+    // Returns the projectile count with a minimum of one, including runtime changes.
+    public int GetProjectileCount()
+    {
+        return Mathf.Max(1, projectileCount);
+    }
+
+    // Returns the nonnegative number of additional targets a projectile can hit.
+    public int GetPierceCount()
+    {
+        return Mathf.Max(0, pierceCount);
+    }
+
+    // Returns critical hit probability clamped between zero and one.
+    public float GetCriticalChance()
+    {
+        return Mathf.Clamp01(criticalChance);
+    }
+
+    // Returns the total critical damage multiplier, never below normal damage.
+    public float GetCriticalDamageMultiplier()
+    {
+        return Mathf.Max(1f, criticalDamageMultiplier);
     }
 
     // Returns final movement speed after stat modifiers are applied.
