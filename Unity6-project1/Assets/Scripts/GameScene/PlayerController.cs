@@ -231,6 +231,16 @@ public class PlayerController : MonoBehaviour
     // Fires a bullet toward the mouse when the bullet cooldown is ready.
     void FireBullet()
     {
+        PlayerWeaponSystem weapon = GetComponent<PlayerWeaponSystem>();
+        if (weapon != null && weapon.Definition != null)
+        {
+            if (weapon.Definition.Automatic) return;
+            Vector2 aim = mainCamera != null
+                ? (Vector2)(mainCamera.ScreenToWorldPoint(Input.mousePosition) - transform.position)
+                : lastMoveDirection;
+            weapon.TryAttack(aim);
+            return;
+        }
         float currentFireCooldown = GetFireCooldown();
         if (Time.time >= lastFireTime + currentFireCooldown)
         {
@@ -346,6 +356,13 @@ public class PlayerController : MonoBehaviour
     // Calculates the debug damage display using the current bullet prefab and player damage multiplier.
     private float GetCurrentPlayerDamage()
     {
+        PlayerWeaponSystem weapon = GetComponent<PlayerWeaponSystem>();
+        if (weapon != null && weapon.Definition != null)
+        {
+            float primary = weapon.Definition.kind == WeaponKind.Bomb ? 1f
+                : (Stats != null ? Stats.bulletDamageMultiplier : 1f);
+            return weapon.Definition.damage * GetDamageMultiplier() * primary;
+        }
         if (bulletPrefab != null)
         {
             Bullet bullet = bulletPrefab.GetComponent<Bullet>();
@@ -366,7 +383,7 @@ public class PlayerController : MonoBehaviour
         bool rewardApplied = UpgradeManager.Instance != null && UpgradeManager.Instance.TryOfferLevelUpRewards(this);
         if (!rewardApplied)
         {
-            damageMultiplier += 0.1f;
+            damageMultiplier += 0.1f * (Stats != null ? Stats.levelDamageGrowthMultiplier : 1f);
         }
 
         DebugLogPlayerStatus(rewardApplied ? "Level Up Reward" : "Level Up", 0f);

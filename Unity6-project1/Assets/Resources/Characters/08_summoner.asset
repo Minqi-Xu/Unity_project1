@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19fae0f7134d56a4bbe10ea7e95714aa, type: 3}
+  m_Name: 08_summoner
+  m_EditorClassIdentifier: 
+  characterId: 08_summoner
+  displayName: Summoner
+  passive: Two autonomous spirits; recover 2 HP every 5s.
+  limitation: Spirits must reach melee range; all damage -10%.
+  difficulty: Hard
+  playerPrefab: {fileID: 1452042375935165516, guid: 196fa64bf2df54047a7416e7c68229a1, type: 3}
+  startingWeapon: {fileID: 11400000, guid: 7558b06bc9075d39bf3a258c1c937b83, type: 2}
+  tint: {r: 0.9, g: 0.5, b: 0.8, a: 1}
+  maxHealth: 110
+  moveSpeed: 4.8
+  regeneration: 2
+  damageMultiplier: 0.9

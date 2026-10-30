@@ -27,12 +27,12 @@ public class Bullet : MonoBehaviour
 
     // Initializes projectile direction and owner after instantiation.
     // This method is called when the bullet is instantiated
-    public void Initialize(Vector2 dir, PlayerController controller)
+    public void Initialize(Vector2 dir, PlayerController controller, int weaponPierce = 0)
     {
         direction = dir.normalized;
         spawnPosition = transform.position;
         playerController = controller;  // Store the reference
-        remainingHits = 1 + (controller != null && controller.Stats != null ? controller.Stats.GetPierceCount() : 0);
+        remainingHits = 1 + Mathf.Max(0, weaponPierce) + (controller != null && controller.Stats != null ? controller.Stats.GetPierceCount() : 0);
         spent = false;
         hitEnemies.Clear();
         mainCamera = Camera.main;

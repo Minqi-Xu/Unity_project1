@@ -1865,9 +1865,7 @@ MonoBehaviour:
   gameOverPanel: {fileID: 1443379874}
   gameOverWindow: {fileID: 1890028088}
   targetGameTime: 1200
-  characterPrefabs:
-  - {fileID: 1452042375935165516, guid: 196fa64bf2df54047a7416e7c68229a1, type: 3}
-  - {fileID: 1452042375935165516, guid: efe53a9da2082bf45a8bc3a222c0c860, type: 3}
+  characterDefinitions: []
 --- !u!1 &795268480
 GameObject:
   m_ObjectHideFlags: 0

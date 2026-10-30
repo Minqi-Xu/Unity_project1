@@ -20,8 +20,8 @@ public class GameManager : MonoBehaviour
     // Seconds the player needs to survive to complete the run.
     public float targetGameTime = 1200f;  // Time that player need to survive
 
-    // Selectable character prefabs spawned at game start.
-    public GameObject[] characterPrefabs;   // Assign the character prefabs
+    // Selectable character configurations; defaults to the Resources catalog.
+    public CharacterDefinition[] characterDefinitions;
 
     // Runtime scene state.
     private float survivalTime = 0f;
@@ -54,16 +54,35 @@ public class GameManager : MonoBehaviour
         // Retrieve the selected character index from PlayerPrefs
         int selectedCharacterIndex = PlayerPrefs.GetInt("SelectedCharacter", 0);    // Default to first character
 
-        if (characterPrefabs == null || characterPrefabs.Length == 0)
+        if (characterDefinitions == null || characterDefinitions.Length == 0)
+            characterDefinitions = CharacterCatalog.Load();
+        CharacterDefinition selected = CharacterCatalog.Resolve(characterDefinitions,
+            PlayerPrefs.GetString(CharacterCatalog.SelectionKey, ""), selectedCharacterIndex);
+        if (selected != null && selected.playerPrefab != null)
         {
-            Debug.LogError("No character prefabs assigned to GameManager.");
+            if (!ValidatePlayerPrefab(selected.playerPrefab)) return;
+            playerCharacter = Instantiate(selected.playerPrefab, Vector3.zero, Quaternion.identity);
+            PlayerController controller = playerCharacter.GetComponent<PlayerController>();
+            if (controller != null) selected.ApplyTo(controller);
             return;
         }
 
-        selectedCharacterIndex = Mathf.Clamp(selectedCharacterIndex, 0, characterPrefabs.Length - 1);
+        Debug.LogError("No playable character configured. Add CharacterDefinition assets to Resources/Characters " +
+            "or assign GameManager.characterDefinitions, with a valid playerPrefab.");
+    }
 
-        // Instantiate the selected character
-        playerCharacter = Instantiate(characterPrefabs[selectedCharacterIndex], Vector3.zero, Quaternion.identity);
+    // Preview-only prefabs are unsuitable for gameplay; report the missing setup explicitly.
+    private static bool ValidatePlayerPrefab(GameObject prefab)
+    {
+        if (prefab == null || prefab.GetComponent<PlayerController>() == null ||
+            prefab.GetComponent<Rigidbody2D>() == null || prefab.GetComponent<PlayerHealth>() == null)
+        {
+            Debug.LogError($"Cannot spawn player '{(prefab != null ? prefab.name : "None")}'. " +
+                "Assign a playable prefab with PlayerController, Rigidbody2D and PlayerHealth; " +
+                "image-only preview prefabs cannot be controlled.");
+            return false;
+        }
+        return true;
     }
 
     // Creates runtime core managers if the scene does not already contain them.

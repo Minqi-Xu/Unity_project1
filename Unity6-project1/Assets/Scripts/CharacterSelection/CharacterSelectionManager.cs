@@ -1,69 +1,42 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// Handles character preview, selection, and confirmation before entering the game scene.
+// Builds the data-driven roster and saves the selected character before gameplay.
 public class CharacterSelectionManager : MonoBehaviour
 {
-    // Available character prefabs shown in selection and spawned in game.
-    public GameObject[] characters; // Assign character prefabs in the Inspector
+    public CharacterDefinition[] characterDefinitions;
+    private CharacterSelectionUI selectionUI;
+    private int selectedCharacterIndex;
 
-    // Preview anchor used to position the selected character preview.
-    public Transform previewPosition;  // Assign the preview position
-
-    // Runtime character selection state.
-    private int selectedCharacterIndex = 0; // Index of the selected character
-    private GameObject currentPreviewCharacter; // Stores the currently previewed character
-
-    // Displays the default selected character at scene start.
-    void Start()
+    private void Start()
     {
-        // Optionally, display the first character as selected by default
-        DisplaySelectedCharacter();
+        if (characterDefinitions == null || characterDefinitions.Length == 0)
+            characterDefinitions = CharacterCatalog.Load();
+        if (characterDefinitions.Length == 0)
+        {
+            Debug.LogError("No character definitions found. Add assets to Resources/Characters.");
+            return;
+        }
+
+        CharacterDefinition selected = CharacterCatalog.Resolve(characterDefinitions,
+            PlayerPrefs.GetString(CharacterCatalog.SelectionKey, ""), PlayerPrefs.GetInt("SelectedCharacter", 0));
+        selectedCharacterIndex = System.Array.IndexOf(characterDefinitions, selected);
+        selectionUI = gameObject.AddComponent<CharacterSelectionUI>();
+        selectionUI.Build(characterDefinitions, SelectCharacter, ConfirmSelection);
+        selectionUI.Show(selected, selectedCharacterIndex);
     }
 
-    // Selects a character index and refreshes the preview.
     public void SelectCharacter(int index)
     {
-        if (characters == null || characters.Length == 0)
-        {
-            Debug.LogError("No character prefabs assigned to CharacterSelectionManager.");
-            return;
-        }
-
-        // Store the selected character index
-        selectedCharacterIndex = Mathf.Clamp(index, 0, characters.Length - 1);
-        DisplaySelectedCharacter();
+        if (characterDefinitions == null || characterDefinitions.Length == 0 || selectionUI == null) return;
+        selectedCharacterIndex = Mathf.Clamp(index, 0, characterDefinitions.Length - 1);
+        selectionUI.Show(characterDefinitions[selectedCharacterIndex], selectedCharacterIndex);
     }
 
-    // Saves selected character index and loads the game scene.
     public void ConfirmSelection()
     {
-        // Store the selected character index using PlayerPrefs so it's available in the game scene
-        PlayerPrefs.SetInt("SelectedCharacter", selectedCharacterIndex);
-
-        // Load the GameScene
+        if (characterDefinitions == null || characterDefinitions.Length == 0) return;
+        PlayerPrefs.SetString(CharacterCatalog.SelectionKey, characterDefinitions[selectedCharacterIndex].characterId);
         SceneManager.LoadScene("GameScene");
-    }
-
-    // Rebuilds the preview object for the currently selected character.
-    void DisplaySelectedCharacter()
-    {
-        if (characters == null || characters.Length == 0 || previewPosition == null)
-        {
-            return;
-        }
-
-        // Destroy the previous preview character, if any
-        if(currentPreviewCharacter != null)
-        {
-            Destroy(currentPreviewCharacter);
-        }
-
-        // Instantiate the selected character at the preview position
-        currentPreviewCharacter = Instantiate(characters[selectedCharacterIndex], previewPosition.position, Quaternion.identity);
-        
-        // Adjust the scale and position for the preview to fit the scene
-        currentPreviewCharacter.transform.SetParent(previewPosition);   // Set parent to keep organized
-
     }
 }

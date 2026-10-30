@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19fae0f7134d56a4bbe10ea7e95714aa, type: 3}
+  m_Name: 07_operator
+  m_EditorClassIdentifier: 
+  characterId: 07_operator
+  displayName: Drone Pilot
+  passive: Two automatic drones; dash cooldown -20%.
+  limitation: All damage -15%; only 80 starting HP.
+  difficulty: Normal
+  playerPrefab: {fileID: 1452042375935165516, guid: 196fa64bf2df54047a7416e7c68229a1, type: 3}
+  startingWeapon: {fileID: 11400000, guid: 085a9317651e5b60984bbfbd7c813c7d, type: 2}
+  tint: {r: 0.5, g: 1, b: 0.9, a: 1}
+  maxHealth: 80
+  moveSpeed: 5.4
+  dashCooldownMultiplier: 0.8
+  damageMultiplier: 0.85

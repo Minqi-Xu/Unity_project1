@@ -35,6 +35,8 @@ public class PlayerStats : MonoBehaviour
     public float levelUpHealing = 0f;
     // Global damage multiplier added on each future level-up.
     public float levelUpDamage = 0f;
+    // Character-specific scaling for future per-level damage growth.
+    public float levelDamageGrowthMultiplier = 1f;
     // Fraction of bullet damage dealt by an explosion on the final allowed hit.
     public float finalPierceExplosion = 0f;
     // Attack-speed bonus after dashing, scaled by movement-speed bonuses.
@@ -62,7 +64,7 @@ public class PlayerStats : MonoBehaviour
     // Applies growth bonuses owned before this level was earned.
     public void OnLevelUp(PlayerHealth health)
     {
-        damageMultiplier += Mathf.Max(0f, levelUpDamage);
+        damageMultiplier += Mathf.Max(0f, levelUpDamage) * Mathf.Max(0f, levelDamageGrowthMultiplier);
         if (health != null) HealWithLog(health, health.maxHealth * Mathf.Clamp01(levelUpHealing));
     }
 

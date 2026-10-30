@@ -37,6 +37,7 @@ public class Enemy : MonoBehaviour
     private bool loggedMissingPlayer;
     // Prevent multiple projectiles or explosions from granting duplicate death rewards.
     private bool dead;
+    public bool IsAlive => !dead && currentHealth > 0f;
 
     // Initializes target lookup, health, damage, and camera references.
     void Start()
