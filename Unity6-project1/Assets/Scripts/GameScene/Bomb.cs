@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 // Moves a thrown bomb and applies area damage when it hits an enemy or reaches max range.
 public class Bomb: MonoBehaviour
@@ -22,6 +23,8 @@ public class Bomb: MonoBehaviour
     private Vector2 direction;
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to playerController
+    // Unity destroys objects at frame end, so guard against repeated explosion callbacks.
+    private bool exploded;
 
     // Camera references used for resolution-aware projectile movement.
     private float cameraSizeFactor;     // Since camera size changed due to resolution change, the speed related should also changed accordingly
@@ -68,27 +71,34 @@ public class Bomb: MonoBehaviour
     // Spawns explosion effects, damages enemies in radius, and destroys the bomb.
     void Explode()
     {
+        if (exploded) return;
+        exploded = true;
         // Instantiate the explosion effect
         if (explossionEffectprefab != null)
         {
             Instantiate(explossionEffectprefab, transform.position, Quaternion.identity);
         }
 
-        // Find all colliders in the explosion radius
-        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
-        foreach(var hitCollider in hitColliders)
-        {
-            // Deal damage to each enemy within the explosion radius
-            Enemy enemy = hitCollider.GetComponent<Enemy>();
-            if(enemy != null)
-            {
-                // calculate damage with the damage multiplier
-                float currentDamage = basedamage * (playerController != null ? playerController.GetDamageMultiplier() : 1f);
-                enemy.TakeDamage(currentDamage);
-            }
-        }
+        float radius = explosionRadius * (playerController != null && playerController.Stats != null
+            ? Mathf.Max(0f, playerController.Stats.explosionRadiusMultiplier) : 1f);
+        DamageArea(transform.position, radius, basedamage, playerController, false);
         // Destroy bomb after explode
         Destroy(gameObject);
+    }
+
+    // Applies one independently rolled hit per enemy, even when it has multiple colliders.
+    public static void DamageArea(Vector2 center, float radius, float baseDamage, PlayerController owner, bool bullet)
+    {
+        HashSet<Enemy> damaged = new HashSet<Enemy>();
+        foreach (Collider2D collider in Physics2D.OverlapCircleAll(center, radius))
+        {
+            Enemy enemy = collider.GetComponentInParent<Enemy>();
+            if (enemy == null || !damaged.Add(enemy)) continue;
+            float damage = owner != null && owner.Stats != null
+                ? owner.Stats.CalculateDamage(baseDamage, owner.damageMultiplier, bullet)
+                : baseDamage * (owner != null ? owner.GetDamageMultiplier() : 1f);
+            enemy.TakeDamage(damage);
+        }
     }
 
     // Returns projectile movement scale based on current camera size.

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 // Moves a bullet projectile and applies player-scaled damage when it hits an enemy.
 public class Bullet : MonoBehaviour
@@ -13,6 +14,10 @@ public class Bullet : MonoBehaviour
     private Vector2 direction;
     private Vector3 spawnPosition;
     private PlayerController playerController;  // Reference to the PlayerController
+    // Snapshot the penetration budget at launch; each enemy can be hit only once.
+    private int remainingHits = 1;
+    private bool spent;
+    private readonly HashSet<Enemy> hitEnemies = new HashSet<Enemy>();
 
     // Camera references used for resolution-aware projectile movement.
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
@@ -27,6 +32,9 @@ public class Bullet : MonoBehaviour
         direction = dir.normalized;
         spawnPosition = transform.position;
         playerController = controller;  // Store the reference
+        remainingHits = 1 + (controller != null && controller.Stats != null ? controller.Stats.GetPierceCount() : 0);
+        spent = false;
+        hitEnemies.Clear();
         mainCamera = Camera.main;
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
@@ -49,21 +57,27 @@ public class Bullet : MonoBehaviour
     // Damages an enemy on contact and then destroys the bullet.
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Enemy"))
+        if (spent) return;
+        Enemy enemy = other.GetComponentInParent<Enemy>();
+        if (enemy == null || !hitEnemies.Add(enemy)) return;
+        PlayerStats stats = playerController != null ? playerController.Stats : null;
+        float damage = stats != null ? stats.CalculateDamage(baseDamage, playerController.damageMultiplier, true)
+            : baseDamage * (playerController != null ? playerController.GetDamageMultiplier() : 1f);
+        enemy.TakeDamage(damage);
+        remainingHits--;
+        if (remainingHits > 0) return;
+
+        spent = true;
+        if (stats != null && stats.finalPierceExplosion > 0f)
         {
-            Enemy enemy = other.GetComponent<Enemy>();
-
-            if(enemy != null)
-            {
-                // increase damage over time
-                float currentDamage = baseDamage * (playerController != null ? playerController.GetDamageMultiplier() : 1f);
-
-                // Deal damage to enemy hit
-                enemy.TakeDamage(currentDamage);
-                // Debug.Log($"Deal {currentDamage} damage to enemy!");
-            }
-            Destroy(gameObject);
+            // This secondary hit cannot create another projectile or recursively explode.
+            float radius = 2f * Mathf.Max(0f, stats.explosionRadiusMultiplier);
+            Bomb.DamageArea(transform.position, radius, baseDamage * stats.finalPierceExplosion, playerController, true);
+            Bomb bomb = playerController.bombPrefab != null ? playerController.bombPrefab.GetComponent<Bomb>() : null;
+            if (bomb != null && bomb.explossionEffectprefab != null)
+                Instantiate(bomb.explossionEffectprefab, transform.position, Quaternion.identity);
         }
+        Destroy(gameObject);
     }
 
     // Returns projectile movement scale based on current camera size.

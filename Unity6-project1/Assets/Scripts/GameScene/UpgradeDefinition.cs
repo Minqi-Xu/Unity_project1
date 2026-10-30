@@ -20,6 +20,9 @@ public class UpgradeDefinition : ScriptableObject
     // Upgrade rarity tier.
     public UpgradeRarity rarity = UpgradeRarity.Common;
 
+    // Category used to organize and display this buff.
+    public UpgradeCategory category;
+
     // Maximum times this upgrade can be applied. Use 0 or less for unlimited.
     public int maxLevel = 1;
 

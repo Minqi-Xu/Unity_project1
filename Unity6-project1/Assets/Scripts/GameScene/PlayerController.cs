@@ -201,6 +201,7 @@ public class PlayerController : MonoBehaviour
 
         // End dashing
         isDashing = false;
+        Stats?.OnDashCompleted();
     }
 
     // Clamps the target player position to the current camera view.
@@ -250,25 +251,19 @@ public class PlayerController : MonoBehaviour
             //calculate the direction to the mouse
             Vector2 fireDirection = (mousePosition - transform.position).normalized;
 
-            // Instantiate the bullet at the player's position
-            GameObject bullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
-            // Debug.Log($"Bullet Position: {transform.position}");
-
-            // Set the bullet's direction
-            Bullet bulletScript = bullet.GetComponent<Bullet>();
-            // Debug.Log($"Bullet Position: {bulletScript}");
-            if (bulletScript != null)
+            // Spread additional projectiles symmetrically while keeping the fan within 60 degrees.
+            int count = Stats != null ? Stats.GetProjectileCount() : 1;
+            float step = count > 1 ? Mathf.Min(8f, 60f / (count - 1)) : 0f;
+            for (int i = 0; i < count; i++)
             {
-                bulletScript.Initialize(fireDirection, this);
+                Vector2 shotDirection = Quaternion.Euler(0f, 0f, (i - (count - 1) * 0.5f) * step) * fireDirection;
+                GameObject bullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
+                Bullet bulletScript = bullet.GetComponent<Bullet>();
+                if (bulletScript != null) bulletScript.Initialize(shotDirection, this);
+                float angle = Mathf.Atan2(shotDirection.y, shotDirection.x) * Mathf.Rad2Deg;
+                bullet.transform.rotation = Quaternion.Euler(0, 0, angle);
+                Destroy(bullet, 10f);
             }
-
-
-            // calculate the angle to rotate the bullet to face the direction of movement
-            float angle = Mathf.Atan2(fireDirection.y, fireDirection.x) * Mathf.Rad2Deg;
-            bullet.transform.rotation = Quaternion.Euler(0, 0, angle);
-
-            // Destroy the bullet after a few seconds to avoid clutter
-            Destroy(bullet, 10f);  // Destroy after 10 seconds
 
             // Update the last fire time
             lastFireTime = Time.time;
@@ -356,7 +351,7 @@ public class PlayerController : MonoBehaviour
             Bullet bullet = bulletPrefab.GetComponent<Bullet>();
             if (bullet != null)
             {
-                return bullet.baseDamage * GetDamageMultiplier();
+                return bullet.baseDamage * GetDamageMultiplier() * (Stats != null ? Stats.bulletDamageMultiplier : 1f);
             }
         }
 
@@ -367,6 +362,7 @@ public class PlayerController : MonoBehaviour
     private void LevelUp()
     {
         level++;
+        Stats?.OnLevelUp(GetComponent<PlayerHealth>());
         bool rewardApplied = UpgradeManager.Instance != null && UpgradeManager.Instance.TryOfferLevelUpRewards(this);
         if (!rewardApplied)
         {

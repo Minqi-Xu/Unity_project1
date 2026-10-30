@@ -36,6 +36,8 @@ public class PlayerHealth : MonoBehaviour
     // Cached damage-feedback state.
     private SpriteRenderer playerSprite;    // Reference to the player's SpriteRenderer component
     private Coroutine flashCoroutine;
+    // Scaled-time expiry of immunity granted by the last successful hit.
+    private float invulnerableUntil;
 
     // Initializes health, UI references, and the sprite used for damage flashing.
     void Start()
@@ -59,6 +61,7 @@ public class PlayerHealth : MonoBehaviour
     // Applies enemy damage after time scaling, player stat reduction, and max-hit clamping.
     public void TakeDamage(float damage, PlayerController player)
     {
+        if (currentHealth <= 0f || damage <= 0f || Time.timeScale <= 0f || Time.time < invulnerableUntil) return;
         PlayerController playerController = player != null ? player : GetComponent<PlayerController>();
         float playerGameTime = playerController != null ? playerController.gameTime : 0f;
         float final_damage = damage * (damageMultiplier + damageReceiveIncreasingRate * playerGameTime);
@@ -69,6 +72,8 @@ public class PlayerHealth : MonoBehaviour
         }
 
         final_damage = Mathf.Min(final_damage, maxReceivingDmg);
+        if (final_damage <= 0f) return;
+        invulnerableUntil = Time.time + (stats != null ? Mathf.Max(0f, stats.hitInvulnerability) : 0f);
         // Debug.Log($"Player receives {final_damage} damage");
         currentHealth -= final_damage; // Reduce health by damage amount
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Ensure health doesn't go below 0
@@ -115,7 +120,7 @@ public class PlayerHealth : MonoBehaviour
     // Restores health without exceeding max health.
     public void Heal(float amount)
     {
-        if (amount <= 0f)
+        if (amount <= 0f || currentHealth <= 0f)
         {
             return;
         }

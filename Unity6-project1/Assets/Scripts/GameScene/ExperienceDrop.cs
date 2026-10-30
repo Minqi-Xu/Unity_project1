@@ -12,6 +12,8 @@ public class ExperienceDrop: MonoBehaviour
     // Cached player references used for attraction and reward delivery.
     private Transform player;
     private PlayerController playerController;
+    // Prevent duplicate collection when the player has multiple colliders.
+    private bool collected;
 
     // Camera references used for resolution-aware pickup movement.
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
@@ -48,8 +50,10 @@ public class ExperienceDrop: MonoBehaviour
             float pickupRadius = playerController != null ? playerController.GetPickupRadius(3f) : 3f;
             if (distance <= pickupRadius * cameraSizeFactor)
             {
-                Vector2 direction = (player.position - transform.position).normalized;
-                transform.position += (Vector3)direction * moveSpeed * Time.deltaTime * cameraSizeFactor;
+                float speedMultiplier = playerController != null && playerController.Stats != null
+                    ? Mathf.Max(0f, playerController.Stats.pickupSpeedMultiplier) : 1f;
+                transform.position = Vector3.MoveTowards(transform.position, player.position,
+                    moveSpeed * speedMultiplier * Time.deltaTime * cameraSizeFactor);
             }
         }
     }
@@ -57,12 +61,13 @@ public class ExperienceDrop: MonoBehaviour
     // Grants experience to the player and destroys the pickup on collection.
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (!collected && other.CompareTag("Player"))
         {
             // Call method on player increase their exp here
             PlayerController playerController = other.GetComponent<PlayerController>();
             if (playerController != null)
             {
+                collected = true;
                 if (RewardManager.Instance != null)
                 {
                     RewardManager.Instance.GrantExperience(playerController, 1);

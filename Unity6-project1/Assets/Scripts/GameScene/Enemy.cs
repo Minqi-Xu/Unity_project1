@@ -35,6 +35,8 @@ public class Enemy : MonoBehaviour
     private Camera mainCamera;
     private CameraScaler cameraScaler;
     private bool loggedMissingPlayer;
+    // Prevent multiple projectiles or explosions from granting duplicate death rewards.
+    private bool dead;
 
     // Initializes target lookup, health, damage, and camera references.
     void Start()
@@ -86,6 +88,7 @@ public class Enemy : MonoBehaviour
     // Damages the player on contact and destroys this enemy without dropping experience.
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (dead) return;
         if(collision.CompareTag("Player")) // if the player is "touch" by enemy
         {
             PlayerHealth playerHealth = collision.GetComponentInParent<PlayerHealth>();
@@ -97,6 +100,7 @@ public class Enemy : MonoBehaviour
             }
 
             // Destroy the enemy (without exp drop)
+            dead = true;
             Destroy(gameObject);
         }
     }
@@ -105,6 +109,7 @@ public class Enemy : MonoBehaviour
     // Run when receive damage
     public void TakeDamage(float damage)
     {
+        if (dead || damage <= 0f) return;
         currentHealth -= damage;
         //Debug.Log($"Enemy took {damage} damage, {currentHealth} health remaining");
 
@@ -117,6 +122,8 @@ public class Enemy : MonoBehaviour
     // Drops experience if configured and destroys this enemy.
     void Die()
     {
+        if (dead) return;
+        dead = true;
         //Debug.Log("Enemy die!");
         // Death effects, and destroy
 

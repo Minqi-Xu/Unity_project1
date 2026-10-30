@@ -22,8 +22,28 @@ public enum UpgradeEffectType
     Heal,
     DamageReduction,
     PickupRadiusMultiplier,
-    ExperienceGainMultiplier
+    ExperienceGainMultiplier,
+    // Append new values to preserve existing serialized effect identifiers.
+    BulletDamageMultiplier,
+    ProjectileCount,
+    PierceCount,
+    CriticalChance,
+    CriticalDamageMultiplier,
+    ExplosionRadiusMultiplier,
+    Regeneration,
+    HitInvulnerability,
+    PickupSpeedMultiplier,
+    LevelUpHealing,
+    LevelUpDamage,
+    GlobalCooldownReduction,
+    FinalPierceExplosion,
+    DashAttackSpeed,
+    LowHealthCriticalChance,
+    RandomHigherRarityBuffs
 }
+
+// Gameplay category displayed alongside the rarity in the selection window.
+public enum UpgradeCategory { Attack, Survival, Mobility, Growth, Universal }
 
 // Serializable data entry describing one stat change in an upgrade.
 [Serializable]

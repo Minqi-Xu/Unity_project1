@@ -19,6 +19,77 @@ public class PlayerStats : MonoBehaviour
     // Multiplier applied to experience rewards before they are granted.
     public float experienceGainMultiplier = 1f;
 
+    // Additive bullet-only damage bonus; global damage remains independent.
+    public float bulletDamageMultiplier = 1f;
+    // Radius multiplier for bombs and final-pierce explosions.
+    public float explosionRadiusMultiplier = 1f;
+    // Multiplier shared by bullet, bomb, and dash cooldowns.
+    public float globalCooldownMultiplier = 1f;
+    // Health restored every five seconds of active gameplay.
+    public float regeneration = 0f;
+    // Additional seconds of immunity after a successful incoming hit.
+    public float hitInvulnerability = 0f;
+    // Multiplier for the speed of attracted experience pickups.
+    public float pickupSpeedMultiplier = 1f;
+    // Fraction of maximum health restored on each future level-up.
+    public float levelUpHealing = 0f;
+    // Global damage multiplier added on each future level-up.
+    public float levelUpDamage = 0f;
+    // Fraction of bullet damage dealt by an explosion on the final allowed hit.
+    public float finalPierceExplosion = 0f;
+    // Attack-speed bonus after dashing, scaled by movement-speed bonuses.
+    public float dashAttackSpeed = 0f;
+    // Maximum additional critical chance at zero health, scaled by missing health.
+    public float lowHealthCriticalChance = 0f;
+    // Scaled-time regeneration accumulator and temporary attack-speed expiry.
+    private float regenerationTimer;
+    private float dashAttackSpeedUntil;
+
+    // Regeneration stops during pauses and never revives a dead player.
+    private void Update()
+    {
+        if (regeneration <= 0f) { regenerationTimer = 0f; return; }
+        PlayerHealth health = GetComponent<PlayerHealth>();
+        if (health == null || health.currentHealth <= 0f) return;
+        regenerationTimer += Time.deltaTime;
+        while (regenerationTimer >= 5f)
+        {
+            regenerationTimer -= 5f;
+            HealWithLog(health, regeneration);
+        }
+    }
+
+    // Applies growth bonuses owned before this level was earned.
+    public void OnLevelUp(PlayerHealth health)
+    {
+        damageMultiplier += Mathf.Max(0f, levelUpDamage);
+        if (health != null) HealWithLog(health, health.maxHealth * Mathf.Clamp01(levelUpHealing));
+    }
+
+    // Refreshes, rather than stacks, a three-second post-dash attack-speed window.
+    public void OnDashCompleted()
+    {
+        dashAttackSpeedUntil = Time.time + 3f;
+    }
+
+    // Rolls one critical hit per target; callers supply their weapon base damage.
+    public float CalculateDamage(float baseDamage, float legacyMultiplier, bool bullet)
+    {
+        float result = Mathf.Max(0f, baseDamage) * GetDamageMultiplier(legacyMultiplier);
+        if (bullet) result *= Mathf.Max(0f, bulletDamageMultiplier);
+        float chance = GetCriticalChance();
+        if (chance >= 1f || (chance > 0f && Random.value < chance)) result *= GetCriticalDamageMultiplier();
+        return result;
+    }
+
+    // Logs actual passive healing without emitting messages at full health.
+    private void HealWithLog(PlayerHealth health, float amount)
+    {
+        if (health.currentHealth <= 0f || amount <= 0f || health.currentHealth >= health.maxHealth) return;
+        health.Heal(amount);
+        GetComponent<PlayerController>()?.DebugLogPlayerStatus("Buff Healing", 0f);
+    }
+
     [Header("Movement")]
     // Multiplier applied to the player's base movement speed.
     public float moveSpeedMultiplier = 1f;
@@ -74,7 +145,10 @@ public class PlayerStats : MonoBehaviour
     // Returns critical hit probability clamped between zero and one.
     public float GetCriticalChance()
     {
-        return Mathf.Clamp01(criticalChance);
+        PlayerHealth health = GetComponent<PlayerHealth>();
+        float missingHealth = health != null && health.maxHealth > 0f
+            ? 1f - Mathf.Clamp01(health.currentHealth / health.maxHealth) : 0f;
+        return Mathf.Clamp01(criticalChance + Mathf.Max(0f, lowHealthCriticalChance) * missingHealth);
     }
 
     // Returns the total critical damage multiplier, never below normal damage.
@@ -98,19 +172,21 @@ public class PlayerStats : MonoBehaviour
     // Returns final bullet cooldown after stat modifiers are applied.
     public float GetFireCooldown(float baseFireCooldown)
     {
-        return Mathf.Max(0.02f, baseFireCooldown * fireCooldownMultiplier);
+        float attackSpeed = Time.time < dashAttackSpeedUntil
+            ? 1f + Mathf.Max(0f, dashAttackSpeed) * Mathf.Max(1f, moveSpeedMultiplier) : 1f;
+        return Mathf.Max(0.02f, baseFireCooldown * fireCooldownMultiplier * globalCooldownMultiplier / attackSpeed);
     }
 
     // Returns final bomb cooldown after stat modifiers are applied.
     public float GetBombCooldown(float baseBombCooldown)
     {
-        return Mathf.Max(0.05f, baseBombCooldown * bombCooldownMultiplier);
+        return Mathf.Max(0.05f, baseBombCooldown * bombCooldownMultiplier * globalCooldownMultiplier);
     }
 
     // Returns final dash cooldown after stat modifiers are applied.
     public float GetDashCooldown(float baseDashCooldown)
     {
-        return Mathf.Max(0.05f, baseDashCooldown * dashCooldownMultiplier);
+        return Mathf.Max(0.05f, baseDashCooldown * dashCooldownMultiplier * globalCooldownMultiplier);
     }
 
     // Returns the multiplier that remains after damage reduction is applied.
@@ -156,6 +232,36 @@ public class PlayerStats : MonoBehaviour
     {
         switch (effect.effectType)
         {
+            case UpgradeEffectType.BulletDamageMultiplier:
+                bulletDamageMultiplier = Mathf.Max(0f, bulletDamageMultiplier + effect.value); break;
+            case UpgradeEffectType.ProjectileCount:
+                projectileCount = Mathf.Max(1, projectileCount + Mathf.RoundToInt(effect.value)); break;
+            case UpgradeEffectType.PierceCount:
+                pierceCount = Mathf.Max(0, pierceCount + Mathf.RoundToInt(effect.value)); break;
+            case UpgradeEffectType.CriticalChance:
+                criticalChance = Mathf.Clamp01(criticalChance + effect.value); break;
+            case UpgradeEffectType.CriticalDamageMultiplier:
+                criticalDamageMultiplier = Mathf.Max(1f, criticalDamageMultiplier + effect.value); break;
+            case UpgradeEffectType.ExplosionRadiusMultiplier:
+                explosionRadiusMultiplier = Mathf.Max(0f, explosionRadiusMultiplier + effect.value); break;
+            case UpgradeEffectType.Regeneration:
+                regeneration = Mathf.Max(0f, regeneration + effect.value); break;
+            case UpgradeEffectType.HitInvulnerability:
+                hitInvulnerability = Mathf.Max(0f, hitInvulnerability + effect.value); break;
+            case UpgradeEffectType.PickupSpeedMultiplier:
+                pickupSpeedMultiplier = Mathf.Max(0f, pickupSpeedMultiplier + effect.value); break;
+            case UpgradeEffectType.LevelUpHealing:
+                levelUpHealing = Mathf.Clamp01(levelUpHealing + effect.value); break;
+            case UpgradeEffectType.LevelUpDamage:
+                levelUpDamage = Mathf.Max(0f, levelUpDamage + effect.value); break;
+            case UpgradeEffectType.GlobalCooldownReduction:
+                globalCooldownMultiplier = ApplyCooldownReduction(globalCooldownMultiplier, effect.value); break;
+            case UpgradeEffectType.FinalPierceExplosion:
+                finalPierceExplosion = Mathf.Max(0f, finalPierceExplosion + effect.value); break;
+            case UpgradeEffectType.DashAttackSpeed:
+                dashAttackSpeed = Mathf.Max(0f, dashAttackSpeed + effect.value); break;
+            case UpgradeEffectType.LowHealthCriticalChance:
+                lowHealthCriticalChance = Mathf.Clamp01(lowHealthCriticalChance + effect.value); break;
             case UpgradeEffectType.DamageMultiplier:
                 damageMultiplier = Mathf.Max(0f, damageMultiplier + effect.value);
                 break;

@@ -72,7 +72,7 @@ public class BuffSelectionUI : MonoBehaviour
         Time.timeScale = previousTimeScale;
     }
 
-    // Creates a screen-space canvas, centered window, and scrollable option list.
+    // Creates a screen-space modal with equal-width options visible simultaneously.
     private void BuildWindow()
     {
         canvasRoot = new GameObject("BuffSelectionCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -88,8 +88,8 @@ public class BuffSelectionUI : MonoBehaviour
         RectTransform overlay = Panel("Dimmer", canvasRoot.transform, new Color(0f, 0f, 0f, 0.78f));
         Stretch(overlay, 0f, 0f, 0f, 0f);
         RectTransform window = Panel("SelectionWindow", overlay, new Color(0.09f, 0.1f, 0.12f));
-        window.anchorMin = new Vector2(0.08f, 0.08f);
-        window.anchorMax = new Vector2(0.92f, 0.92f);
+        window.anchorMin = new Vector2(0.04f, 0.06f);
+        window.anchorMax = new Vector2(0.96f, 0.94f);
         window.offsetMin = Vector2.zero;
         window.offsetMax = Vector2.zero;
         Outline outline = window.gameObject.AddComponent<Outline>();
@@ -108,30 +108,15 @@ public class BuffSelectionUI : MonoBehaviour
         title.fontSizeMin = 14f;
         title.fontSizeMax = 26f;
 
-        RectTransform viewport = Panel("OptionsViewport", window, new Color(0.07f, 0.08f, 0.1f));
-        Stretch(viewport, 24f, 24f, 24f, 86f);
-        viewport.gameObject.AddComponent<RectMask2D>();
-        ScrollRect scroll = viewport.gameObject.AddComponent<ScrollRect>();
-        scroll.horizontal = false;
-        scroll.movementType = ScrollRect.MovementType.Clamped;
-        scroll.scrollSensitivity = 35f;
-        scroll.viewport = viewport;
-
         content = new GameObject("Options", typeof(RectTransform)).GetComponent<RectTransform>();
-        content.SetParent(viewport, false);
-        content.anchorMin = new Vector2(0f, 1f);
-        content.anchorMax = Vector2.one;
-        content.pivot = new Vector2(0.5f, 1f);
-        content.sizeDelta = Vector2.zero;
-        VerticalLayoutGroup layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(8, 8, 8, 8);
-        layout.spacing = 12f;
+        content.SetParent(window, false);
+        Stretch(content, 24f, 24f, 24f, 86f);
+        HorizontalLayoutGroup layout = content.gameObject.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = 16f;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
-        layout.childForceExpandHeight = false;
-        ContentSizeFitter fitter = content.gameObject.AddComponent<ContentSizeFitter>();
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        scroll.content = content;
+        layout.childForceExpandWidth = true;
+        layout.childForceExpandHeight = true;
 
         if (EventSystem.current == null)
         {
@@ -139,40 +124,44 @@ public class BuffSelectionUI : MonoBehaviour
         }
     }
 
-    // Creates a selectable row with rarity color, buff name, and description.
+    // Creates an equal-width card with separate text regions that cannot resize its layout.
     private Button CreateOption(UpgradeDefinition upgrade)
     {
         Color rarityColor = RarityColor(upgrade.rarity);
         RectTransform row = Panel(upgrade.DisplayName, content, new Color(0.15f, 0.17f, 0.2f));
         LayoutElement size = row.gameObject.AddComponent<LayoutElement>();
-        size.minHeight = 146f;
-        size.preferredHeight = 146f;
+        size.minWidth = 0f;
+        size.preferredWidth = 0f;
+        size.flexibleWidth = 1f;
         Button button = row.gameObject.AddComponent<Button>();
         ColorBlock colors = button.colors;
         colors.highlightedColor = new Color(1.25f, 1.25f, 1.25f);
         colors.selectedColor = colors.highlightedColor;
         button.colors = colors;
-        VerticalLayoutGroup layout = row.gameObject.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(20, 20, 12, 12);
-        layout.spacing = 5f;
-        layout.childControlHeight = true;
-        layout.childControlWidth = true;
-        layout.childForceExpandHeight = false;
-
-        TextMeshProUGUI rarity = Label("Rarity", row, upgrade.rarity.ToString().ToUpperInvariant(), 14f, rarityColor);
-        rarity.gameObject.AddComponent<LayoutElement>().preferredHeight = 20f;
+        TextMeshProUGUI rarity = Label("Rarity", row, upgrade.rarity.ToString().ToUpperInvariant() + " | " + upgrade.category, 14f, rarityColor);
+        FitCardText(rarity, 0.85f, 0.95f, 14f);
         TextMeshProUGUI nameLabel = Label("Name", row, upgrade.DisplayName, 23f, Color.white);
         nameLabel.fontStyle = FontStyles.Bold;
-        nameLabel.enableAutoSizing = true;
-        nameLabel.fontSizeMin = 14f;
-        nameLabel.fontSizeMax = 23f;
-        nameLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 30f;
+        FitCardText(nameLabel, 0.62f, 0.82f, 23f);
         TextMeshProUGUI detail = Label("Description", row, upgrade.description, 17f, new Color(0.83f, 0.86f, 0.89f));
-        detail.enableAutoSizing = true;
-        detail.fontSizeMin = 11f;
-        detail.fontSizeMax = 17f;
-        detail.gameObject.AddComponent<LayoutElement>().preferredHeight = 50f;
+        FitCardText(detail, 0.05f, 0.58f, 17f);
         return button;
+    }
+
+    // Wraps and auto-sizes the full text within a stable, proportional region of its card.
+    private static void FitCardText(TextMeshProUGUI label, float bottom, float top, float maxSize)
+    {
+        RectTransform rect = label.rectTransform;
+        rect.anchorMin = new Vector2(0.06f, bottom);
+        rect.anchorMax = new Vector2(0.94f, top);
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        label.alignment = TextAlignmentOptions.TopLeft;
+        label.textWrappingMode = TextWrappingModes.Normal;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 6f;
+        label.fontSizeMax = maxSize;
+        label.characterSpacing = 0f;
     }
 
     // Creates a UI panel without requiring scene or prefab references.

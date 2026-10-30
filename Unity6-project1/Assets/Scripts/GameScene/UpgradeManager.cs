@@ -144,6 +144,20 @@ public class UpgradeManager : MonoBehaviour
         }
 
         PlayerHealth health = player.GetComponent<PlayerHealth>();
+        int bundleCount = GetBundleCount(upgrade);
+        if (bundleCount > 0)
+        {
+            List<UpgradeDefinition> rewards = GetBundleCandidates(upgrade);
+            if (rewards.Count < bundleCount) return false;
+            for (int i = 0; i < bundleCount; i++)
+            {
+                int index = UnityEngine.Random.Range(0, rewards.Count);
+                UpgradeDefinition reward = rewards[index];
+                ApplyUpgrade(reward, player);
+                rewards.RemoveAt(index);
+                Debug.Log("[Fortune Bundle] Granted " + reward.DisplayName + " (" + reward.rarity + ")");
+            }
+        }
         stats.ApplyUpgrade(upgrade, health);
         upgradeLevels[upgradeKey] = currentLevel + 1;
 
@@ -225,13 +239,42 @@ public class UpgradeManager : MonoBehaviour
 
             string upgradeKey = GetUpgradeKey(upgrade);
             upgradeLevels.TryGetValue(upgradeKey, out int currentLevel);
-            if (upgrade.maxLevel <= 0 || currentLevel < upgrade.maxLevel)
+            if ((upgrade.maxLevel <= 0 || currentLevel < upgrade.maxLevel)
+                && (GetBundleCount(upgrade) == 0 || GetBundleCandidates(upgrade).Count >= GetBundleCount(upgrade)))
             {
                 candidates.Add(upgrade);
             }
         }
 
         return candidates;
+    }
+
+    // Bundles are manager-owned effects, never recursive stat effects.
+    private int GetBundleCount(UpgradeDefinition upgrade)
+    {
+        int count = 0;
+        if (upgrade.effects != null)
+            foreach (UpgradeEffect effect in upgrade.effects)
+                if (effect.effectType == UpgradeEffectType.RandomHigherRarityBuffs)
+                    count += Mathf.Max(0, Mathf.RoundToInt(effect.value));
+        return count;
+    }
+
+    // Returns one eligible basic buff per family at exactly the next rarity, excluding bundles.
+    private List<UpgradeDefinition> GetBundleCandidates(UpgradeDefinition bundle)
+    {
+        List<UpgradeDefinition> result = new List<UpgradeDefinition>();
+        HashSet<string> keys = new HashSet<string>();
+        if (availableUpgrades == null || bundle.rarity == UpgradeRarity.Legendary) return result;
+        foreach (UpgradeDefinition candidate in availableUpgrades)
+        {
+            if (candidate == null || candidate.category == UpgradeCategory.Universal || GetBundleCount(candidate) > 0
+                || (int)candidate.rarity != (int)bundle.rarity + 1) continue;
+            string key = GetUpgradeKey(candidate);
+            upgradeLevels.TryGetValue(key, out int level);
+            if ((candidate.maxLevel <= 0 || level < candidate.maxLevel) && keys.Add(key)) result.Add(candidate);
+        }
+        return result;
     }
 
     // Returns a stable tracking key for an upgrade definition.
@@ -257,113 +300,141 @@ public class UpgradeManager : MonoBehaviour
         return string.Join(", ", names);
     }
 
-    // Creates a small runtime upgrade pool so level-up rewards work before asset setup exists.
+    // Builds twenty basic families and rare-only universal or synergy upgrades.
     private UpgradeDefinition[] CreatePrototypeUpgradePool()
     {
-        UpgradeDefinition[] commonUpgrades = new UpgradeDefinition[]
+        UpgradeDefinition[] basics =
         {
-            CreateRuntimeUpgrade(
-                "damage_training",
-                "Damage Training",
-                "Increase player damage by 10%.",
-                UpgradeRarity.Common,
-                10,
-                new UpgradeEffect(UpgradeEffectType.DamageMultiplier, 0.1f)),
-            CreateRuntimeUpgrade(
-                "rapid_fire",
-                "Rapid Fire",
-                "Reduce bullet cooldown by 8%.",
-                UpgradeRarity.Common,
-                5,
-                new UpgradeEffect(UpgradeEffectType.FireCooldownReduction, 0.08f)),
-            CreateRuntimeUpgrade(
-                "battle_boots",
-                "Battle Boots",
-                "Increase movement speed by 8%.",
-                UpgradeRarity.Common,
-                5,
-                new UpgradeEffect(UpgradeEffectType.MoveSpeedMultiplier, 0.08f)),
-            CreateRuntimeUpgrade(
-                "dash_practice",
-                "Dash Practice",
-                "Reduce dash cooldown by 10%.",
-                UpgradeRarity.Common,
-                5,
-                new UpgradeEffect(UpgradeEffectType.DashCooldownReduction, 0.1f)),
-            CreateRuntimeUpgrade(
-                "vitality",
-                "Vitality",
-                "Increase max health by 20.",
-                UpgradeRarity.Common,
-                5,
-                new UpgradeEffect(UpgradeEffectType.MaxHealth, 20f)),
-            CreateRuntimeUpgrade(
-                "armor_training",
-                "Armor Training",
-                "Reduce incoming damage by 5%.",
-                UpgradeRarity.Common,
-                5,
-                new UpgradeEffect(UpgradeEffectType.DamageReduction, 0.05f)),
-            CreateRuntimeUpgrade(
-                "magnet",
-                "Magnet",
-                "Increase pickup radius by 20%.",
-                UpgradeRarity.Common,
-                5,
-                new UpgradeEffect(UpgradeEffectType.PickupRadiusMultiplier, 0.2f)),
-            CreateRuntimeUpgrade(
-                "bomb_tech",
-                "Bomb Tech",
-                "Reduce bomb cooldown by 10%.",
-                UpgradeRarity.Common,
-                5,
-                new UpgradeEffect(UpgradeEffectType.BombCooldownReduction, 0.1f))
+            Basic("damage_training", "Damage Training", UpgradeCategory.Attack, UpgradeEffectType.BulletDamageMultiplier, 0.1f, 10),
+            Basic("rapid_fire", "Rapid Fire", UpgradeCategory.Attack, UpgradeEffectType.FireCooldownReduction, 0.08f),
+            Basic("multishot", "Multishot", UpgradeCategory.Attack, UpgradeEffectType.ProjectileCount, 1f, 3),
+            Basic("piercing", "Piercing Rounds", UpgradeCategory.Attack, UpgradeEffectType.PierceCount, 1f, 3),
+            Basic("blast_radius", "Blast Radius", UpgradeCategory.Attack, UpgradeEffectType.ExplosionRadiusMultiplier, 0.15f),
+            Basic("bomb_tech", "Bomb Tech", UpgradeCategory.Attack, UpgradeEffectType.BombCooldownReduction, 0.1f),
+            Basic("critical_chance", "Precision", UpgradeCategory.Attack, UpgradeEffectType.CriticalChance, 0.05f),
+            Basic("critical_damage", "Deadly Aim", UpgradeCategory.Attack, UpgradeEffectType.CriticalDamageMultiplier, 0.25f),
+            Basic("vitality", "Vitality", UpgradeCategory.Survival, UpgradeEffectType.MaxHealth, 20f),
+            Basic("armor_training", "Armor Training", UpgradeCategory.Survival, UpgradeEffectType.DamageReduction, 0.08f),
+            Basic("regeneration", "Regeneration", UpgradeCategory.Survival, UpgradeEffectType.Regeneration, 1f),
+            Basic("second_wind", "Second Wind", UpgradeCategory.Survival, UpgradeEffectType.HitInvulnerability, 0.2f),
+            Basic("battle_boots", "Battle Boots", UpgradeCategory.Mobility, UpgradeEffectType.MoveSpeedMultiplier, 0.08f),
+            Basic("dash_practice", "Dash Practice", UpgradeCategory.Mobility, UpgradeEffectType.DashCooldownReduction, 0.1f),
+            Basic("long_dash", "Long Dash", UpgradeCategory.Mobility, UpgradeEffectType.DashSpeedMultiplier, 0.15f),
+            Basic("magnet", "Magnet", UpgradeCategory.Mobility, UpgradeEffectType.PickupRadiusMultiplier, 0.2f),
+            Basic("scholar", "Scholar", UpgradeCategory.Growth, UpgradeEffectType.ExperienceGainMultiplier, 0.15f),
+            Basic("swift_pickups", "Swift Pickups", UpgradeCategory.Growth, UpgradeEffectType.PickupSpeedMultiplier, 0.2f),
+            Basic("renewal", "Renewal", UpgradeCategory.Growth, UpgradeEffectType.LevelUpHealing, 0.1f),
+            Basic("potential", "Potential", UpgradeCategory.Growth, UpgradeEffectType.LevelUpDamage, 0.02f)
         };
-
-        List<UpgradeDefinition> variants = new List<UpgradeDefinition>();
-        foreach (UpgradeDefinition common in commonUpgrades)
+        List<UpgradeDefinition> pool = new List<UpgradeDefinition>();
+        foreach (UpgradeDefinition common in basics)
         {
-            variants.Add(common);
-            variants.Add(CreateRarityVariant(common, UpgradeRarity.Rare, 1.5f));
-            variants.Add(CreateRarityVariant(common, UpgradeRarity.Epic, 2f));
-            variants.Add(CreateRarityVariant(common, UpgradeRarity.Legendary, 3f));
+            pool.Add(common);
+            pool.Add(CreateRarityVariant(common, UpgradeRarity.Rare, 1.5f));
+            pool.Add(CreateRarityVariant(common, UpgradeRarity.Epic, 2f));
+            pool.Add(CreateRarityVariant(common, UpgradeRarity.Legendary, 3f));
         }
-
-        return variants.ToArray();
+        AddSpecial(pool, "power", "Universal Power", UpgradeRarity.Rare, 5,
+            new UpgradeEffect(UpgradeEffectType.DamageMultiplier, 0.15f));
+        AddSpecial(pool, "haste", "Universal Haste", UpgradeRarity.Rare, 5,
+            new UpgradeEffect(UpgradeEffectType.GlobalCooldownReduction, 0.1f));
+        AddSpecial(pool, "piercing_blast", "Piercing Blast", UpgradeRarity.Epic, 1,
+            new UpgradeEffect(UpgradeEffectType.PierceCount, 1f),
+            new UpgradeEffect(UpgradeEffectType.FinalPierceExplosion, 1f));
+        AddSpecial(pool, "dash_frenzy", "Dash Frenzy", UpgradeRarity.Epic, 1,
+            new UpgradeEffect(UpgradeEffectType.MoveSpeedMultiplier, 0.16f),
+            new UpgradeEffect(UpgradeEffectType.DashAttackSpeed, 0.3f));
+        AddSpecial(pool, "desperate_precision", "Desperate Precision", UpgradeRarity.Epic, 1,
+            new UpgradeEffect(UpgradeEffectType.LowHealthCriticalChance, 0.5f));
+        foreach (UpgradeRarity rarity in new[] { UpgradeRarity.Rare, UpgradeRarity.Epic })
+        {
+            UpgradeDefinition bundle = CreateRuntimeUpgrade("fortune_bundle", "Fortune Bundle",
+                "Immediately gain 2 different " + ((UpgradeRarity)((int)rarity + 1)) +
+                " basic buffs. Both consume their normal family levels.",
+                rarity, 3, new UpgradeEffect(UpgradeEffectType.RandomHigherRarityBuffs, 2f));
+            bundle.category = UpgradeCategory.Universal;
+            pool.Add(bundle);
+        }
+        return pool.ToArray();
     }
 
-    // Variants share upgradeId and maxLevel, so rarity does not bypass a buff family's level cap.
+    // Creates a common basic buff with its description derived from its actual effect.
+    private UpgradeDefinition Basic(string id, string title, UpgradeCategory category,
+        UpgradeEffectType type, float value, int maxLevel = 5)
+    {
+        UpgradeEffect effect = new UpgradeEffect(type, value);
+        UpgradeDefinition buff = CreateRuntimeUpgrade(id, title, DescribeEffect(effect), UpgradeRarity.Common, maxLevel, effect);
+        buff.category = category;
+        return buff;
+    }
+
+    // Adds a rare-only family and progressively stronger variants with one shared level cap.
+    private void AddSpecial(List<UpgradeDefinition> pool, string id, string title, UpgradeRarity minimum,
+        int maxLevel, params UpgradeEffect[] effects)
+    {
+        List<string> descriptions = new List<string>();
+        foreach (UpgradeEffect effect in effects) descriptions.Add(DescribeEffect(effect));
+        UpgradeDefinition buff = CreateRuntimeUpgrade(id, title, string.Join("\n", descriptions), minimum, maxLevel, effects);
+        buff.category = UpgradeCategory.Universal;
+        pool.Add(buff);
+        for (int tier = (int)minimum + 1; tier <= (int)UpgradeRarity.Legendary; tier++)
+            pool.Add(CreateRarityVariant(buff, (UpgradeRarity)tier, 1f + 0.5f * (tier - (int)minimum)));
+    }
+
+    // Integer effects scale in whole steps; all variants share their family's level cap.
     private UpgradeDefinition CreateRarityVariant(UpgradeDefinition common, UpgradeRarity rarity, float strength)
     {
         UpgradeEffect[] effects = new UpgradeEffect[common.effects.Length];
         List<string> details = new List<string>();
         for (int i = 0; i < effects.Length; i++)
         {
-            effects[i] = new UpgradeEffect(common.effects[i].effectType, common.effects[i].value * strength);
+            UpgradeEffect source = common.effects[i];
+            bool count = source.effectType == UpgradeEffectType.ProjectileCount || source.effectType == UpgradeEffectType.PierceCount;
+            float value = count ? source.value + ((int)rarity - (int)common.rarity) : source.value * strength;
+            effects[i] = new UpgradeEffect(source.effectType, value);
             details.Add(DescribeEffect(effects[i]));
         }
-
         UpgradeDefinition variant = CreateRuntimeUpgrade(common.upgradeId, common.DisplayName,
             string.Join("\n", details), rarity, common.maxLevel, effects);
+        variant.category = common.category;
         variant.name = common.upgradeId + "_" + rarity;
         return variant;
     }
 
-    // Generate the description from the actual scaled effect so the UI displays the correct numbers.
+    // Descriptions distinguish additive stat bonuses from multiplicative cooldown reductions.
     private string DescribeEffect(UpgradeEffect effect)
     {
+        string value = effect.value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
         string percent = (effect.value * 100f).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%";
         switch (effect.effectType)
         {
-            case UpgradeEffectType.DamageMultiplier: return "Increase player damage by " + percent + ".";
-            case UpgradeEffectType.FireCooldownReduction: return "Reduce bullet cooldown by " + percent + ".";
-            case UpgradeEffectType.BombCooldownReduction: return "Reduce bomb cooldown by " + percent + ".";
-            case UpgradeEffectType.DashCooldownReduction: return "Reduce dash cooldown by " + percent + ".";
-            case UpgradeEffectType.MoveSpeedMultiplier: return "Increase movement speed by " + percent + ".";
-            case UpgradeEffectType.DamageReduction: return "Reduce incoming damage by " + percent + ".";
-            case UpgradeEffectType.PickupRadiusMultiplier: return "Increase pickup radius by " + percent + ".";
-            case UpgradeEffectType.MaxHealth: return "Increase max health by " + effect.value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + ".";
-            default: return effect.effectType + ": " + effect.value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+            case UpgradeEffectType.BulletDamageMultiplier: return "Bullet damage bonus +" + percent + ".";
+            case UpgradeEffectType.DamageMultiplier: return "All damage bonus +" + percent + ".";
+            case UpgradeEffectType.FireCooldownReduction: return "Bullet cooldown -" + percent + " (multiplicative).";
+            case UpgradeEffectType.BombCooldownReduction: return "Bomb cooldown -" + percent + " (multiplicative).";
+            case UpgradeEffectType.DashCooldownReduction: return "Dash cooldown -" + percent + " (multiplicative).";
+            case UpgradeEffectType.GlobalCooldownReduction: return "All weapon and dash cooldowns -" + percent + ".";
+            case UpgradeEffectType.MoveSpeedMultiplier: return "Movement speed bonus +" + percent + ".";
+            case UpgradeEffectType.DashSpeedMultiplier: return "Dash distance bonus +" + percent + " via dash speed.";
+            case UpgradeEffectType.DamageReduction: return "Damage reduction +" + percent + " (90% cap).";
+            case UpgradeEffectType.PickupRadiusMultiplier: return "Pickup radius bonus +" + percent + ".";
+            case UpgradeEffectType.PickupSpeedMultiplier: return "Pickup attraction speed bonus +" + percent + ".";
+            case UpgradeEffectType.ExperienceGainMultiplier: return "Experience gain bonus +" + percent + ".";
+            case UpgradeEffectType.ExplosionRadiusMultiplier: return "Explosion radius bonus +" + percent + ".";
+            case UpgradeEffectType.MaxHealth: return "Max health +" + value + "; heal the same amount.";
+            case UpgradeEffectType.Heal: return "Restore " + value + " health.";
+            case UpgradeEffectType.ProjectileCount: return "Projectiles per shot +" + value + ".";
+            case UpgradeEffectType.PierceCount: return "Additional targets pierced +" + value + ".";
+            case UpgradeEffectType.CriticalChance: return "Critical chance +" + percent + " (100% cap).";
+            case UpgradeEffectType.CriticalDamageMultiplier: return "Critical damage multiplier +" + value + "x.";
+            case UpgradeEffectType.Regeneration: return "Restore " + value + " health every 5 seconds.";
+            case UpgradeEffectType.HitInvulnerability: return "Post-hit invulnerability +" + value + " seconds.";
+            case UpgradeEffectType.LevelUpHealing: return "Future level-ups restore +" + percent + " of max health.";
+            case UpgradeEffectType.LevelUpDamage: return "Future level-ups add +" + percent + " all damage bonus.";
+            case UpgradeEffectType.FinalPierceExplosion: return "Final projectile hit explodes in radius 2 for " + percent + " bullet damage.";
+            case UpgradeEffectType.DashAttackSpeed: return "After dashing: +" + percent + " attack speed for 3s, multiplied by move-speed multiplier.";
+            case UpgradeEffectType.LowHealthCriticalChance: return "Gain up to +" + percent + " critical chance, proportional to missing health.";
+            default: return effect.effectType + ": " + value;
         }
     }
 
