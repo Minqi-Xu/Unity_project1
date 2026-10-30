@@ -8,6 +8,18 @@ public class PlayerStats : MonoBehaviour
     [Header("Offense")]
     // Outgoing damage multiplier applied on top of the legacy player damage multiplier.
     public float damageMultiplier = 1f;
+    [Header("Target bonuses and on-hit enchantments")]
+    [Min(0f)] public float normalEnemyDamageBonus;
+    [Min(0f)] public float eliteEnemyDamageBonus;
+    [Min(0f)] public float bossDamageBonus;
+    [Min(0f)] public float flatHitDamage;
+    [Min(0f)] public float projectileFlatDamage;
+    [Min(0f)] public float executeDamageBonus;
+
+    public float ModifyDamageAgainst(Enemy enemy, float damage, bool directHit, bool projectileHit) =>
+        EnemyDamageRules.Resolve(damage, enemy.Rank, enemy.maxHealth > 0f ? enemy.currentHealth / enemy.maxHealth : 1f,
+            normalEnemyDamageBonus, eliteEnemyDamageBonus, bossDamageBonus, executeDamageBonus,
+            flatHitDamage, projectileFlatDamage, directHit, projectileHit);
 
     // Probability of a critical hit; 0.25 means a 25% chance.
     [Range(0f, 1f)]
@@ -214,13 +226,13 @@ public class PlayerStats : MonoBehaviour
         return Mathf.Max(0f, basePickupRadius * pickupRadiusMultiplier);
     }
 
-    // Converts base experience into whole experience points after experience modifiers.
-    public int ApplyExperienceGain(int baseExperience)
+    // Preserve fractional experience throughout reward delivery and level progress.
+    public float ApplyExperienceGain(float baseExperience)
     {
-        return Mathf.Max(0, Mathf.FloorToInt(GetExperienceAmount(baseExperience)));
+        return GetExperienceAmount(baseExperience);
     }
 
-    // Returns scaled experience as a float so RewardManager can preserve fractional remainders.
+    // Returns the complete scaled amount; no integer rounding or separate remainder bucket.
     public float GetExperienceAmount(float baseExperience)
     {
         return Mathf.Max(0f, baseExperience * experienceGainMultiplier);
@@ -245,6 +257,12 @@ public class PlayerStats : MonoBehaviour
     {
         switch (effect.effectType)
         {
+            case UpgradeEffectType.NormalEnemyDamageBonus: normalEnemyDamageBonus = Mathf.Max(0f, normalEnemyDamageBonus + effect.value); break;
+            case UpgradeEffectType.EliteEnemyDamageBonus: eliteEnemyDamageBonus = Mathf.Max(0f, eliteEnemyDamageBonus + effect.value); break;
+            case UpgradeEffectType.BossDamageBonus: bossDamageBonus = Mathf.Max(0f, bossDamageBonus + effect.value); break;
+            case UpgradeEffectType.FlatHitDamage: flatHitDamage = Mathf.Max(0f, flatHitDamage + effect.value); break;
+            case UpgradeEffectType.ProjectileFlatDamage: projectileFlatDamage = Mathf.Max(0f, projectileFlatDamage + effect.value); break;
+            case UpgradeEffectType.ExecuteDamageBonus: executeDamageBonus = Mathf.Max(0f, executeDamageBonus + effect.value); break;
             case UpgradeEffectType.PrimaryWeaponDamageMultiplier:
                 primaryWeaponDamageMultiplier = Mathf.Max(0f, primaryWeaponDamageMultiplier + effect.value); break;
             case UpgradeEffectType.ProjectileCount:

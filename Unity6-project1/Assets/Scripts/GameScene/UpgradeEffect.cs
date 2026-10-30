@@ -39,7 +39,13 @@ public enum UpgradeEffectType
     FinalPierceExplosion,
     DashAttackSpeed,
     LowHealthCriticalChance,
-    RandomHigherRarityBuffs
+    RandomHigherRarityBuffs,
+    NormalEnemyDamageBonus,
+    EliteEnemyDamageBonus,
+    BossDamageBonus,
+    FlatHitDamage,
+    ProjectileFlatDamage,
+    ExecuteDamageBonus
 }
 
 // Gameplay category displayed alongside the rarity in the selection window.

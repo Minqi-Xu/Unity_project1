@@ -32,6 +32,8 @@ public static class EnemySmokeTests
         WeaponRewardSmokeTests.Run();
         WeaponBalanceSmokeTests.Run();
         AbilityUiSmokeTests.Run();
+        EnemyDamageSmokeTests.Run();
+        GameCodexSmokeTests.Run();
         SessionState.SetBool(Running, true);
         EditorSceneManager.OpenScene("Assets/Scenes/GameScene.unity");
         EditorApplication.EnterPlaymode();

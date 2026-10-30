@@ -72,6 +72,15 @@ Each synergy family can be acquired once regardless of rarity.
 
 ## Validation
 
+Experience progress now stores both current experience and the next-level threshold
+as floats. RewardManager passes the full boosted amount to the player without integer
+rounding or a separate remainder bucket. The top-left HUD shows a horizontal blue
+experience bar, current integer level and next-level percentage. For example, 1 XP
+with a 15% bonus fills 23% of a 5-XP threshold. Multi-level grants preserve leftover XP.
+Run `Tools > Player > Run Experience Smoke Tests` for fractional reward, threshold,
+overflow and rounding checks; `Tests/ExperienceMathChecks.cs` tests the production
+progress and boundary helpers independently. Play Mode layout verification remains pending.
+
 The pause menu now includes an acquired-buff list. Each family has one named row
 with its acquired level; hover or keyboard focus shows the exact rarity stacks
 and each stack's per-pick description. Long lists and descriptions scroll

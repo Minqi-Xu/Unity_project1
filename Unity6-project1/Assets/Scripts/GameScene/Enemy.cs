@@ -171,9 +171,10 @@ public class Enemy : MonoBehaviour
 
     // Reduces enemy health and kills it when health reaches zero.
     // Run when receive damage
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, PlayerStats source = null, bool directHit = false, bool projectileHit = false)
     {
         if (dead || damage <= 0f) return;
+        if (source != null) damage = source.ModifyDamageAgainst(this, damage, directHit, projectileHit);
         currentHealth -= damage;
         //Debug.Log($"Enemy took {damage} damage, {currentHealth} health remaining");
 

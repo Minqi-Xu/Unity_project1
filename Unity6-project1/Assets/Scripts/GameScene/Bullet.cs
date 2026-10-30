@@ -93,12 +93,12 @@ public class Bullet : MonoBehaviour
         Enemy enemy = other.GetComponentInParent<Enemy>();
         if (enemy == null || !hitEnemies.Add(enemy)) return;
         PlayerStats stats = playerController != null ? playerController.Stats : null;
-        if (weapon != null) weapon.Hit(enemy, baseDamage, spawnPosition, hitIndex++, attackContext, weaponScale, allowProcs);
+        if (weapon != null) weapon.Hit(enemy, baseDamage, spawnPosition, hitIndex++, attackContext, weaponScale, allowProcs, true);
         else
         {
             float damage = stats != null ? stats.CalculateDamage(baseDamage, playerController.damageMultiplier, true)
                 : baseDamage * (playerController != null ? playerController.GetDamageMultiplier() : 1f);
-            enemy.TakeDamage(damage);
+            enemy.TakeDamage(damage, stats, true, true);
         }
         remainingHits--;
         if (remainingHits > 0) return;
@@ -113,7 +113,7 @@ public class Bullet : MonoBehaviour
             float radius = 2f * Mathf.Max(0f, stats.explosionRadiusMultiplier);
             if (weapon != null) weapon.DamageArea(transform.position, radius,
                 baseDamage * stats.finalPierceExplosion * weaponScale, null, false);
-            else Bomb.DamageArea(transform.position, radius, baseDamage * stats.finalPierceExplosion, playerController, true);
+            else Bomb.DamageArea(transform.position, radius, baseDamage * stats.finalPierceExplosion, playerController, true, false);
             Bomb bomb = playerController.bombPrefab != null ? playerController.bombPrefab.GetComponent<Bomb>() : null;
             if (bomb != null && bomb.explossionEffectprefab != null)
                 Instantiate(bomb.explossionEffectprefab, transform.position, Quaternion.identity);

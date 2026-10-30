@@ -74,7 +74,7 @@ public partial class PlayerWeaponSystem
 
     // All proc-generated damage uses procs=false to prevent recursive rewards/attacks.
     public void Hit(Enemy enemy, float baseDamage, Vector2 origin, int pierced = 0,
-        WeaponAttackContext context = null, float scale = 1f, bool procs = true)
+        WeaponAttackContext context = null, float scale = 1f, bool procs = true, bool projectileHit = false)
     {
         if (enemy == null || !enemy.IsAlive || owner == null || owner.Stats == null) return;
         float multiplier = 1f + Get(WeaponBuffEffect.Damage);
@@ -100,7 +100,7 @@ public partial class PlayerWeaponSystem
         float characterScale = Definition.kind == WeaponKind.Bomb ? 1f : CharacterDamageMultiplier;
         float damage = owner.Stats.CalculateDamage(baseDamage * multiplier * scale * characterScale, owner.damageMultiplier,
             IsPrimaryWeapon);
-        enemy.TakeDamage(damage);
+        enemy.TakeDamage(damage, owner.Stats, procs, projectileHit);
         bool killed = !enemy.IsAlive;
         if ((Definition.kind == WeaponKind.Melee || Definition.kind == WeaponKind.Axe) && !killed)
         {

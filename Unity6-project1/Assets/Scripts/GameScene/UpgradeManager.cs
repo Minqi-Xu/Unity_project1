@@ -61,7 +61,7 @@ public class UpgradeManager : MonoBehaviour
 
         if (availableUpgrades == null || availableUpgrades.Length == 0)
         {
-            availableUpgrades = CreatePrototypeUpgradePool();
+            availableUpgrades = CreateDefaultUpgradePool();
         }
         List<UpgradeDefinition> pool = new List<UpgradeDefinition>(availableUpgrades);
         foreach (UpgradeDefinition upgrade in WeaponUpgradeCatalog.Create())
@@ -233,7 +233,8 @@ public class UpgradeManager : MonoBehaviour
         if (upgrade.effects == null) return true;
         foreach (UpgradeEffect effect in upgrade.effects)
         {
-            if ((effect.effectType == UpgradeEffectType.PierceCount || effect.effectType == UpgradeEffectType.FinalPierceExplosion) &&
+            if ((effect.effectType == UpgradeEffectType.PierceCount || effect.effectType == UpgradeEffectType.FinalPierceExplosion ||
+                effect.effectType == UpgradeEffectType.ProjectileFlatDamage) &&
                 inventory.Find(WeaponKind.Pistol) == null && inventory.Find(WeaponKind.Shotgun) == null &&
                 inventory.Find(WeaponKind.Bow) == null && inventory.Find(WeaponKind.Turret) == null && inventory.Find(WeaponKind.Drone) == null)
                 return false;
@@ -381,7 +382,7 @@ public class UpgradeManager : MonoBehaviour
     }
 
     // Builds twenty basic families and rare-only universal or synergy upgrades.
-    private UpgradeDefinition[] CreatePrototypeUpgradePool()
+    public static UpgradeDefinition[] CreateDefaultUpgradePool()
     {
         UpgradeDefinition[] basics =
         {
@@ -460,11 +461,26 @@ public class UpgradeManager : MonoBehaviour
             new UpgradeEffect(UpgradeEffectType.GlobalCooldownReduction, .06f), new UpgradeEffect(UpgradeEffectType.DamageMultiplier, .1f));
         AddSpecial(pool, "growth_core", "Growth Core", UpgradeRarity.Epic, 2,
             new UpgradeEffect(UpgradeEffectType.ExperienceGainMultiplier, .15f), new UpgradeEffect(UpgradeEffectType.LevelUpDamage, .015f));
+        AddSpecial(pool, "monster_hunter", "Monster Hunter", UpgradeRarity.Rare, 5,
+            new UpgradeEffect(UpgradeEffectType.NormalEnemyDamageBonus, .15f));
+        AddSpecial(pool, "elite_breaker", "Elite Breaker", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.EliteEnemyDamageBonus, .2f));
+        AddSpecial(pool, "boss_slayer", "Boss Slayer", UpgradeRarity.Rare, 3,
+            new UpgradeEffect(UpgradeEffectType.BossDamageBonus, .2f));
+        AddSpecial(pool, "arcane_impact", "Arcane Impact", UpgradeRarity.Epic, 3,
+            new UpgradeEffect(UpgradeEffectType.FlatHitDamage, 3f));
+        AddSpecial(pool, "empowered_rounds", "Empowered Rounds", UpgradeRarity.Epic, 3,
+            new UpgradeEffect(UpgradeEffectType.ProjectileFlatDamage, 4f));
+        AddSpecial(pool, "final_verdict", "Final Verdict", UpgradeRarity.Legendary, 2,
+            new UpgradeEffect(UpgradeEffectType.ExecuteDamageBonus, .35f));
+        AddSpecial(pool, "giant_bane", "Giant Bane", UpgradeRarity.Legendary, 1,
+            new UpgradeEffect(UpgradeEffectType.EliteEnemyDamageBonus, .15f),
+            new UpgradeEffect(UpgradeEffectType.BossDamageBonus, .15f), new UpgradeEffect(UpgradeEffectType.FlatHitDamage, 5f));
         return pool.ToArray();
     }
 
     // Creates a common basic buff with its description derived from its actual effect.
-    private UpgradeDefinition Basic(string id, string title, UpgradeCategory category,
+    private static UpgradeDefinition Basic(string id, string title, UpgradeCategory category,
         UpgradeEffectType type, float value, int maxLevel = 5)
     {
         UpgradeEffect effect = new UpgradeEffect(type, value);
@@ -474,7 +490,7 @@ public class UpgradeManager : MonoBehaviour
     }
 
     // Adds a rare-only family and progressively stronger variants with one shared level cap.
-    private void AddSpecial(List<UpgradeDefinition> pool, string id, string title, UpgradeRarity minimum,
+    private static void AddSpecial(List<UpgradeDefinition> pool, string id, string title, UpgradeRarity minimum,
         int maxLevel, params UpgradeEffect[] effects)
     {
         List<string> descriptions = new List<string>();
@@ -487,7 +503,7 @@ public class UpgradeManager : MonoBehaviour
     }
 
     // Integer effects scale in whole steps; all variants share their family's level cap.
-    private UpgradeDefinition CreateRarityVariant(UpgradeDefinition common, UpgradeRarity rarity, float strength)
+    private static UpgradeDefinition CreateRarityVariant(UpgradeDefinition common, UpgradeRarity rarity, float strength)
     {
         UpgradeEffect[] effects = new UpgradeEffect[common.effects.Length];
         List<string> details = new List<string>();
@@ -507,12 +523,18 @@ public class UpgradeManager : MonoBehaviour
     }
 
     // Descriptions distinguish additive stat bonuses from multiplicative cooldown reductions.
-    private string DescribeEffect(UpgradeEffect effect)
+    public static string DescribeEffect(UpgradeEffect effect)
     {
         string value = effect.value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
         string percent = (effect.value * 100f).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%";
         switch (effect.effectType)
         {
+            case UpgradeEffectType.NormalEnemyDamageBonus: return "Damage to normal enemies +" + percent + ".";
+            case UpgradeEffectType.EliteEnemyDamageBonus: return "Damage to elites +" + percent + "; excludes bosses.";
+            case UpgradeEffectType.BossDamageBonus: return "Damage to mini bosses and final bosses +" + percent + ".";
+            case UpgradeEffectType.FlatHitDamage: return "Direct hits add " + value + " fixed damage after multipliers; excludes damage-over-time and secondary procs.";
+            case UpgradeEffectType.ProjectileFlatDamage: return "Bullet and arrow hits add " + value + " fixed damage after multipliers; includes turret and drone bullets, excludes secondary procs.";
+            case UpgradeEffectType.ExecuteDamageBonus: return "Damage to enemies at or below 30% HP +" + percent + "; checked before the hit.";
             case UpgradeEffectType.PrimaryWeaponDamageMultiplier: return "Primary weapon damage +" + percent + "; excludes auxiliary weapons and RMB bombs.";
             case UpgradeEffectType.DamageMultiplier: return "All damage bonus +" + percent + ".";
             case UpgradeEffectType.PrimaryWeaponAttackSpeed: return "Primary weapon attack speed +" + percent + "; cooldown is divided by attack-speed multiplier.";
@@ -544,7 +566,7 @@ public class UpgradeManager : MonoBehaviour
     }
 
     // Creates one runtime-only upgrade definition for the prototype pool.
-    private UpgradeDefinition CreateRuntimeUpgrade(
+    private static UpgradeDefinition CreateRuntimeUpgrade(
         string upgradeId,
         string displayName,
         string description,

@@ -21,7 +21,7 @@ public class WeaponBleed : MonoBehaviour
             Stack stack = stacks[i];
             if (Time.time < stack.nextTick) continue;
             if (stack.owner != null && stack.owner.Stats != null)
-                enemy.TakeDamage(stack.owner.Stats.CalculateDamage(stack.damage, stack.owner.damageMultiplier, false));
+                enemy.TakeDamage(stack.owner.Stats.CalculateDamage(stack.damage, stack.owner.damageMultiplier, false), stack.owner.Stats);
             stack.nextTick += 1f;
             if (--stack.ticks <= 0) stacks.RemoveAt(i);
         }

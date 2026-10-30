@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 // Central entry point for granting experience, upgrades, healing, and future rewards.
@@ -11,9 +10,6 @@ public class RewardManager : MonoBehaviour
         rank == EnemyRank.MiniBoss || rank == EnemyRank.FinalBoss ? BossChestBuffCount : 0;
     // Active reward manager instance for the current scene.
     public static RewardManager Instance { get; private set; }
-
-    // Fractional experience stored per player so small multipliers accumulate correctly.
-    private readonly Dictionary<PlayerController, float> experienceRemainders = new Dictionary<PlayerController, float>();
 
     // Initializes the singleton instance for reward delivery.
     void Awake()
@@ -63,25 +59,16 @@ public class RewardManager : MonoBehaviour
     }
 
     // Grants experience to a player after applying experience multipliers.
-    public void GrantExperience(PlayerController player, int amount)
+    public void GrantExperience(PlayerController player, float amount)
     {
-        if (player == null)
+        if (player == null || !ExperienceMath.IsPositiveFinite(amount))
         {
             return;
         }
 
         PlayerStats stats = player.Stats;
         float scaledAmount = stats != null ? stats.GetExperienceAmount(amount) : Mathf.Max(0f, amount);
-        experienceRemainders.TryGetValue(player, out float remainder);
-
-        float totalExperience = scaledAmount + remainder;
-        int wholeExperience = Mathf.FloorToInt(totalExperience);
-        experienceRemainders[player] = totalExperience - wholeExperience;
-
-        if (wholeExperience > 0)
-        {
-            player.CollectExperience(wholeExperience);
-        }
+        player.CollectExperience(scaledAmount);
     }
 
     // Grants a specific upgrade to a player and logs the resulting player status.

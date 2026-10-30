@@ -74,7 +74,8 @@ public class ExperienceDrop: MonoBehaviour
                 }
                 else
                 {
-                    playerController.CollectExperience(1);
+                    playerController.CollectExperience(playerController.Stats != null
+                        ? playerController.Stats.GetExperienceAmount(1f) : 1f);
                 }
             }
             Destroy(gameObject);

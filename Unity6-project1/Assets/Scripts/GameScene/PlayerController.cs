@@ -35,11 +35,11 @@ public class PlayerController : MonoBehaviour
     // Legacy outgoing damage multiplier kept for compatibility with existing gameplay.
     public float damageMultiplier = 1f; // damage multiplier
 
-    // UI text that displays level and experience progress.
+    // Legacy level label; the experience HUD replaces its numeric progress display.
     public TextMeshProUGUI levelText; // Link to a UI text element to display level
 
     // Experience required to gain one level.
-    public int experienceThreshold = 5;    // How many exp to level up
+    [Min(.01f)] public float experienceThreshold = 5f;
 
     // Cooldown indicator for bullet firing.
     public CooldownIndicator bulletCooldownIndicator; // Bullet cooldown indicator
@@ -73,7 +73,9 @@ public class PlayerController : MonoBehaviour
     public float BombCooldownDuration => GetBombCooldown();
     public float PrimaryCooldownRemaining => Mathf.Max(0f, lastFireTime + GetPrimaryWeaponCooldown() - Time.time);
     public float PrimaryCooldownDuration => GetPrimaryWeaponCooldown();
-    private int currentExperience = 0;  // current experience collected
+    private float currentExperience = 0f;
+    public float CurrentExperience => currentExperience;
+    public float ExperienceProgress => ExperienceMath.Progress(currentExperience, experienceThreshold);
 
     // Camera references used for screen bounds and resolution-aware movement scaling.
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
@@ -99,6 +101,7 @@ public class PlayerController : MonoBehaviour
         dashCooldownIndicator = FindComponentByName<CooldownIndicator>("DashCooldownIndicator");
         bombCooldownIndicator = FindComponentByName<CooldownIndicator>("BombCooldownIndicator");
         if (GetComponent<AbilityCooldownHUD>() == null) gameObject.AddComponent<AbilityCooldownHUD>();
+        if (GetComponent<ExperienceHUD>() == null) gameObject.AddComponent<ExperienceHUD>();
         UpdateLevelText();
     }
 
@@ -330,22 +333,24 @@ public class PlayerController : MonoBehaviour
     }
 
     // Adds experience and triggers level-ups while the experience threshold is met.
-    public void CollectExperience(int amount)
+    public void CollectExperience(float amount)
     {
-        // increase player level
-        currentExperience += Mathf.Max(0, amount);
+        if (!ExperienceMath.IsPositiveFinite(amount)) return;
 
-        if (experienceThreshold <= 0)
+        if (!ExperienceMath.IsPositiveFinite(experienceThreshold))
         {
             Debug.LogWarning("Experience threshold must be greater than 0. Resetting to 1.");
-            experienceThreshold = 1;
+            experienceThreshold = 1f;
         }
+        float total = currentExperience + amount;
+        if (float.IsInfinity(total) || total - experienceThreshold == total) return;
+        currentExperience = total;
 
         // check if current experience meets the threshold
-        while(currentExperience >= experienceThreshold)
+        while (ExperienceMath.CanLevelUp(currentExperience, experienceThreshold))
         {
             // Reset experience
-            currentExperience -= experienceThreshold;
+            currentExperience = Mathf.Max(0f, currentExperience - experienceThreshold);
             LevelUp();
         }
 
@@ -446,7 +451,7 @@ public class PlayerController : MonoBehaviour
     {
         if(levelText != null)
         {
-            levelText.text = $"Level: {level} ({currentExperience}/{experienceThreshold})";
+            levelText.text = $"Level: {level}";
         }
     }
 

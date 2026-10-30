@@ -6,6 +6,7 @@ public static class EnemyScheduleChecks
 {
     public static void Main()
     {
+        EnemyDamageChecks.Run();
         EnemyEncounter[] entries = EnemyEncounter.Defaults();
         Check(entries.Select(x => x.time).SequenceEqual(new float[] { 120, 300, 480, 600, 900, 1080, 1200 }), "Exact seven encounter times");
         Check(entries.Count(x => x.rank == EnemyRank.Elite) == 4, "Four elites");

@@ -192,7 +192,7 @@ MonoBehaviour:
   level: 1
   damageMultiplier: 1
   levelText: {fileID: 0}
-  experienceThreshold: 1
+  experienceThreshold: 5
   bulletCooldownIndicator: {fileID: 0}
   dashCooldownIndicator: {fileID: 0}
   bombCooldownIndicator: {fileID: 0}

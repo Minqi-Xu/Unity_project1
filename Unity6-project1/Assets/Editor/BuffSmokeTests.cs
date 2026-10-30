@@ -31,7 +31,7 @@ public static class BuffSmokeTests
             Call(manager, "Awake");
             UpgradeDefinition[] pool = manager.availableUpgrades.Where(x => !x.weaponSpecific && x.grantedWeapon == null).ToArray();
             Check(pool.Count(x => x.rarity == UpgradeRarity.Common) == 20, "Twenty common basics");
-            Check(pool.Length == 126, "All basic, special and twelve new compound families");
+            Check(pool.Length == 141, "All basic, compound and seven new target/enchantment families");
             string[] newFamilies = { "vanguard_provisions", "mobile_gunnery", "demolition_kit", "survivor_instinct", "field_scholar", "salvage_engine", "renewing_potential", "dash_logistics",
                 "battle_medic", "critical_engine", "arcane_overdrive", "growth_core" };
             foreach (string id in newFamilies)
@@ -41,6 +41,9 @@ public static class BuffSmokeTests
                 Check(variants.Last().rarity == UpgradeRarity.Legendary && variants.Last().effects[0].value > variants.First().effects[0].value, "Compound legendary variants are stronger");
                 Check(variants.All(x => x.effects.All(e => e.effectType != UpgradeEffectType.ProjectileCount)), "Compound buffs cannot leak extra projectiles into auxiliary weapons");
             }
+            string[] damageFamilies = { "monster_hunter", "elite_breaker", "boss_slayer", "arcane_impact", "empowered_rounds", "final_verdict", "giant_bane" };
+            Check(pool.Count(x => damageFamilies.Contains(x.upgradeId)) == 15, "Seven new damage families have fifteen rarity versions");
+            Check(pool.Where(x => damageFamilies.Contains(x.upgradeId)).All(x => x.rarity >= UpgradeRarity.Rare), "New damage buffs never roll Common");
             foreach (var family in pool.Where(x => x.category != UpgradeCategory.Universal).GroupBy(x => x.upgradeId))
             {
                 var variants = family.OrderBy(x => x.rarity).ToArray();
@@ -97,6 +100,9 @@ public static class BuffSmokeTests
             foreach (UpgradeDefinition basic in pool.Where(x => x.category != UpgradeCategory.Universal))
                 levels[basic.upgradeId] = basic.maxLevel;
             Check(!manager.ApplyUpgrade(bundle, player), "Exhausted bundle cannot consume a reward");
+            Check(manager.ApplyUpgrade(pool.First(x => x.upgradeId == "boss_slayer" && x.rarity == UpgradeRarity.Rare), player), "Rare boss vulnerability can be granted");
+            Check(manager.ApplyUpgrade(pool.First(x => x.upgradeId == "boss_slayer" && x.rarity == UpgradeRarity.Legendary), player), "Legendary boss vulnerability shares the same family");
+            Near(stats.bossDamageBonus, .6f, "Rarity versions stack their actual target damage values");
             health.currentHealth = 0f;
             health.Heal(100f);
             Near(health.currentHealth, 0f, "Healing cannot revive");
