@@ -5,6 +5,23 @@ public static class WeaponVisuals
 {
     private static Material lineMaterial;
 
+    public static void Lightning(Vector2 position, Color color)
+    {
+        GameObject effect = new GameObject("LightningStrike");
+        LineRenderer line = effect.AddComponent<LineRenderer>();
+        if (lineMaterial == null) lineMaterial = new Material(Shader.Find("Sprites/Default"));
+        line.sharedMaterial = lineMaterial;
+        line.positionCount = 4;
+        line.SetPosition(0, position + Vector2.up * 4f);
+        line.SetPosition(1, position + new Vector2(.3f, 2.5f));
+        line.SetPosition(2, position + new Vector2(-.3f, 1.5f));
+        line.SetPosition(3, position);
+        line.startWidth = line.endWidth = .1f;
+        line.startColor = line.endColor = color;
+        line.sortingOrder = 20;
+        Object.Destroy(effect, .2f);
+    }
+
     public static void Pulse(Vector2 position, float radius, Color color)
     {
         GameObject effect = new GameObject("AttackRing");

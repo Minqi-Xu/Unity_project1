@@ -3,7 +3,7 @@ using UnityEngine;
 
 // Owns the primary weapon; bombs on RMB and movement stay on PlayerController.
 [DisallowMultipleComponent]
-public class PlayerWeaponSystem : MonoBehaviour
+public partial class PlayerWeaponSystem : MonoBehaviour
 {
     public WeaponDefinition Definition { get; private set; }
     private PlayerController owner;
@@ -16,15 +16,20 @@ public class PlayerWeaponSystem : MonoBehaviour
         summons.Clear();
         owner = player;
         Definition = definition;
+        buffs.Clear();
+        CharacterDamageMultiplier = CharacterCooldownMultiplier = 1f;
+        configuredAt = Time.time;
+        consecutiveShots = pistolHits = 0;
+        lastShot = -100f;
+        drawStarted = -1f;
         nextAttack = Time.time;
     }
 
-    public float Cooldown => Definition == null ? 0.3f : Definition.kind == WeaponKind.Bomb
-        ? owner.Stats.GetBombCooldown(Definition.cooldown)
-        : owner.Stats.GetFireCooldown(Definition.cooldown);
+    public float Cooldown => GetWeaponCooldown();
 
     private void Update()
     {
+        if (Definition != null && Definition.kind == WeaponKind.Bow && !Input.GetMouseButton(0)) CancelDraw();
         if (Definition == null || owner == null || owner.Stats == null || Time.timeScale <= 0f) return;
         PlayerHealth health = owner.GetComponent<PlayerHealth>();
         if (health != null && health.currentHealth <= 0f) return;
@@ -32,7 +37,9 @@ public class PlayerWeaponSystem : MonoBehaviour
         {
             summons.RemoveAll(unit => unit == null);
             int count = Mathf.Clamp(Definition.summonCount + owner.Stats.GetProjectileCount() - 1, 1, 12);
-            while (summons.Count < count) SpawnSummon(transform.position, summons.Count);
+            int permanent = 0;
+            foreach (SummonedUnit unit in summons) if (!unit.IsTemporary) permanent++;
+            while (permanent < count) { SpawnSummon(transform.position, permanent); permanent++; }
         }
         else if (Definition.Automatic) TryAttack(Vector2.right);
     }
@@ -42,13 +49,11 @@ public class PlayerWeaponSystem : MonoBehaviour
         if (Definition == null || owner == null || owner.Stats == null || Time.timeScale <= 0f || Time.time < nextAttack)
             return false;
         if (Definition.kind == WeaponKind.Drone || Definition.kind == WeaponKind.Creature) return false;
+        if (!ReadyToDraw()) return false;
         if (direction.sqrMagnitude < 0.001f) direction = Vector2.right;
         if (Definition.kind == WeaponKind.Melee)
         {
-            int strikes = Mathf.Clamp(owner.Stats.GetProjectileCount(), 1, 32);
-            for (int i = 0; i < strikes; i++)
-                Bomb.DamageArea(transform.position, Definition.radius, Definition.damage, owner, true);
-            WeaponVisuals.Pulse(transform.position, Definition.radius, Definition.tint);
+            StartCoroutine(MeleeAttack());
         }
         else if (Definition.kind == WeaponKind.Turret)
         {
@@ -60,7 +65,16 @@ public class PlayerWeaponSystem : MonoBehaviour
                 summons.RemoveAt(0);
                 Destroy(oldest.gameObject);
             }
-            SpawnSummon((Vector2)transform.position + direction.normalized * 1.2f, summons.Count);
+            Vector2 placement = (Vector2)transform.position + direction.normalized * (1.2f + Get(WeaponBuffEffect.TurretDistance));
+            Camera camera = Camera.main;
+            if (camera != null && camera.orthographic)
+            {
+                Vector3 viewport = camera.WorldToViewportPoint(placement);
+                viewport.x = Mathf.Clamp(viewport.x, .03f, .97f);
+                viewport.y = Mathf.Clamp(viewport.y, .03f, .97f);
+                placement = camera.ViewportToWorldPoint(viewport);
+            }
+            SpawnSummon(placement, summons.Count);
         }
         else if (Definition.kind == WeaponKind.Bomb)
         {
@@ -71,27 +85,37 @@ public class PlayerWeaponSystem : MonoBehaviour
             bomb.basedamage = Definition.damage;
             bomb.explosionRadius = Definition.radius;
             bomb.maxDistance = Definition.range;
-            bomb.Initialize(direction, owner);
+            bomb.Initialize(direction, owner, this);
             Destroy(shot, 10f);
+        }
+        else if (Definition.kind == WeaponKind.FireOrb) CastFireballs();
+        else if (Definition.kind == WeaponKind.Lightning)
+        {
+            if (!CastLightning()) { nextAttack = Time.time + .15f; return false; }
         }
         else
         {
             if (owner.bulletPrefab == null) return false;
             FireProjectiles(transform.position, direction);
         }
+        RecordShot();
         float actionCooldown = Definition.kind == WeaponKind.Turret
-            ? owner.Stats.GetFireCooldown(Definition.deploymentCooldown) : Cooldown;
+            ? owner.Stats.GetPrimaryWeaponCooldown(Definition.deploymentCooldown * CharacterCooldownMultiplier * Mathf.Max(.4f, 1f - Get(WeaponBuffEffect.TurretDeployment))) : Cooldown;
         nextAttack = Time.time + actionCooldown;
-        owner.bulletCooldownIndicator?.StartCooldown(actionCooldown);
+        if (gameObject == owner.gameObject) owner.bulletCooldownIndicator?.StartCooldown(actionCooldown);
         return true;
     }
 
-    public void FireProjectiles(Vector2 position, Vector2 direction)
+    public void FireProjectiles(Vector2 position, Vector2 direction, float scale = 1f, bool procs = true, int shotCountOverride = 0)
     {
         if (owner.bulletPrefab == null) return;
         bool summon = Definition.kind == WeaponKind.Turret || Definition.kind == WeaponKind.Drone;
-        int count = Mathf.Clamp(Definition.projectiles + (summon ? 0 : owner.Stats.GetProjectileCount() - 1), 1, 64);
+        int count = Mathf.Clamp(Definition.projectiles + Mathf.RoundToInt(Get(WeaponBuffEffect.Count)) +
+            (summon ? 0 : owner.Stats.GetProjectileCount() - 1), 1, 64);
+        if (shotCountOverride > 0) count = Mathf.Clamp(shotCountOverride, 1, 64);
         float fan = Definition.kind == WeaponKind.Shotgun ? Definition.spread : Mathf.Min(60f, Definition.spread * (count - 1));
+        if (Definition.kind == WeaponKind.Shotgun) fan = Mathf.Max(10f, fan * (1f - Get(WeaponBuffEffect.ShotgunChoke)));
+        WeaponAttackContext context = new WeaponAttackContext();
         for (int i = 0; i < count; i++)
         {
             float angle = count <= 1 ? 0f : (i / (float)(count - 1) - 0.5f) * fan;
@@ -101,7 +125,8 @@ public class PlayerWeaponSystem : MonoBehaviour
             if (bullet == null) { Destroy(shot); continue; }
             bullet.baseDamage = Definition.damage;
             bullet.bulletSpeed = Definition.projectileSpeed;
-            bullet.Initialize(aim, owner, Definition.pierce);
+            bullet.Initialize(aim, owner, Definition.pierce + Mathf.RoundToInt(Get(WeaponBuffEffect.BowPierce)));
+            bullet.SetWeapon(this, context, scale, procs);
             SpriteRenderer renderer = shot.GetComponent<SpriteRenderer>();
             if (renderer != null) renderer.color = Definition.tint;
             if (Definition.kind == WeaponKind.Bow) shot.transform.localScale = Vector3.Scale(shot.transform.localScale, new Vector3(1.8f, 0.55f, 1f));

@@ -4,6 +4,7 @@ using UnityEngine;
 public class CharacterDefinition : ScriptableObject
 {
     public string characterId;
+    public bool availableAtStart = true;
     public string displayName;
     [TextArea] public string passive;
     [TextArea] public string limitation;
@@ -31,8 +32,6 @@ public class CharacterDefinition : ScriptableObject
         if (stats == null) stats = player.gameObject.AddComponent<PlayerStats>();
         player.moveSpeed = moveSpeed;
         stats.damageMultiplier *= damageMultiplier;
-        stats.bulletDamageMultiplier *= primaryDamageMultiplier;
-        stats.fireCooldownMultiplier *= attackCooldownMultiplier;
         stats.bombCooldownMultiplier *= bombCooldownMultiplier;
         stats.explosionRadiusMultiplier *= explosionRadiusMultiplier;
         stats.dashCooldownMultiplier *= dashCooldownMultiplier;
@@ -49,6 +48,9 @@ public class CharacterDefinition : ScriptableObject
             PlayerWeaponSystem system = player.GetComponent<PlayerWeaponSystem>();
             if (system == null) system = player.gameObject.AddComponent<PlayerWeaponSystem>();
             system.Configure(player, startingWeapon);
+            system.CharacterDamageMultiplier = primaryDamageMultiplier;
+            system.CharacterCooldownMultiplier = attackCooldownMultiplier;
         }
+        WeaponInventory.Ensure(player);
     }
 }

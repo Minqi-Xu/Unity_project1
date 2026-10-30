@@ -15,7 +15,7 @@ public enum UpgradeEffectType
     DamageMultiplier,
     MoveSpeedMultiplier,
     DashSpeedMultiplier,
-    FireCooldownReduction,
+    PrimaryWeaponAttackSpeed,
     BombCooldownReduction,
     DashCooldownReduction,
     MaxHealth,
@@ -24,7 +24,7 @@ public enum UpgradeEffectType
     PickupRadiusMultiplier,
     ExperienceGainMultiplier,
     // Append new values to preserve existing serialized effect identifiers.
-    BulletDamageMultiplier,
+    PrimaryWeaponDamageMultiplier,
     ProjectileCount,
     PierceCount,
     CriticalChance,

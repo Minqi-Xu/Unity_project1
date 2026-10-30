@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // Holds runtime player stat modifiers and converts base values into final gameplay values.
 [DisallowMultipleComponent]
@@ -19,8 +20,9 @@ public class PlayerStats : MonoBehaviour
     // Multiplier applied to experience rewards before they are granted.
     public float experienceGainMultiplier = 1f;
 
-    // Additive bullet-only damage bonus; global damage remains independent.
-    public float bulletDamageMultiplier = 1f;
+    // Primary-weapon bonus; auxiliaries and RMB bombs do not inherit it.
+    [FormerlySerializedAs("bulletDamageMultiplier")]
+    public float primaryWeaponDamageMultiplier = 1f;
     // Radius multiplier for bombs and final-pierce explosions.
     public float explosionRadiusMultiplier = 1f;
     // Multiplier shared by bullet, bomb, and dash cooldowns.
@@ -75,10 +77,10 @@ public class PlayerStats : MonoBehaviour
     }
 
     // Rolls one critical hit per target; callers supply their weapon base damage.
-    public float CalculateDamage(float baseDamage, float legacyMultiplier, bool bullet)
+    public float CalculateDamage(float baseDamage, float legacyMultiplier, bool primaryWeapon)
     {
         float result = Mathf.Max(0f, baseDamage) * GetDamageMultiplier(legacyMultiplier);
-        if (bullet) result *= Mathf.Max(0f, bulletDamageMultiplier);
+        if (primaryWeapon) result *= Mathf.Max(0f, primaryWeaponDamageMultiplier);
         float chance = GetCriticalChance();
         if (chance >= 1f || (chance > 0f && Random.value < chance)) result *= GetCriticalDamageMultiplier();
         return result;
@@ -111,8 +113,10 @@ public class PlayerStats : MonoBehaviour
     [Min(0)]
     public int pierceCount = 0;
 
-    // Multiplier applied to the player's base bullet fire cooldown.
-    public float fireCooldownMultiplier = 1f;
+    // Retain serialized legacy cooldown multipliers when loading existing prefabs.
+    [FormerlySerializedAs("fireCooldownMultiplier")]
+    public float primaryWeaponCooldownMultiplier = 1f;
+    public float primaryWeaponAttackSpeedMultiplier = 1f;
 
     // Multiplier applied to the player's base bomb cooldown.
     public float bombCooldownMultiplier = 1f;
@@ -171,12 +175,19 @@ public class PlayerStats : MonoBehaviour
         return Mathf.Max(0f, baseDashSpeed * dashSpeedMultiplier);
     }
 
-    // Returns final bullet cooldown after stat modifiers are applied.
-    public float GetFireCooldown(float baseFireCooldown)
+    // Returns final primary cooldown after its attack-speed and global modifiers.
+    public float GetPrimaryWeaponCooldown(float baseFireCooldown)
     {
         float attackSpeed = Time.time < dashAttackSpeedUntil
             ? 1f + Mathf.Max(0f, dashAttackSpeed) * Mathf.Max(1f, moveSpeedMultiplier) : 1f;
-        return Mathf.Max(0.02f, baseFireCooldown * fireCooldownMultiplier * globalCooldownMultiplier / attackSpeed);
+        return Mathf.Max(0.02f, baseFireCooldown * primaryWeaponCooldownMultiplier * globalCooldownMultiplier /
+            (Mathf.Max(.01f, primaryWeaponAttackSpeedMultiplier) * attackSpeed));
+    }
+
+    // Auxiliary weapons inherit global cooldown, not primary attack-speed buffs.
+    public float GetAuxiliaryWeaponCooldown(float baseCooldown)
+    {
+        return Mathf.Max(.02f, baseCooldown * globalCooldownMultiplier);
     }
 
     // Returns final bomb cooldown after stat modifiers are applied.
@@ -234,8 +245,8 @@ public class PlayerStats : MonoBehaviour
     {
         switch (effect.effectType)
         {
-            case UpgradeEffectType.BulletDamageMultiplier:
-                bulletDamageMultiplier = Mathf.Max(0f, bulletDamageMultiplier + effect.value); break;
+            case UpgradeEffectType.PrimaryWeaponDamageMultiplier:
+                primaryWeaponDamageMultiplier = Mathf.Max(0f, primaryWeaponDamageMultiplier + effect.value); break;
             case UpgradeEffectType.ProjectileCount:
                 projectileCount = Mathf.Max(1, projectileCount + Mathf.RoundToInt(effect.value)); break;
             case UpgradeEffectType.PierceCount:
@@ -273,8 +284,8 @@ public class PlayerStats : MonoBehaviour
             case UpgradeEffectType.DashSpeedMultiplier:
                 dashSpeedMultiplier = Mathf.Max(0f, dashSpeedMultiplier + effect.value);
                 break;
-            case UpgradeEffectType.FireCooldownReduction:
-                fireCooldownMultiplier = ApplyCooldownReduction(fireCooldownMultiplier, effect.value);
+            case UpgradeEffectType.PrimaryWeaponAttackSpeed:
+                primaryWeaponAttackSpeedMultiplier = Mathf.Max(.01f, primaryWeaponAttackSpeedMultiplier + effect.value);
                 break;
             case UpgradeEffectType.BombCooldownReduction:
                 bombCooldownMultiplier = ApplyCooldownReduction(bombCooldownMultiplier, effect.value);

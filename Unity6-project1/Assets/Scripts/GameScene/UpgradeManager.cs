@@ -22,6 +22,9 @@ public class UpgradeManager : MonoBehaviour
 
     // Automatically applies the first choice until a selection UI exists.
     public bool autoPickFirstChoiceForPrototype = false;
+    public AutonomousOfferPolicy autonomousWeapons = new AutonomousOfferPolicy();
+    private readonly Dictionary<PlayerController, int> autonomousMisses = new Dictionary<PlayerController, int>();
+    public int GetAutonomousMisses(PlayerController player) => autonomousMisses.TryGetValue(player, out int value) ? value : 0;
 
     // Pending level-ups are resolved one at a time using a fresh upgrade pool.
     private readonly Queue<KeyValuePair<PlayerController, int>> pendingPlayers = new Queue<KeyValuePair<PlayerController, int>>();
@@ -53,6 +56,11 @@ public class UpgradeManager : MonoBehaviour
         {
             availableUpgrades = CreatePrototypeUpgradePool();
         }
+        List<UpgradeDefinition> pool = new List<UpgradeDefinition>(availableUpgrades);
+        foreach (UpgradeDefinition upgrade in WeaponUpgradeCatalog.Create())
+            if (!pool.Exists(item => item != null && item.upgradeId == upgrade.upgradeId)) pool.Add(upgrade);
+            else Destroy(upgrade);
+        availableUpgrades = pool.ToArray();
     }
 
     // Builds level-up choices for a player and optionally auto-applies one during prototype mode.
@@ -75,7 +83,7 @@ public class UpgradeManager : MonoBehaviour
             return true;
         }
 
-        List<UpgradeDefinition> choices = PickUpgradeChoices();
+        List<UpgradeDefinition> choices = PickLevelUpChoices(player);
         if (choices.Count == 0)
         {
             return false;
@@ -142,6 +150,16 @@ public class UpgradeManager : MonoBehaviour
         {
             return false;
         }
+        if (upgrade.grantedWeapon != null)
+        {
+            if (!WeaponInventory.Ensure(player).Acquire(upgrade.grantedWeapon)) return false;
+        }
+        if (upgrade.weaponSpecific)
+        {
+            PlayerWeaponSystem weapon = WeaponInventory.Ensure(player).Find(upgrade.targetWeapon);
+            if (weapon == null) return false;
+            weapon.ApplyBuff(upgrade.weaponEffect, upgrade.weaponValue);
+        }
 
         PlayerHealth health = player.GetComponent<PlayerHealth>();
         int bundleCount = GetBundleCount(upgrade);
@@ -168,9 +186,49 @@ public class UpgradeManager : MonoBehaviour
     // Picks weighted rarity variants without offering the same buff family twice.
     private List<UpgradeDefinition> PickUpgradeChoices()
     {
-        List<UpgradeDefinition> candidates = GetAvailableUpgrades();
+        return PickWeightedChoices(GetAvailableUpgrades().FindAll(item => !item.weaponSpecific && item.grantedWeapon == null), choicesPerLevel);
+    }
+
+    private List<UpgradeDefinition> PickLevelUpChoices(PlayerController player)
+    {
+        WeaponInventory inventory = WeaponInventory.Ensure(player);
+        List<UpgradeDefinition> eligible = GetAvailableUpgrades();
+        List<UpgradeDefinition> weapons = eligible.FindAll(item => item.grantedWeapon != null && inventory.CanAcquire(item.grantedWeapon));
+        List<UpgradeDefinition> normal = eligible.FindAll(item => item.grantedWeapon == null &&
+            (!item.weaponSpecific || inventory.Find(item.targetWeapon) != null) && IsUsefulForLoadout(item, inventory));
+        int misses = GetAutonomousMisses(player);
+        bool weaponOffered = weapons.Count > 0 && autonomousWeapons.ShouldOffer(misses, UnityEngine.Random.value);
+        int count = Mathf.Max(1, choicesPerLevel);
+        List<UpgradeDefinition> choices = PickWeightedChoices(normal, count - (weaponOffered ? 1 : 0));
+        if (weaponOffered) choices.Insert(UnityEngine.Random.Range(0, choices.Count + 1), weapons[UnityEngine.Random.Range(0, weapons.Count)]);
+        if (weapons.Count > 0 && choices.Count > 0) autonomousMisses[player] = weaponOffered ? 0 : misses + 1;
+        return choices;
+    }
+
+    private static bool IsUsefulForLoadout(UpgradeDefinition upgrade, WeaponInventory inventory)
+    {
+        if (upgrade.effects == null) return true;
+        foreach (UpgradeEffect effect in upgrade.effects)
+        {
+            if ((effect.effectType == UpgradeEffectType.PierceCount || effect.effectType == UpgradeEffectType.FinalPierceExplosion) &&
+                inventory.Find(WeaponKind.Pistol) == null && inventory.Find(WeaponKind.Shotgun) == null &&
+                inventory.Find(WeaponKind.Bow) == null && inventory.Find(WeaponKind.Turret) == null && inventory.Find(WeaponKind.Drone) == null)
+                return false;
+            if (effect.effectType == UpgradeEffectType.ProjectileCount)
+            {
+                bool useful = false;
+                foreach (WeaponKind kind in Enum.GetValues(typeof(WeaponKind)))
+                    if (kind != WeaponKind.Bomb && inventory.Find(kind) != null) { useful = true; break; }
+                if (!useful) return false;
+            }
+        }
+        return true;
+    }
+
+    private List<UpgradeDefinition> PickWeightedChoices(List<UpgradeDefinition> candidates, int count)
+    {
         List<UpgradeDefinition> choices = new List<UpgradeDefinition>();
-        int choiceCount = Mathf.Clamp(choicesPerLevel, 1, Mathf.Max(1, candidates.Count));
+        int choiceCount = Mathf.Clamp(count, 0, candidates.Count);
 
         for (int i = 0; i < choiceCount && candidates.Count > 0; i++)
         {
@@ -268,7 +326,7 @@ public class UpgradeManager : MonoBehaviour
         if (availableUpgrades == null || bundle.rarity == UpgradeRarity.Legendary) return result;
         foreach (UpgradeDefinition candidate in availableUpgrades)
         {
-            if (candidate == null || candidate.category == UpgradeCategory.Universal || GetBundleCount(candidate) > 0
+            if (candidate == null || candidate.weaponSpecific || candidate.grantedWeapon != null || candidate.category == UpgradeCategory.Universal || GetBundleCount(candidate) > 0
                 || (int)candidate.rarity != (int)bundle.rarity + 1) continue;
             string key = GetUpgradeKey(candidate);
             upgradeLevels.TryGetValue(key, out int level);
@@ -305,8 +363,8 @@ public class UpgradeManager : MonoBehaviour
     {
         UpgradeDefinition[] basics =
         {
-            Basic("damage_training", "Damage Training", UpgradeCategory.Attack, UpgradeEffectType.BulletDamageMultiplier, 0.1f, 10),
-            Basic("rapid_fire", "Rapid Fire", UpgradeCategory.Attack, UpgradeEffectType.FireCooldownReduction, 0.08f),
+            Basic("damage_training", "Primary Weapon Damage", UpgradeCategory.Attack, UpgradeEffectType.PrimaryWeaponDamageMultiplier, 0.1f, 10),
+            Basic("rapid_fire", "Primary Weapon Attack Speed", UpgradeCategory.Attack, UpgradeEffectType.PrimaryWeaponAttackSpeed, 0.08f),
             Basic("multishot", "Multishot", UpgradeCategory.Attack, UpgradeEffectType.ProjectileCount, 1f, 3),
             Basic("piercing", "Piercing Rounds", UpgradeCategory.Attack, UpgradeEffectType.PierceCount, 1f, 3),
             Basic("blast_radius", "Blast Radius", UpgradeCategory.Attack, UpgradeEffectType.ExplosionRadiusMultiplier, 0.15f),
@@ -408,9 +466,9 @@ public class UpgradeManager : MonoBehaviour
         string percent = (effect.value * 100f).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%";
         switch (effect.effectType)
         {
-            case UpgradeEffectType.BulletDamageMultiplier: return "Bullet damage bonus +" + percent + ".";
+            case UpgradeEffectType.PrimaryWeaponDamageMultiplier: return "Primary weapon damage +" + percent + "; excludes auxiliary weapons and RMB bombs.";
             case UpgradeEffectType.DamageMultiplier: return "All damage bonus +" + percent + ".";
-            case UpgradeEffectType.FireCooldownReduction: return "Bullet cooldown -" + percent + " (multiplicative).";
+            case UpgradeEffectType.PrimaryWeaponAttackSpeed: return "Primary weapon attack speed +" + percent + "; cooldown is divided by attack-speed multiplier.";
             case UpgradeEffectType.BombCooldownReduction: return "Bomb cooldown -" + percent + " (multiplicative).";
             case UpgradeEffectType.DashCooldownReduction: return "Dash cooldown -" + percent + " (multiplicative).";
             case UpgradeEffectType.GlobalCooldownReduction: return "All weapon and dash cooldowns -" + percent + ".";
@@ -432,7 +490,7 @@ public class UpgradeManager : MonoBehaviour
             case UpgradeEffectType.LevelUpHealing: return "Future level-ups restore +" + percent + " of max health.";
             case UpgradeEffectType.LevelUpDamage: return "Future level-ups add +" + percent + " all damage bonus.";
             case UpgradeEffectType.FinalPierceExplosion: return "Final projectile hit explodes in radius 2 for " + percent + " bullet damage.";
-            case UpgradeEffectType.DashAttackSpeed: return "After dashing: +" + percent + " attack speed for 3s, multiplied by move-speed multiplier.";
+            case UpgradeEffectType.DashAttackSpeed: return "After dashing: +" + percent + " primary weapon attack speed for 3s, multiplied by move-speed multiplier.";
             case UpgradeEffectType.LowHealthCriticalChance: return "Gain up to +" + percent + " critical chance, proportional to missing health.";
             default: return effect.effectType + ": " + value;
         }

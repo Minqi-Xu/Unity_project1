@@ -25,6 +25,7 @@ public class Bomb: MonoBehaviour
     private PlayerController playerController;  // Reference to playerController
     // Unity destroys objects at frame end, so guard against repeated explosion callbacks.
     private bool exploded;
+    private PlayerWeaponSystem weapon;
 
     // Camera references used for resolution-aware projectile movement.
     private float cameraSizeFactor;     // Since camera size changed due to resolution change, the speed related should also changed accordingly
@@ -32,11 +33,12 @@ public class Bomb: MonoBehaviour
     private CameraScaler cameraScaler;
 
     // Initializes projectile direction and owner after instantiation.
-    public void Initialize(Vector2 dir, PlayerController controller)
+    public void Initialize(Vector2 dir, PlayerController controller, PlayerWeaponSystem source = null)
     {
         direction = dir.normalized;
         spawnPosition = transform.position;
         playerController = controller;
+        weapon = source;
         mainCamera = Camera.main;
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
@@ -74,20 +76,21 @@ public class Bomb: MonoBehaviour
         if (exploded) return;
         exploded = true;
         // Instantiate the explosion effect
-        if (explossionEffectprefab != null)
+        if (explossionEffectprefab != null && weapon == null)
         {
             Instantiate(explossionEffectprefab, transform.position, Quaternion.identity);
         }
 
         float radius = explosionRadius * (playerController != null && playerController.Stats != null
             ? Mathf.Max(0f, playerController.Stats.explosionRadiusMultiplier) : 1f);
-        DamageArea(transform.position, radius, basedamage, playerController, false);
+        if (weapon != null) weapon.Explode(transform.position, explosionRadius, basedamage);
+        else DamageArea(transform.position, radius, basedamage, playerController, false);
         // Destroy bomb after explode
         Destroy(gameObject);
     }
 
     // Applies one independently rolled hit per enemy, even when it has multiple colliders.
-    public static void DamageArea(Vector2 center, float radius, float baseDamage, PlayerController owner, bool bullet)
+    public static void DamageArea(Vector2 center, float radius, float baseDamage, PlayerController owner, bool primaryWeapon)
     {
         HashSet<Enemy> damaged = new HashSet<Enemy>();
         foreach (Collider2D collider in Physics2D.OverlapCircleAll(center, radius))
@@ -95,7 +98,7 @@ public class Bomb: MonoBehaviour
             Enemy enemy = collider.GetComponentInParent<Enemy>();
             if (enemy == null || !damaged.Add(enemy)) continue;
             float damage = owner != null && owner.Stats != null
-                ? owner.Stats.CalculateDamage(baseDamage, owner.damageMultiplier, bullet)
+                ? owner.Stats.CalculateDamage(baseDamage, owner.damageMultiplier, primaryWeapon)
                 : baseDamage * (owner != null ? owner.GetDamageMultiplier() : 1f);
             enemy.TakeDamage(damage);
         }

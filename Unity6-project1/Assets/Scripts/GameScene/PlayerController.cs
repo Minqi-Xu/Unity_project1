@@ -241,7 +241,7 @@ public class PlayerController : MonoBehaviour
             weapon.TryAttack(aim);
             return;
         }
-        float currentFireCooldown = GetFireCooldown();
+        float currentFireCooldown = GetPrimaryWeaponCooldown();
         if (Time.time >= lastFireTime + currentFireCooldown)
         {
             if (bulletCooldownIndicator != null)
@@ -359,16 +359,16 @@ public class PlayerController : MonoBehaviour
         PlayerWeaponSystem weapon = GetComponent<PlayerWeaponSystem>();
         if (weapon != null && weapon.Definition != null)
         {
-            float primary = weapon.Definition.kind == WeaponKind.Bomb ? 1f
-                : (Stats != null ? Stats.bulletDamageMultiplier : 1f);
-            return weapon.Definition.damage * GetDamageMultiplier() * primary;
+            float primary = Stats != null ? Stats.primaryWeaponDamageMultiplier : 1f;
+            return weapon.Definition.damage * GetDamageMultiplier() * primary *
+                (weapon.Definition.kind == WeaponKind.Bomb ? 1f : weapon.CharacterDamageMultiplier);
         }
         if (bulletPrefab != null)
         {
             Bullet bullet = bulletPrefab.GetComponent<Bullet>();
             if (bullet != null)
             {
-                return bullet.baseDamage * GetDamageMultiplier() * (Stats != null ? Stats.bulletDamageMultiplier : 1f);
+                return bullet.baseDamage * GetDamageMultiplier() * (Stats != null ? Stats.primaryWeaponDamageMultiplier : 1f);
             }
         }
 
@@ -414,9 +414,9 @@ public class PlayerController : MonoBehaviour
     }
 
     // Returns final bullet cooldown after PlayerStats modifiers are applied.
-    private float GetFireCooldown()
+    private float GetPrimaryWeaponCooldown()
     {
-        return Stats != null ? Stats.GetFireCooldown(fireCooldown) : fireCooldown;
+        return Stats != null ? Stats.GetPrimaryWeaponCooldown(fireCooldown) : fireCooldown;
     }
 
     // Returns final bomb cooldown after PlayerStats modifiers are applied.

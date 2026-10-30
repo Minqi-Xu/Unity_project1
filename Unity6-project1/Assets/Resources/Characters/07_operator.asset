@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19fae0f7134d56a4bbe10ea7e95714aa, type: 3}
   m_Name: 07_operator
   m_EditorClassIdentifier: 
+  availableAtStart: 0
   characterId: 07_operator
   displayName: Drone Pilot
   passive: Two automatic drones; dash cooldown -20%.

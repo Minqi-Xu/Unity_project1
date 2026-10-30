@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 public static class CharacterCatalog
@@ -7,7 +8,8 @@ public static class CharacterCatalog
 
     public static CharacterDefinition[] Load()
     {
-        CharacterDefinition[] entries = Resources.LoadAll<CharacterDefinition>("Characters");
+        CharacterDefinition[] entries = Resources.LoadAll<CharacterDefinition>("Characters")
+            .Where(entry => entry.availableAtStart).ToArray();
         Array.Sort(entries, (a, b) => string.CompareOrdinal(a.characterId, b.characterId));
         return entries;
     }

@@ -11,9 +11,11 @@ public static class CharacterSmokeTests
     {
         if (Application.isPlaying) throw new InvalidOperationException("Run outside Play Mode.");
         CharacterDefinition[] roster = CharacterCatalog.Load();
-        Check(roster.Length == 8, "Eight shipped characters");
+        Check(roster.Length == 6, "Six starting characters");
         Check(roster.Select(x => x.characterId).Distinct().Count() == roster.Length, "Unique stable IDs");
-        Check(roster.Select(x => x.startingWeapon.kind).Distinct().Count() == 8, "Eight weapon behaviors");
+        Check(roster.Select(x => x.startingWeapon.kind).Distinct().Count() == 6, "Six starting weapon behaviors");
+        Check(roster.All(x => x.startingWeapon.kind != WeaponKind.Drone && x.startingWeapon.kind != WeaponKind.Creature),
+            "Autonomous summons are rewards, not starting classes");
         foreach (CharacterDefinition character in roster)
         {
             Check(CharacterCatalog.Resolve(roster, character.characterId, 0) == character, "ID resolves across scenes");

@@ -17,6 +17,27 @@ public class Bullet : MonoBehaviour
     // Snapshot the penetration budget at launch; each enemy can be hit only once.
     private int remainingHits = 1;
     private bool spent;
+    private PlayerWeaponSystem weapon;
+    private WeaponAttackContext attackContext;
+    private float weaponScale = 1f;
+    private bool allowProcs = true;
+    private int hitIndex;
+    private int initialHits;
+    private float launched;
+    private bool returning;
+
+    public void SetWeapon(PlayerWeaponSystem source, WeaponAttackContext context, float scale, bool procs)
+    {
+        weapon = source; attackContext = context; weaponScale = scale; allowProcs = procs;
+    }
+
+    private void BeginReturn()
+    {
+        returning = true;
+        hitEnemies.Clear();
+        remainingHits = initialHits;
+        hitIndex = 0;
+    }
     private readonly HashSet<Enemy> hitEnemies = new HashSet<Enemy>();
 
     // Camera references used for resolution-aware projectile movement.
@@ -34,6 +55,8 @@ public class Bullet : MonoBehaviour
         playerController = controller;  // Store the reference
         remainingHits = 1 + Mathf.Max(0, weaponPierce) + (controller != null && controller.Stats != null ? controller.Stats.GetPierceCount() : 0);
         spent = false;
+        initialHits = remainingHits;
+        launched = Time.time;
         hitEnemies.Clear();
         mainCamera = Camera.main;
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
@@ -42,6 +65,15 @@ public class Bullet : MonoBehaviour
     // Moves the bullet forward and destroys it after it travels too far.
     void Update()
     {
+        if (weapon != null && weapon.Get(WeaponBuffEffect.BowReturn) > 0f && !returning && Time.time - launched >= .45f)
+            BeginReturn();
+        if (returning)
+        {
+            if (playerController == null || Vector2.Distance(transform.position, playerController.transform.position) < .4f)
+            { Destroy(gameObject); return; }
+            direction = (playerController.transform.position - transform.position).normalized;
+            transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
+        }
         // get the camera's orthographic size
         cameraSizeFactor = GetCameraSizeFactor();
         // Move the bullet in the specified direction
@@ -61,18 +93,27 @@ public class Bullet : MonoBehaviour
         Enemy enemy = other.GetComponentInParent<Enemy>();
         if (enemy == null || !hitEnemies.Add(enemy)) return;
         PlayerStats stats = playerController != null ? playerController.Stats : null;
-        float damage = stats != null ? stats.CalculateDamage(baseDamage, playerController.damageMultiplier, true)
-            : baseDamage * (playerController != null ? playerController.GetDamageMultiplier() : 1f);
-        enemy.TakeDamage(damage);
+        if (weapon != null) weapon.Hit(enemy, baseDamage, spawnPosition, hitIndex++, attackContext, weaponScale, allowProcs);
+        else
+        {
+            float damage = stats != null ? stats.CalculateDamage(baseDamage, playerController.damageMultiplier, true)
+                : baseDamage * (playerController != null ? playerController.GetDamageMultiplier() : 1f);
+            enemy.TakeDamage(damage);
+        }
         remainingHits--;
         if (remainingHits > 0) return;
+
+        if (!returning && weapon != null && weapon.Get(WeaponBuffEffect.BowReturn) > 0f)
+        { BeginReturn(); return; }
 
         spent = true;
         if (stats != null && stats.finalPierceExplosion > 0f)
         {
             // This secondary hit cannot create another projectile or recursively explode.
             float radius = 2f * Mathf.Max(0f, stats.explosionRadiusMultiplier);
-            Bomb.DamageArea(transform.position, radius, baseDamage * stats.finalPierceExplosion, playerController, true);
+            if (weapon != null) weapon.DamageArea(transform.position, radius,
+                baseDamage * stats.finalPierceExplosion * weaponScale, null, false);
+            else Bomb.DamageArea(transform.position, radius, baseDamage * stats.finalPierceExplosion, playerController, true);
             Bomb bomb = playerController.bombPrefab != null ? playerController.bombPrefab.GetComponent<Bomb>() : null;
             if (bomb != null && bomb.explossionEffectprefab != null)
                 Instantiate(bomb.explossionEffectprefab, transform.position, Quaternion.identity);

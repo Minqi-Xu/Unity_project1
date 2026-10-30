@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: BombLauncher
   m_EditorClassIdentifier: 
   displayName: Bomb Launcher
-  description: Throw explosive bombs with LMB.
+  description: Compact explosions with a full-damage core and linear falloff to 25% at the edge.
   cooldown: 2.8
   damage: 40
-  radius: 3
+  radius: 1.8
+  explosionCoreFraction: 0.35
+  explosionEdgeDamageMultiplier: 0.25
   range: 10
   kind: 4
   tint: {r: 1, g: 0.4, b: 0.3, a: 1}

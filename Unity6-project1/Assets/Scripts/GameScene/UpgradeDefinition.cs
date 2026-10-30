@@ -28,6 +28,12 @@ public class UpgradeDefinition : ScriptableObject
 
     // Effects applied when this upgrade is selected.
     public UpgradeEffect[] effects;
+    [Header("Weapon rewards")]
+    public WeaponDefinition grantedWeapon;
+    public bool weaponSpecific;
+    public WeaponKind targetWeapon;
+    public WeaponBuffEffect weaponEffect;
+    public float weaponValue;
 
     // Returns a safe display name even when displayName is empty.
     public string DisplayName

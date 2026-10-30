@@ -2,14 +2,15 @@
 
 The default runtime catalog contains 20 basic families (80 rarity variants), plus
 14 universal/synergy variants. It is used when UpgradeManager.availableUpgrades
-is empty. A configured custom pool remains authoritative.
+is empty. Weapon unlocks and 44 dedicated weapon buffs are appended to the default
+or configured pool. See [WEAPON_BUFF_DESIGN.md](WEAPON_BUFF_DESIGN.md).
 
 ## Basic buffs (Common values)
 
 | Category | Buff | Effect |
 | --- | --- | --- |
-| Attack | Damage Training | Bullet damage bonus +10% |
-| Attack | Rapid Fire | Bullet cooldown -8% |
+| Attack | Primary Weapon Damage | Primary damage +10%; excludes auxiliaries and RMB bombs |
+| Attack | Primary Weapon Attack Speed | Primary attack frequency +8%; cooldown divided by speed multiplier |
 | Attack | Multishot | +1 projectile per shot |
 | Attack | Piercing Rounds | +1 additional target per bullet |
 | Attack | Blast Radius | Explosion radius +15% |
@@ -55,10 +56,10 @@ Each synergy family can be acquired once regardless of rarity.
 
 ## Combat and stacking
 
-- Damage = weapon base * legacy multiplier * global multiplier * bullet-only
-  multiplier (bullets only) * critical multiplier (on a successful roll).
+- Damage = weapon base * legacy multiplier * global multiplier * primary-only
+  multiplier (primary weapon only) * critical multiplier (on a successful roll).
 - Base critical chance is 0%; base critical multiplier is 2x. Chance caps at 100%.
-- Stat bonuses add within their own bucket. Cooldown reductions multiply.
+- Stat and primary attack-speed bonuses add within their own bucket. Cooldown reductions multiply.
   Per-bucket cooldown multipliers bottom out at 0.1. Final cooldown floors are
   0.02s for bullets and 0.05s for bombs/dashes. Damage reduction caps at 90%.
 - Pierce 0 hits one target; pierce N hits N+1 distinct enemies. The penetration

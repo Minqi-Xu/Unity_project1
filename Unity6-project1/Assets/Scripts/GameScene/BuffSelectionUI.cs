@@ -138,7 +138,8 @@ public class BuffSelectionUI : MonoBehaviour
         colors.highlightedColor = new Color(1.25f, 1.25f, 1.25f);
         colors.selectedColor = colors.highlightedColor;
         button.colors = colors;
-        TextMeshProUGUI rarity = Label("Rarity", row, upgrade.rarity.ToString().ToUpperInvariant() + " | " + upgrade.category, 14f, rarityColor);
+        string category = upgrade.grantedWeapon != null ? "NEW AUXILIARY" : upgrade.weaponSpecific ? upgrade.targetWeapon.ToString() : upgrade.category.ToString();
+        TextMeshProUGUI rarity = Label("Rarity", row, upgrade.rarity.ToString().ToUpperInvariant() + " | " + category, 14f, rarityColor);
         FitCardText(rarity, 0.85f, 0.95f, 14f);
         TextMeshProUGUI nameLabel = Label("Name", row, upgrade.DisplayName, 23f, Color.white);
         nameLabel.fontStyle = FontStyles.Bold;

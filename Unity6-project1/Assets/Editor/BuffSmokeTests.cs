@@ -29,7 +29,7 @@ public static class BuffSmokeTests
             health.currentHealth = 50f;
             manager = root.AddComponent<UpgradeManager>();
             Call(manager, "Awake");
-            UpgradeDefinition[] pool = manager.availableUpgrades;
+            UpgradeDefinition[] pool = manager.availableUpgrades.Where(x => !x.weaponSpecific && x.grantedWeapon == null).ToArray();
             Check(pool.Count(x => x.rarity == UpgradeRarity.Common) == 20, "Twenty common basics");
             Check(pool.Length == 94, "All basic and special rarity variants");
             foreach (var family in pool.Where(x => x.category != UpgradeCategory.Universal).GroupBy(x => x.upgradeId))
@@ -41,8 +41,8 @@ public static class BuffSmokeTests
             }
             UpgradeDefinition damage = pool.First(x => x.upgradeId == "damage_training" && x.rarity == UpgradeRarity.Common);
             Check(manager.ApplyUpgrade(damage, player), "Apply bullet buff");
-            Near(stats.CalculateDamage(10f, 1f, true), 11f, "Bullet-only bonus");
-            Near(stats.CalculateDamage(10f, 1f, false), 10f, "Bomb unaffected by bullet buff");
+            Near(stats.CalculateDamage(10f, 1f, true), 11f, "Primary weapon bonus");
+            Near(stats.CalculateDamage(10f, 1f, false), 10f, "Auxiliaries and RMB bomb unaffected");
             stats.criticalChance = 1f;
             Near(stats.CalculateDamage(10f, 1f, true), 22f, "Guaranteed critical hit");
             stats.criticalChance = 0f;
@@ -59,7 +59,7 @@ public static class BuffSmokeTests
             stats.dashAttackSpeed = 0.3f;
             stats.moveSpeedMultiplier = 1.5f;
             stats.OnDashCompleted();
-            Near(stats.GetFireCooldown(1f), 0.9f / 1.45f, "Movement-scaled dash attack speed");
+            Near(stats.GetPrimaryWeaponCooldown(1f), 0.9f / 1.45f, "Movement-scaled dash attack speed");
             UpgradeDefinition commonPierce = pool.First(x => x.upgradeId == "piercing" && x.rarity == UpgradeRarity.Common);
             UpgradeDefinition legendaryPierce = pool.First(x => x.upgradeId == "piercing" && x.rarity == UpgradeRarity.Legendary);
             for (int i = 0; i < 3; i++) Check(manager.ApplyUpgrade(commonPierce, player), "Pierce stacking");
