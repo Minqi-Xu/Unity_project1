@@ -55,12 +55,13 @@ public class Enemy : MonoBehaviour
     private SpriteRenderer sprite;
     private float startingCharacterAverageSpeed = 5f;
     private float relativeSpeedLimit = EnemyMovementBalance.MaximumRelativeSpeed;
+    public bool GuaranteedPrimaryWeaponReward { get; private set; }
 
     public float GetLimitedMovementSpeed(float multiplier = 1f) =>
         EnemyMovementBalance.LimitSpeed(speed * multiplier, startingCharacterAverageSpeed, Rank, relativeSpeedLimit);
 
     public void Configure(EnemyDefinition data, EnemyRank rank, EnemyAffix affixes, float extraHealth, float startingAverageSpeed = 5f,
-        float bossMovementMultiplier = 1f, float bossRelativeSpeedLimit = EnemyMovementBalance.MaximumRelativeSpeed)
+        float bossMovementMultiplier = 1f, float bossRelativeSpeedLimit = EnemyMovementBalance.MaximumRelativeSpeed, bool guaranteePrimaryWeaponBuff = false)
     {
         definition = data;
         Rank = rank;
@@ -68,6 +69,7 @@ public class Enemy : MonoBehaviour
         DisplayName = data.displayName;
         startingCharacterAverageSpeed = startingAverageSpeed;
         relativeSpeedLimit = bossRelativeSpeedLimit;
+        GuaranteedPrimaryWeaponReward = guaranteePrimaryWeaponBuff;
         float rankHealth = rank == EnemyRank.FinalBoss ? 35f : rank == EnemyRank.MiniBoss ? 16f : rank == EnemyRank.Elite ? 7f : 1f;
         float rankSize = rank == EnemyRank.FinalBoss ? 3.5f : rank == EnemyRank.MiniBoss ? 2.7f : rank == EnemyRank.Elite ? 1.8f : 1f;
         maxHealth = (maxHealth + Mathf.Max(0f, extraHealth)) * data.healthMultiplier * rankHealth * (Has(EnemyAffix.Healthy) ? 1.8f : 1f);
@@ -177,6 +179,7 @@ public class Enemy : MonoBehaviour
     {
         if (dead || damage <= 0f) return;
         if (source != null) damage = source.ModifyDamageAgainst(this, damage, directHit, projectileHit);
+        damage = CombatTuning.ApplyPlayerDamage(damage);
         currentHealth -= damage;
         //Debug.Log($"Enemy took {damage} damage, {currentHealth} health remaining");
 
@@ -203,7 +206,7 @@ public class Enemy : MonoBehaviour
         if (Has(EnemyAffix.DeathBlast))
             EnemyHazard.Blast(transform.position, 2.8f * GetCameraSizeFactor(), baseDamage * 1.5f, .9f);
         if (Rank != EnemyRank.Normal && RewardManager.Instance != null)
-            RewardManager.Instance.DropEnemyChest(transform.position, sprite != null ? sprite : GetComponent<SpriteRenderer>(), Rank);
+            RewardManager.Instance.DropEnemyChest(transform.position, sprite != null ? sprite : GetComponent<SpriteRenderer>(), Rank, GuaranteedPrimaryWeaponReward);
         if (Rank == EnemyRank.FinalBoss && GameManager.Instance != null)
             GameManager.Instance.NotifyFinalBossDefeated();
 

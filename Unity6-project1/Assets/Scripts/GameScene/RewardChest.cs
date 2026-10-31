@@ -4,6 +4,7 @@ using UnityEngine;
 public class RewardChest : MonoBehaviour
 {
     public EnemyRank enemyRank = EnemyRank.Elite;
+    public bool guaranteePrimaryWeaponBuff;
     public bool finalBossReward => enemyRank == EnemyRank.FinalBoss;
     public float pickupDistance = 1.25f;
     private bool claimed;
@@ -17,8 +18,7 @@ public class RewardChest : MonoBehaviour
         PlayerHealth health = player.GetComponent<PlayerHealth>();
         if (health == null || health.currentHealth <= 0f || RewardManager.Instance == null) return;
         claimed = true;
-        if (!RewardManager.Instance.GrantEnemyChest(player, enemyRank)) { claimed = false; return; }
-        if (finalBossReward && GameManager.Instance != null) GameManager.Instance.NotifyFinalRewardClaimed();
+        if (!RewardManager.Instance.GrantEnemyChest(player, enemyRank, guaranteePrimaryWeaponBuff)) { claimed = false; return; }
         Destroy(gameObject);
     }
 

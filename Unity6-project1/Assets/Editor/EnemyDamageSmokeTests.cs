@@ -39,13 +39,13 @@ public static class EnemyDamageSmokeTests
                 enemy.maxHealth = enemy.currentHealth = 5000f;
                 float bonus = rank == EnemyRank.Normal ? .1f : rank == EnemyRank.Elite ? .2f : .3f;
                 weapon.Hit(enemy, 10f, Vector2.zero, projectileHit: true);
-                Near(5000f - enemy.currentHealth, 60f * (1f + bonus) + 7f, "Target bonus once after crit; fixed damage stays seven");
+                Near(5000f - enemy.currentHealth, 50f * (1f + bonus) + 7f, "Global and primary damage add; target bonus once after crit; fixed damage stays seven");
                 enemy.currentHealth = 5000f;
                 weapon.Hit(enemy, 10f, Vector2.zero, procs: false, projectileHit: true);
-                Near(5000f - enemy.currentHealth, 60f * (1f + bonus), "Secondary weapon hits suppress fixed procs");
+                Near(5000f - enemy.currentHealth, 50f * (1f + bonus), "Secondary weapon hits suppress fixed procs");
                 enemy.currentHealth = 1500f;
                 weapon.Hit(enemy, 10f, Vector2.zero, projectileHit: true);
-                Near(1500f - enemy.currentHealth, 60f * (1f + bonus + .35f) + 7f, "Execute uses pre-hit target health");
+                Near(1500f - enemy.currentHealth, 50f * (1f + bonus + .35f) + 7f, "Execute uses pre-hit target health");
                 UnityEngine.Object.DestroyImmediate(enemy);
             }
             Debug.Log("[EnemyDamageSmokeTests] PASS: upgrade effects, main weapon crit/target/fixed ordering, rank isolation, secondary proc suppression and execute.");

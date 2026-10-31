@@ -7,11 +7,23 @@ public static class EnemyScheduleChecks
     public static void Main()
     {
         EnemyDamageChecks.Run();
+        ChestRewardChecks.Run();
         EnemyEncounter[] entries = EnemyEncounter.Defaults();
-        Check(entries.Select(x => x.time).SequenceEqual(new float[] { 120, 300, 480, 600, 900, 1080, 1200 }), "Exact seven encounter times");
+        Check(entries.Select(x => x.time).SequenceEqual(new float[] { 120, 240, 360, 420, 540, 600, 720 }), "Exact seven encounter times in the twelve-minute schedule");
         Check(entries.Count(x => x.rank == EnemyRank.Elite) == 4, "Four elites");
         Check(entries.Count(x => x.rank == EnemyRank.MiniBoss) == 2, "Two mini bosses");
-        Check(entries.Last().rank == EnemyRank.FinalBoss, "Final boss at twenty minutes");
+        Check(entries.Last().rank == EnemyRank.FinalBoss && entries.Last().time == 720f, "Final boss at twelve minutes");
+        Check(entries.Where(x => x.rank == EnemyRank.MiniBoss).First().guaranteePrimaryWeaponBuff &&
+            entries.Count(x => x.guaranteePrimaryWeaponBuff) == 1, "Only the first mini boss has the guaranteed primary-weapon chest");
+        NormalEnemySpawnRule[] normals = NormalEnemySpawnRule.Defaults();
+        Check(normals.Select(x => x.unlockTime).SequenceEqual(new float[] { 0, 60, 120, 300 }), "Normal enemies unlock at 0, 1, 2 and 5 minutes");
+        foreach (NormalEnemySpawnRule rule in normals)
+        {
+            Check(!rule.IsAvailable(rule.unlockTime - .01f), "Normal kinds never unlock early");
+            Check(rule.IsAvailable(rule.unlockTime), "Normal unlock boundary is inclusive");
+            rule.weight = 0f;
+            Check(!rule.IsAvailable(rule.unlockTime + 1000f), "Zero weight disables a kind");
+        }
         foreach (EnemyEncounter entry in entries)
         {
             Check(!entry.IsWarning(entry.time - 2.01f, 2f), "No early warning");

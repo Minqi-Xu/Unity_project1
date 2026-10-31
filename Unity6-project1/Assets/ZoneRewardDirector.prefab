@@ -46,12 +46,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   definitions: []
   firstWaveTime: 180
-  sealedWaveTime: 720
+  sealedWaveTime: 480
   sealedWaveSealHealth: 500
   referenceMoveSpeed: 4.5
   minTravelTime: 10
   maxTravelTime: 25
   revealDistance: 10
-  areaRadiusMultiplier: 0.6
+  areaRadius: 1.8
+  altarStayTime: 5
+  healingSpringStayTime: 2.5
+  weaponWreckageStayTime: 4
+  dangerousChestStayTime: 10
+  experienceFieldStayTime: 3
   announcementDuration: 3.5
   announcementVerticalPosition: 0.38

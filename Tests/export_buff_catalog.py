@@ -12,8 +12,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "Unity6-project1/Assets/Scripts/GameScene"
 manager = (SCRIPTS / "UpgradeManager.cs").read_text(encoding="utf-8-sig")
 weapons = (SCRIPTS / "WeaponUpgradeCatalog.cs").read_text(encoding="utf-8-sig")
-RARITIES = ["Common", "Rare", "Epic", "Legendary"]
-RARITY_CN = ["普通", "稀有", "史诗", "传说"]
+RARITIES = ["Common", "Rare", "Epic", "Legendary", "Myth"]
+RARITY_CN = ["普通", "稀有", "史诗", "传说", "神话"]
 TYPES = {"Attack": "攻击", "Survival": "生存", "Mobility": "机动", "Growth": "成长", "Universal": "通用与复合", "Weapon": "武器专属"}
 WEAPON_CN = dict(Pistol="手枪", Shotgun="霰弹枪", Bow="穿透弓", Melee="旋风守卫", Axe="战斧", Bomb="炸弹发射器", Turret="炮塔", Drone="浮游炮", Creature="灵体召唤", FireOrb="环形火球", Lightning="精准闪电")
 NUMBER = r"[.\d]+f?"
@@ -68,7 +68,14 @@ for weapon, effect, title, description, value, cap, rarity in re.findall(weapon_
     rows.append(dict(id=f"weapon_{weapon}_{effect}", title=json.loads(title), type="Weapon", rarity=RARITIES.index(rarity or "Rare"), cap=int(cap),
                      description=json.loads(description), weapon=weapon))
 
-if len(rows) != 196 or len({(row["id"], row["rarity"]) for row in rows}) != 196:
+specialization_pattern = rf'AddSpecialization\(result, WeaponKind\.(\w+), WeaponBuffEffect\.(\w+), ("(?:[^"\\]|\\.)*"), ("(?:[^"\\]|\\.)*"), ({NUMBER}), (\d+)(?:, (true|false))?\);'
+for weapon, effect, title, description, value, cap, whole in re.findall(specialization_pattern, weapons):
+    amount = number(value)
+    display = amount if whole == "true" or effect == "BombVacuum" else amount * 100
+    rows.append(dict(id=f"weapon_{weapon}_{effect}", title=json.loads(title), type="Weapon", rarity=RARITIES.index("Myth"), cap=int(cap),
+                     description="PRIMARY ONLY: " + json.loads(description).format(fmt(display)), weapon=weapon))
+
+if len(rows) != 205 or len({(row["id"], row["rarity"]) for row in rows}) != 205:
     raise ValueError(f"Catalog coverage/uniqueness changed: parsed {len(rows)} buff versions; update export checks with the production catalog")
 
 
@@ -82,16 +89,16 @@ def append_table(output, selection):
 
 
 output = ["# 当前全部 Buff 清单", "", "从当前 UpgradeManager 与 WeaponUpgradeCatalog 源码生成。", "",
-          "共 **196 个 Buff 稀有度版本**；另有 **5 张稀有自律武器获取卡**，总奖励池 201 张。", "",
+          "共 **205 个 Buff 稀有度版本**；另有 **5 张稀有自律武器获取卡**，总奖励池 210 张。", "",
           "数值为每次获取效果；同名家族不同稀有度共享叠加上限。武器专属 Buff 需持有对应武器。", "",
           "基础额外子弹：手枪/弓箭增加同时发射的弹丸，霰弹增加完整连续齐射波次，炮台增加单位；不作用于炸弹发射器、重斧或自律武器；固定附伤不被暴击/倍率再次放大，持续及衍生伤害不重复触发固定附伤。", ""]
 counts = collections.Counter(row["rarity"] for row in rows)
 output += ["| 稀有度 | Buff 版本数（不含获取卡） |", "|---|---:|"]
-output += [f"| {RARITY_CN[tier]} {RARITIES[tier]} | {counts[tier]} |" for tier in range(4)]
+output += [f"| {RARITY_CN[tier]} {RARITIES[tier]} | {counts[tier]} |" for tier in range(len(RARITIES))]
 output += ["", "## 一、自律武器 → 稀有度 → 专属 Buff", ""]
 for weapon in ("Melee", "Drone", "Creature", "FireOrb", "Lightning"):
     output += ["### " + WEAPON_CN[weapon], ""]
-    for rarity in range(4):
+    for rarity in range(len(RARITIES)):
         selected = [row for row in rows if row["weapon"] == weapon and row["rarity"] == rarity]
         if selected:
             output += [f"#### {RARITY_CN[rarity]} {RARITIES[rarity]}", ""]
@@ -99,7 +106,7 @@ for weapon in ("Melee", "Drone", "Creature", "FireOrb", "Lightning"):
 output += ["## 二、全部 Buff → 类型 → 稀有度", ""]
 for category, label in TYPES.items():
     output += ["### " + label, ""]
-    for rarity in range(4):
+    for rarity in range(len(RARITIES)):
         selected = [row for row in rows if row["type"] == category and row["rarity"] == rarity]
         if selected:
             output += [f"#### {RARITY_CN[rarity]} {RARITIES[rarity]}", ""]

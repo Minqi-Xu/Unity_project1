@@ -75,7 +75,8 @@ public class SummonedUnit : MonoBehaviour
         if (definition.kind == WeaponKind.Creature)
         {
             if (distance > weapon.SummonReach) return;
-            weapon.Hit(target, definition.damage, transform.position, 0, null, Time.time < pounceUntil ? 1.5f : 1f, !IsTemporary);
+            weapon.Hit(target, definition.damage, transform.position, 0, null, 1f, !IsTemporary,
+                additionalDamageBonus: Time.time < pounceUntil ? .5f : 0f);
             WeaponVisuals.Pulse(transform.position, weapon.SummonReach, definition.tint);
         }
         else weapon.FireSummon(this, target.transform.position - transform.position);

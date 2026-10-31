@@ -73,6 +73,7 @@ public class PlayerHealth : MonoBehaviour
         }
 
         final_damage = Mathf.Min(final_damage, maxReceivingDmg);
+        final_damage = CombatTuning.ApplyIncomingDamage(final_damage);
         if (final_damage <= 0f) return;
         invulnerableUntil = Time.time + (stats != null ? Mathf.Max(0f, stats.hitInvulnerability) : 0f);
         // Debug.Log($"Player receives {final_damage} damage");

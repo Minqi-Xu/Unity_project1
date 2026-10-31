@@ -7,6 +7,9 @@ public class WeaponAttackContext
     public readonly Dictionary<Enemy, int> hits = new Dictionary<Enemy, int>();
     public readonly HashSet<ZoneSeal> seals = new HashSet<ZoneSeal>();
     public float healing;
+    public bool primaryAreaTriggered;
+    public bool primaryKillBurstTriggered;
+    public bool ricochetTriggered;
 }
 
 public partial class PlayerWeaponSystem
@@ -30,6 +33,7 @@ public partial class PlayerWeaponSystem
         ? WeaponWaveRules.Count(owner.Stats.GetProjectileCount(), Get(WeaponBuffEffect.Waves)) : 1;
 
     public float Get(WeaponBuffEffect effect) => buffs.TryGetValue(effect, out float value) ? value : 0f;
+    public float AdditiveDamageBonus => Get(WeaponBuffEffect.Damage) + LevelDamageMultiplier - 1f;
     public float Radius => Definition.radius * (1f + Get(WeaponBuffEffect.Radius));
     public float SummonSpeed => Definition.summonSpeed * (1f + Get(WeaponBuffEffect.CreatureSpeed));
     public float SummonReach => Definition.radius + Get(WeaponBuffEffect.CreatureReach);
@@ -47,15 +51,14 @@ public partial class PlayerWeaponSystem
     private float GetWeaponCooldown()
     {
         if (Definition == null || owner == null || owner.Stats == null) return .3f;
-        float cooldown = IsPrimaryWeapon
-            ? owner.Stats.GetPrimaryWeaponCooldown(Definition.cooldown * CharacterCooldownMultiplier)
-            : owner.Stats.GetAuxiliaryWeaponCooldown(Definition.cooldown);
-        if (Definition.kind == WeaponKind.Bomb) cooldown *= owner.Stats.bombCooldownMultiplier;
-        cooldown *= Mathf.Max(.4f, 1f - Get(WeaponBuffEffect.Cooldown));
+        float reduction = Mathf.Min(.6f, Get(WeaponBuffEffect.Cooldown));
+        if (Definition.kind == WeaponKind.Bomb) reduction += 1f - owner.Stats.bombCooldownMultiplier;
         if (Definition.kind == WeaponKind.Pistol && Time.time - lastShot <= 1f)
-            cooldown *= 1f - Mathf.Min(.4f, consecutiveShots * Get(WeaponBuffEffect.PistolRamp));
-        if (Definition.kind == WeaponKind.Drone && Overloaded) cooldown *= .6f;
-        return Mathf.Max(.02f, cooldown);
+            reduction += Mathf.Min(.4f, consecutiveShots * Get(WeaponBuffEffect.PistolRamp));
+        if (Definition.kind == WeaponKind.Drone && Overloaded) reduction += .4f;
+        return IsPrimaryWeapon
+            ? owner.Stats.GetPrimaryWeaponCooldown(Definition.cooldown * CharacterCooldownMultiplier, reduction)
+            : owner.Stats.GetAuxiliaryWeaponCooldown(Definition.cooldown, reduction);
     }
 
     private void RecordShot()
@@ -77,12 +80,13 @@ public partial class PlayerWeaponSystem
 
     // All proc-generated damage uses procs=false to prevent recursive rewards/attacks.
     public void Hit(Enemy enemy, float baseDamage, Vector2 origin, int pierced = 0,
-        WeaponAttackContext context = null, float scale = 1f, bool procs = true, bool projectileHit = false)
+        WeaponAttackContext context = null, float scale = 1f, bool procs = true, bool projectileHit = false,
+        float additionalDamageBonus = 0f)
     {
         if (enemy == null || !enemy.IsAlive || owner == null || owner.Stats == null) return;
         bool shotgunPush = Definition.kind == WeaponKind.Shotgun && projectileHit &&
             (context == null || !context.hits.ContainsKey(enemy));
-        float multiplier = 1f + Get(WeaponBuffEffect.Damage);
+        float multiplier = 1f + Get(WeaponBuffEffect.Damage) + additionalDamageBonus;
         if (Definition.kind == WeaponKind.Pistol && procs)
         {
             pistolHits++;
@@ -103,10 +107,11 @@ public partial class PlayerWeaponSystem
         if (Definition.kind == WeaponKind.Axe && enemy.currentHealth <= enemy.maxHealth * .3f)
             multiplier += Get(WeaponBuffEffect.AxeExecute);
         float characterScale = Definition.kind == WeaponKind.Bomb ? 1f : CharacterDamageMultiplier;
-        float damage = owner.Stats.CalculateDamage(baseDamage * multiplier * scale * characterScale * LevelDamageMultiplier, owner.damageMultiplier,
-            IsPrimaryWeapon);
+        float damage = owner.Stats.CalculateDamage(baseDamage * scale * characterScale, owner.damageMultiplier,
+            IsPrimaryWeapon, multiplier - 1f + LevelDamageMultiplier - 1f);
         enemy.TakeDamage(damage, owner.Stats, procs, projectileHit);
         bool killed = !enemy.IsAlive;
+        if (procs && IsPrimaryWeapon) ApplyPrimarySpecialization(enemy, damage, pierced, context, projectileHit, killed);
         if (shotgunPush && !killed)
         {
             // All pellets share one volley context, so extra pellets do not multiply knockback.
@@ -126,7 +131,7 @@ public partial class PlayerWeaponSystem
         {
             WeaponBleed bleed = enemy.GetComponent<WeaponBleed>();
             if (bleed == null) bleed = enemy.gameObject.AddComponent<WeaponBleed>();
-            bleed.Apply(owner, Definition.damage * Get(WeaponBuffEffect.CreatureBleed) * (1f + Get(WeaponBuffEffect.Damage)));
+            bleed.Apply(owner, Definition.damage * Get(WeaponBuffEffect.CreatureBleed), AdditiveDamageBonus);
         }
         if (!killed) return;
         if (Definition.kind == WeaponKind.Pistol && Get(WeaponBuffEffect.PistolKillShot) > 0f)
@@ -155,25 +160,27 @@ public partial class PlayerWeaponSystem
         }
     }
 
-    public void DamageArea(Vector2 center, float radius, float damage, WeaponAttackContext context = null,
+    public HashSet<Enemy> DamageArea(Vector2 center, float radius, float damage, WeaponAttackContext context = null,
         bool procs = true, bool centerBonus = false, bool falloff = false)
     {
         if (owner != null && owner.Stats != null)
-            ZoneSeal.DamageInRadius(center, radius, owner.Stats.CalculateDamage(damage * LevelDamageMultiplier *
-                (1f + Get(WeaponBuffEffect.Damage)), owner.damageMultiplier, IsPrimaryWeapon));
+            ZoneSeal.DamageInRadius(center, radius, owner.Stats.CalculateDamage(damage,
+                owner.damageMultiplier, IsPrimaryWeapon, AdditiveDamageBonus));
         HashSet<Enemy> targets = new HashSet<Enemy>();
         foreach (Collider2D collider in Physics2D.OverlapCircleAll(center, radius))
         {
             Enemy enemy = collider.GetComponentInParent<Enemy>();
             if (enemy == null || !targets.Add(enemy)) continue;
             float distance = Vector2.Distance(center, enemy.transform.position);
-            float scale = centerBonus && distance <= radius * Definition.explosionCoreFraction
-                ? 1f + Get(WeaponBuffEffect.BombCenter) : 1f;
+            float centerDamageBonus = centerBonus && distance <= radius * Definition.explosionCoreFraction
+                ? Get(WeaponBuffEffect.BombCenter) : 0f;
+            float scale = 1f;
             if (falloff) scale *= ExplosionFalloff.Evaluate(distance, radius,
                 Definition.explosionCoreFraction, Definition.explosionEdgeDamageMultiplier);
             if (scale <= 0f) continue;
-            Hit(enemy, damage, center, 0, context, scale, procs);
+            Hit(enemy, damage, center, 0, context, scale, procs, additionalDamageBonus: centerDamageBonus);
         }
+        return targets;
     }
 
     private IEnumerator MeleeAttack()
@@ -191,8 +198,15 @@ public partial class PlayerWeaponSystem
 
     public void Explode(Vector2 center, float baseRadius, float damage)
     {
-        float radius = baseRadius * (1f + Get(WeaponBuffEffect.Radius)) * Mathf.Max(0f, owner.Stats.explosionRadiusMultiplier);
-        DamageArea(center, radius, damage, null, true, true, Definition.kind == WeaponKind.Bomb);
+        float radius = baseRadius * Mathf.Max(0f, owner.Stats.explosionRadiusMultiplier + Get(WeaponBuffEffect.Radius));
+        if (IsPrimaryWeapon && Definition.kind == WeaponKind.Bomb) PullBombTargets(center, radius);
+        HashSet<Enemy> mainBlastTargets = DamageArea(center, radius, damage, null, true, true, Definition.kind == WeaponKind.Bomb);
+        if (IsPrimaryWeapon && Definition.kind == WeaponKind.Bomb && Get(WeaponBuffEffect.BombOuterRing) > 0f)
+        {
+            float resolved = owner.Stats.CalculateDamage(damage,
+                owner.damageMultiplier, true, AdditiveDamageBonus);
+            SecondaryArea(center, radius * 1.7f, resolved * Get(WeaponBuffEffect.BombOuterRing), null, mainBlastTargets);
+        }
         WeaponVisuals.Pulse(center, radius, Definition.tint);
         if (Definition.kind == WeaponKind.Bomb)
             WeaponVisuals.Pulse(center, radius * Definition.explosionCoreFraction, new Color(1f, .85f, .4f));

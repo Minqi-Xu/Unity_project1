@@ -53,7 +53,7 @@ public class PlayerStats : MonoBehaviour
     public float levelDamageGrowthMultiplier = 1f;
     // Fraction of bullet damage dealt by an explosion on the final allowed hit.
     public float finalPierceExplosion = 0f;
-    // Attack-speed bonus after dashing, scaled by movement-speed bonuses.
+    // Attack-speed bonus after dashing, added to other attack-speed bonuses.
     public float dashAttackSpeed = 0f;
     // Maximum additional critical chance at zero health, scaled by missing health.
     public float lowHealthCriticalChance = 0f;
@@ -89,10 +89,11 @@ public class PlayerStats : MonoBehaviour
     }
 
     // Rolls one critical hit per target; callers supply their weapon base damage.
-    public float CalculateDamage(float baseDamage, float legacyMultiplier, bool primaryWeapon)
+    public float CalculateDamage(float baseDamage, float legacyMultiplier, bool primaryWeapon, float weaponDamageBonus = 0f)
     {
-        float result = Mathf.Max(0f, baseDamage) * GetDamageMultiplier(legacyMultiplier);
-        if (primaryWeapon) result *= Mathf.Max(0f, primaryWeaponDamageMultiplier);
+        float multiplier = AdditiveStatMath.DamageMultiplier(legacyMultiplier, damageMultiplier,
+            primaryWeapon ? primaryWeaponDamageMultiplier : 1f, weaponDamageBonus);
+        float result = Mathf.Max(0f, baseDamage) * multiplier;
         float chance = GetCriticalChance();
         if (chance >= 1f || (chance > 0f && Random.value < chance)) result *= GetCriticalDamageMultiplier();
         return result;
@@ -142,10 +143,10 @@ public class PlayerStats : MonoBehaviour
     // Multiplier applied to pickup attraction radius.
     public float pickupRadiusMultiplier = 1f;
 
-    // Combines legacy damage scaling with the new stat-system damage multiplier.
+    // All outgoing damage bonuses share the same additive base-relative bucket.
     public float GetDamageMultiplier(float legacyDamageMultiplier)
     {
-        return Mathf.Max(0f, legacyDamageMultiplier * damageMultiplier);
+        return AdditiveStatMath.DamageMultiplier(legacyDamageMultiplier, damageMultiplier, 1f, 0f);
     }
 
     // Returns primary projectile quantity; shotgun interprets the bonus as extra volleys.
@@ -175,7 +176,7 @@ public class PlayerStats : MonoBehaviour
         return Mathf.Max(1f, criticalDamageMultiplier);
     }
 
-    // Returns final movement speed after stat modifiers are applied.
+    // The multiplier starts at one; all movement buffs add percentage points to it.
     public float GetMoveSpeed(float baseMoveSpeed)
     {
         return Mathf.Max(0f, baseMoveSpeed * moveSpeedMultiplier);
@@ -187,31 +188,31 @@ public class PlayerStats : MonoBehaviour
         return Mathf.Max(0f, baseDashSpeed * dashSpeedMultiplier);
     }
 
-    // Returns final primary cooldown after its attack-speed and global modifiers.
-    public float GetPrimaryWeaponCooldown(float baseFireCooldown)
+    // Cooldown reductions add against base cooldown; attack-speed bonuses share one bucket.
+    public float GetPrimaryWeaponCooldown(float baseFireCooldown, float additionalReduction = 0f)
     {
-        float attackSpeed = Time.time < dashAttackSpeedUntil
-            ? 1f + Mathf.Max(0f, dashAttackSpeed) * Mathf.Max(1f, moveSpeedMultiplier) : 1f;
-        return Mathf.Max(0.02f, baseFireCooldown * primaryWeaponCooldownMultiplier * globalCooldownMultiplier /
-            (Mathf.Max(.01f, primaryWeaponAttackSpeedMultiplier) * attackSpeed));
+        float attackSpeed = AdditiveStatMath.AttackSpeedMultiplier(primaryWeaponAttackSpeedMultiplier,
+            Time.time < dashAttackSpeedUntil ? dashAttackSpeed : 0f);
+        float cooldown = AdditiveStatMath.CooldownMultiplier(primaryWeaponCooldownMultiplier, globalCooldownMultiplier, additionalReduction);
+        return Mathf.Max(0.02f, baseFireCooldown * cooldown / attackSpeed);
     }
 
     // Auxiliary weapons inherit global cooldown, not primary attack-speed buffs.
-    public float GetAuxiliaryWeaponCooldown(float baseCooldown)
+    public float GetAuxiliaryWeaponCooldown(float baseCooldown, float additionalReduction = 0f)
     {
-        return Mathf.Max(.02f, baseCooldown * globalCooldownMultiplier);
+        return Mathf.Max(.02f, baseCooldown * AdditiveStatMath.CooldownMultiplier(1f, globalCooldownMultiplier, additionalReduction));
     }
 
     // Returns final bomb cooldown after stat modifiers are applied.
     public float GetBombCooldown(float baseBombCooldown)
     {
-        return Mathf.Max(0.05f, baseBombCooldown * bombCooldownMultiplier * globalCooldownMultiplier);
+        return Mathf.Max(0.05f, baseBombCooldown * AdditiveStatMath.CooldownMultiplier(bombCooldownMultiplier, globalCooldownMultiplier));
     }
 
     // Returns final dash cooldown after stat modifiers are applied.
     public float GetDashCooldown(float baseDashCooldown)
     {
-        return Mathf.Max(0.05f, baseDashCooldown * dashCooldownMultiplier * globalCooldownMultiplier);
+        return Mathf.Max(0.05f, baseDashCooldown * AdditiveStatMath.CooldownMultiplier(dashCooldownMultiplier, globalCooldownMultiplier));
     }
 
     // Returns the multiplier that remains after damage reduction is applied.
@@ -335,9 +336,9 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
-    // Converts a cooldown reduction percentage into a bounded cooldown multiplier.
+    // Subtracts base-relative percentage points rather than compounding reductions.
     private float ApplyCooldownReduction(float currentMultiplier, float reduction)
     {
-        return Mathf.Clamp(currentMultiplier * (1f - Mathf.Clamp01(reduction)), 0.1f, 5f);
+        return AdditiveStatMath.AddCooldownReduction(currentMultiplier, reduction);
     }
 }

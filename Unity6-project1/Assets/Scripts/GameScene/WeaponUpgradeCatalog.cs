@@ -74,7 +74,26 @@ public static class WeaponUpgradeCatalog
         Add(result, WeaponKind.Drone, WeaponBuffEffect.Count, "Split Cannons", "Add 1 projectile per drone volley per level; does not add drones.", 1f, 2, UpgradeRarity.Epic);
         Add(result, WeaponKind.Drone, WeaponBuffEffect.SummonCount, "Cannon Wing", "Add 1 permanent drone per level; does not increase projectiles per drone.", 1f, 2, UpgradeRarity.Epic);
         Add(result, WeaponKind.Creature, WeaponBuffEffect.SummonCount, "Spirit Pack", "Add 1 permanent spirit per level.", 1f, 2, UpgradeRarity.Epic);
+        AddSpecialization(result, WeaponKind.Pistol, WeaponBuffEffect.PistolRicochet, "Ricochet Rounds", "Start one chain per volley. Bounce to +{0} distinct enemies within 3 units per level, up to 4; each bounce retains 60% damage. No secondary hit procs.", 1f, 2, true);
+        AddSpecialization(result, WeaponKind.Turret, WeaponBuffEffect.TurretSplash, "Explosive Fire Control", "Bullets splash {0}% of hit damage to other enemies within 1.5 units. Up to 8 extra targets; no secondary hit procs.", .35f, 2);
+        AddSpecialization(result, WeaponKind.Shotgun, WeaponBuffEffect.ShotgunPierce, "Crowd Piercer", "Each pellet gains +{0} innate pierce. Does not change pellets per volley.", 1f, 2, true);
+        AddSpecialization(result, WeaponKind.Shotgun, WeaponBuffEffect.ShotgunShockwave, "Concussive Volley", "The first hit per volley splashes {0}% of (hit damage x pellets per volley) within 1.5 units. Up to 8 other targets; no secondary hit procs.", .2f, 2);
+        AddSpecialization(result, WeaponKind.Bow, WeaponBuffEffect.BowNova, "Penetrating Nova", "Every second enemy pierced splashes {0}% arrow damage within 1.6 units. Up to 8 other targets; no secondary hit procs.", .4f, 2);
+        AddSpecialization(result, WeaponKind.Axe, WeaponBuffEffect.AxeShockwave, "Earthshatter", "The first hit per swing splashes {0}% hit damage within 1.8 units. Up to 8 other targets; no secondary hit procs.", .4f, 2);
+        AddSpecialization(result, WeaponKind.Axe, WeaponBuffEffect.AxeKillBurst, "Execution Burst", "The first direct kill per swing explodes for {0}% hit damage within 2 units. Up to 8 other targets; explosions cannot chain.", .6f, 2);
+        AddSpecialization(result, WeaponKind.Bomb, WeaponBuffEffect.BombVacuum, "Implosion Core", "Before exploding, pull up to 16 enemies within 1.5x blast radius inward by up to {0} units. Elites move half as far; bosses are immune.", 1.5f, 2);
+        AddSpecialization(result, WeaponKind.Bomb, WeaponBuffEffect.BombOuterRing, "Siege Ring", "Add an outer blast from 1x to 1.7x explosion radius for {0}% damage. Up to 8 enemies outside the main blast; no secondary hit procs.", .35f, 2);
         return result.ToArray();
+    }
+
+    private static void AddSpecialization(List<UpgradeDefinition> pool, WeaponKind kind, WeaponBuffEffect effect,
+        string title, string description, float value, int cap, bool wholeNumber = false)
+    {
+        string number = (wholeNumber || effect == WeaponBuffEffect.BombVacuum ? value : value * 100f)
+            .ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        Add(pool, kind, effect, title, string.Format(description, number), value, cap, UpgradeRarity.Myth);
+        pool[pool.Count - 1].primarySpecialization = true;
+        pool[pool.Count - 1].description = "PRIMARY " + pool[pool.Count - 1].description;
     }
 
     private static void Add(List<UpgradeDefinition> pool, WeaponKind kind, WeaponBuffEffect effect,

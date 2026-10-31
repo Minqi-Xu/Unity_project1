@@ -30,6 +30,7 @@ public static class EnemySmokeTests
         if (EditorApplication.isPlaying) throw new InvalidOperationException("Run outside Play Mode.");
         BuffSmokeTests.Run();
         WeaponRewardSmokeTests.Run();
+        PrimarySpecializationSmokeTests.RunRewards();
         WeaponBalanceSmokeTests.Run();
         AbilityUiSmokeTests.Run();
         EnemyDamageSmokeTests.Run();
@@ -70,9 +71,24 @@ public static class EnemySmokeTests
         health.damageMultiplier = health.damageReceiveIncreasingRate = 0f;
         foreach (PlayerWeaponSystem weapon in player.GetComponents<PlayerWeaponSystem>()) weapon.enabled = false;
         foreach (Enemy enemy in UnityEngine.Object.FindObjectsByType<Enemy>()) UnityEngine.Object.DestroyImmediate(enemy.gameObject);
+        PrimarySpecializationSmokeTests.RunCombat();
+        RewardManager.Instance.primaryWeaponChestChance = 0f;
         Check(spawner.enemyTypes.Select(x => x.kind).Distinct().Count() == 4, "Four normal kinds");
         for (int i = 0; i < 100; i++) Check(spawner.PickNormalType(0).kind == EnemyKind.Chaser, "Only chasers at start");
-        Check(spawner.encounters.Select(x => x.time).SequenceEqual(new float[] { 120, 300, 480, 600, 900, 1080, 1200 }), "Encounter schedule");
+        Check(spawner.encounters.Select(x => x.time).SequenceEqual(new float[] { 120, 240, 360, 420, 540, 600, 720 }), "Twelve-minute encounter schedule");
+        Check(spawner.initialSpawnDelay == 0f, "First normal enemy spawns immediately");
+        Check(spawner.normalEnemySchedule.Select(x => x.unlockTime).SequenceEqual(new float[] { 0, 60, 120, 300 }), "Spawner owns every normal unlock time");
+        float[] originalWeights = spawner.normalEnemySchedule.Select(x => x.weight).ToArray();
+        try
+        {
+            foreach (NormalEnemySpawnRule rule in spawner.normalEnemySchedule) rule.weight = rule.kind == EnemyKind.Ranged ? 1f : 0f;
+            Check(spawner.PickNormalType(299f) == null, "Locked kinds cannot leak through the fallback picker");
+            Check(spawner.PickNormalType(300f).kind == EnemyKind.Ranged, "Spawner ranged timing overrides the legacy asset unlock time");
+        }
+        finally
+        {
+            for (int i = 0; i < originalWeights.Length; i++) spawner.normalEnemySchedule[i].weight = originalWeights[i];
+        }
         Check(spawner.encounterWarningTime == 2f, "Two-second warning");
         EnemyDefinition chaser = spawner.enemyTypes.First(x => x.kind == EnemyKind.Chaser);
         GameObject probe = new GameObject("EnemyProbe");
@@ -108,7 +124,7 @@ public static class EnemySmokeTests
             UnityEngine.Object.DestroyImmediate(bossProbe);
         }
 
-        Set(spawner, "gameTime", 1200f);
+        Set(spawner, "gameTime", 720f);
         Call(spawner, "Update");
         Enemy[] enemies = UnityEngine.Object.FindObjectsByType<Enemy>();
         Check(enemies.Length == 7, "All seven timed encounters spawn");
@@ -134,24 +150,29 @@ public static class EnemySmokeTests
         eliteChest.transform.position = player.transform.position;
         Call(eliteChest, "Update");
         List<UpgradeDefinition> choices = Choices(upgrades);
-        Check(Time.timeScale == 0f && choices.Count == 2 && choices.All(x => x.rarity >= UpgradeRarity.Rare), "Paused rare two-choice offer");
-        Check(choices.Select(x => x.upgradeId).Distinct().Count() == 2, "Different buff families");
+        Check(Time.timeScale == 0f && choices.Count == 3 && choices.All(x => x.rarity >= UpgradeRarity.Rare), "Paused Rare+ three-choice offer");
+        Check(choices.Select(x => x.upgradeId).Distinct().Count() == 3, "Different buff families");
         upgrades.TryOfferLevelUpRewards(player);
         for (int roll = 1; roll <= RewardManager.EliteChestBuffCount; roll++)
         {
             Check(upgrades.IsSelecting && Time.timeScale == 0f, "Elite chest stays paused through both rewards");
             choices = Choices(upgrades);
-            Check(choices.Count == 2 && choices.All(x => x.rarity >= UpgradeRarity.Rare), "Each chest roll is rare two-choice");
+            Check(choices.Count == 3 && choices.All(x => x.rarity >= UpgradeRarity.Rare), "Each chest roll offers three Rare+ choices");
             Call(upgrades, "SelectUpgrade", choices[0]);
         }
         Check(upgrades.IsSelecting && Choices(upgrades).Count == 3, "Queued level-up preserves three choices");
+        RewardManager.Instance.GrantZoneReward(player, ZoneRewardType.DangerousChest);
+        Call(upgrades, "SelectUpgrade", Choices(upgrades)[0]);
+        Check(upgrades.IsSelecting && Choices(upgrades).Count == 3 && Choices(upgrades)[0].weaponSpecific && Choices(upgrades)[0].targetWeapon == player.GetComponent<PlayerWeaponSystem>().Definition.kind && Choices(upgrades).Skip(1).All(x => x.rarity >= UpgradeRarity.Epic), "Queued danger chest preserves primary guarantee and Epic+ alternatives");
         Call(upgrades, "SelectUpgrade", Choices(upgrades)[0]);
         Check(!upgrades.IsSelecting && Time.timeScale == 1f, "Reward queue resumes play");
-        Enemy miniBoss = enemies.First(x => x.Rank == EnemyRank.MiniBoss);
+        Enemy miniBoss = enemies.First(x => x.Rank == EnemyRank.MiniBoss && x.GuaranteedPrimaryWeaponReward);
         miniBoss.TakeDamage(float.MaxValue);
         RewardChest miniChest = UnityEngine.Object.FindObjectsByType<RewardChest>().First(x => x.enemyRank == EnemyRank.MiniBoss);
+        Check(miniChest.guaranteePrimaryWeaponBuff, "First mini-boss encounter preserves guarantee on its dropped chest");
         miniChest.transform.position = player.transform.position;
         Call(miniChest, "Update");
+        Check(Choices(upgrades).Count == 3 && Choices(upgrades)[0].weaponSpecific && Choices(upgrades)[0].targetWeapon == player.GetComponent<PlayerWeaponSystem>().Definition.kind && Choices(upgrades).Skip(1).All(x => x.rarity >= UpgradeRarity.Epic), "First mini-boss chest guarantees primary option and two Epic+ alternatives");
         for (int roll = 0; roll < RewardManager.BossChestBuffCount; roll++)
         {
             Check(upgrades.IsSelecting && Choices(upgrades).All(x => x.rarity >= UpgradeRarity.Rare), "Mini boss chest grants three rare choices");
@@ -160,26 +181,15 @@ public static class EnemySmokeTests
         Check(!upgrades.IsSelecting && Time.timeScale == 1f, "Mini boss chest completes after three rewards");
         CheckExhaustedChest(upgrades, player, health);
 
-        Set(game, "survivalTime", 1201f);
+        Set(game, "survivalTime", 10000f);
         Call(game, "Update");
-        Check(!(bool)Get(game, "gameEnded"), "20 minutes does not skip final boss");
+        Check(!(bool)Get(game, "gameEnded"), "Elapsed time alone can never grant victory");
+        Set(game, "survivalTime", 1f);
         Enemy final = enemies.First(x => x.Rank == EnemyRank.FinalBoss);
         final.TakeDamage(float.MaxValue);
         Check(game.FinalBossDefeated, "Final kill recorded");
-        Call(game, "Update");
-        Check(!(bool)Get(game, "gameEnded"), "Victory waits for chest");
-        RewardChest finalChest = UnityEngine.Object.FindObjectsByType<RewardChest>().First(x => x.finalBossReward);
-        finalChest.transform.position = player.transform.position;
-        Call(finalChest, "Update");
-        Check(upgrades.IsSelecting, "Final chest offers rare reward");
-        for (int roll = 0; roll < RewardManager.BossChestBuffCount; roll++)
-        {
-            Call(game, "Update");
-            Check(!(bool)Get(game, "gameEnded"), "Victory waits for every final chest roll");
-            Call(upgrades, "SelectUpgrade", Choices(upgrades)[0]);
-        }
-        Call(game, "Update");
-        Check((bool)Get(game, "gameEnded") && Time.timeScale == 0f, "Victory after final reward");
+        Check((bool)Get(game, "gameEnded") && Time.timeScale == 0f, "Final boss kill ends the run immediately, even before the default schedule time");
+        Check(!upgrades.IsSelecting, "Victory does not wait for chest pickup or another upgrade selection");
     }
 
     private static void CheckExhaustedChest(UpgradeManager manager, PlayerController player, PlayerHealth health)

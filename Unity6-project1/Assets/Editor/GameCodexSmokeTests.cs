@@ -17,9 +17,9 @@ public static class GameCodexSmokeTests
         {
             Check(catalog.Characters.Length == 8 && catalog.Characters.Count(x => x.availableAtStart) == 6, "Six selectable and two configured characters");
             Check(catalog.AuxiliaryWeapons.Length == 5 && catalog.AuxiliaryWeapons.All(x => x.IsAuxiliary), "Exactly the five droppable auxiliary weapons");
-            Check(catalog.Buffs.Length == 196 && catalog.Upgrades.Length == 201, "All buffs and separate weapon unlock cards");
-            Check(catalog.Upgrades.Select(x => x.upgradeId + ":" + x.rarity).Distinct().Count() == 201, "No duplicated catalog entries");
-            Check(catalog.Buffs.Select(x => x.upgradeId).Distinct().Count() == 100, "One hundred buff families");
+            Check(catalog.Buffs.Length == 205 && catalog.Upgrades.Length == 210, "All buffs and separate weapon unlock cards");
+            Check(catalog.Upgrades.Select(x => x.upgradeId + ":" + x.rarity).Distinct().Count() == 210, "No duplicated catalog entries");
+            Check(catalog.Buffs.Select(x => x.upgradeId).Distinct().Count() == 109, "One hundred nine buff families");
             Check(GameCodexCatalog.BuffGroups.Sum(x => catalog.GroupBuffs(x).Count()) == catalog.Buffs.Length, "Each buff belongs to exactly one type group");
             foreach (WeaponDefinition weapon in catalog.AuxiliaryWeapons)
             {
@@ -38,12 +38,12 @@ public static class GameCodexSmokeTests
             string markdown = catalog.ExportMarkdown();
             Check(catalog.Buffs.All(x => markdown.Contains(x.DisplayName)), "Full export includes every buff family");
             Check(!markdown.Any(c => c >= '\u4e00' && c <= '\u9fff'), "Codex descriptions and exports are English-only");
-            Check(Enum.GetValues(typeof(UpgradeRarity)).Cast<UpgradeRarity>().Select(GameCodexUI.BuffBackgroundColor).Distinct().Count() == 4,
+            Check(Enum.GetValues(typeof(UpgradeRarity)).Cast<UpgradeRarity>().Select(GameCodexUI.BuffBackgroundColor).Distinct().Count() == 5,
                 "All four rarities have distinct buff-card backgrounds");
             Check(Time.timeScale == scale && UpgradeManager.Instance == manager && RewardManager.Instance == rewards &&
                 PlayerPrefs.GetString(CharacterCatalog.SelectionKey, "") == selected, "Opening a catalog never initializes or mutates run state");
         }
-        Debug.Log("[GameCodexSmokeTests] PASS: character/weapon metadata, complete 201-entry reward pool, 196 buffs, grouping, descriptions, export and read-only lifecycle.");
+        Debug.Log("[GameCodexSmokeTests] PASS: character/weapon metadata, complete 210-entry reward pool, 205 buffs, grouping, descriptions, export and read-only lifecycle.");
     }
 
     [MenuItem("Tools/Codex/Run Chinese Font Smoke Test")]

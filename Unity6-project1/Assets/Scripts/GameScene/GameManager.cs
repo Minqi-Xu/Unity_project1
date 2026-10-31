@@ -11,14 +11,11 @@ public class GameManager : MonoBehaviour
     // UI text showing elapsed survival time.
     public TextMeshProUGUI survivalTimeText; // Assign in Inspector
 
-    // Panel shown when survival target time is reached.
+    // Victory panel shown when the final boss is killed.
     public GameObject gameOverPanel;    // Assign the survival gameOverPanel here
 
     // Window shown when the player dies.
     public GameObject gameOverWindow;   // Assign the gameOverWindow which display when player die
-
-    // Seconds the player needs to survive to complete the run.
-    public float targetGameTime = 1200f;  // Time that player need to survive
 
     // Selectable character configurations; defaults to the Resources catalog.
     public CharacterDefinition[] characterDefinitions;
@@ -28,12 +25,17 @@ public class GameManager : MonoBehaviour
     private bool gameEnded = false;
     private GameObject playerCharacter;
     private static GameManager instance;
-    private EnemySpawner enemySpawner;
     private bool finalBossDefeated;
-    private bool finalRewardClaimed;
+    public int RandomSeed { get; private set; }
     public bool FinalBossDefeated => finalBossDefeated;
-    public void NotifyFinalBossDefeated() => finalBossDefeated = true;
-    public void NotifyFinalRewardClaimed() => finalRewardClaimed = true;
+    public void NotifyFinalBossDefeated()
+    {
+        if (gameEnded || finalBossDefeated) return;
+        PlayerHealth health = playerCharacter != null ? playerCharacter.GetComponent<PlayerHealth>() : null;
+        if (health != null && health.currentHealth <= 0f) return;
+        finalBossDefeated = true;
+        EndGame();
+    }
 
     // Initializes singleton instance and removes duplicate managers.
     void Awake()
@@ -52,11 +54,12 @@ public class GameManager : MonoBehaviour
     // Resets run state, ensures core systems exist, and spawns the selected player.
     void Start()
     {
+        RandomSeed = RunRandomSeed.Initialize();
         EnsureCoreSystems();
-        enemySpawner = FindAnyObjectByType<EnemySpawner>();
         Time.timeScale = 1f;
         survivalTime = 0f;
         gameEnded = false;
+        finalBossDefeated = false;
         
         // Retrieve the selected character index from PlayerPrefs
         int selectedCharacterIndex = PlayerPrefs.GetInt("SelectedCharacter", 0);    // Default to first character
@@ -111,7 +114,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Advances survival timer, updates UI, and checks the survival end condition.
+    // Survival time is display-only; only the final boss kill triggers victory.
     void Update()
     {
         if (!gameEnded)
@@ -129,20 +132,10 @@ public class GameManager : MonoBehaviour
                 survivalTimeText.text = string.Format("Survived Time: {0:00}:{1:00}", minutes, seconds);
             }
 
-            // Check if 20 minutes have passed
-            bool requiresBoss = enemySpawner != null && enemySpawner.RequiresFinalBoss;
-            bool rewardResolved = finalBossDefeated && finalRewardClaimed &&
-                (UpgradeManager.Instance == null || !UpgradeManager.Instance.IsSelecting);
-            PlayerHealth health = playerCharacter != null ? playerCharacter.GetComponent<PlayerHealth>() : null;
-            if (survivalTime >= targetGameTime && (!requiresBoss || rewardResolved) &&
-                (health == null || health.currentHealth > 0f))
-            {
-                EndGame();
-            }
         }
     }
 
-    // Ends the run, shows the survival end UI, and pauses gameplay.
+    // Ends the run after the final boss kill, shows victory UI, and pauses gameplay.
     void EndGame()
     {
         gameEnded = true;

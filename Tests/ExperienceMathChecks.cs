@@ -8,6 +8,20 @@ public static class ExperienceMathChecks
 
     public static void Main()
     {
+        Near(ExperienceMath.ThresholdForLevel(5f, 1, 2f, .25f), 5f, "First level keeps five XP");
+        Near(ExperienceMath.ThresholdForLevel(5f, 5, 2f, .25f), 17f, "Level five curve");
+        Near(ExperienceMath.ThresholdForLevel(5f, 10, 2f, .25f), 44f, "Level ten curve rounds up");
+        Near(ExperienceMath.ThresholdForLevel(5f, 20, 2f, .25f), 134f, "Level twenty curve");
+        Near(ExperienceMath.ThresholdForLevel(2.5f, 10, 0f, 0f), 2.5f, "Zero growth preserves fractional thresholds");
+        Near(ExperienceMath.ThresholdForLevel(5f, 0, 2f, .25f), 5f, "Invalid low level uses base");
+        Near(ExperienceMath.ThresholdForLevel(float.NaN, 10, -1f, float.NaN), 1f, "Invalid configuration is safe");
+        float previous = 0f;
+        for (int level = 1; level <= 100; level++)
+        {
+            float threshold = ExperienceMath.ThresholdForLevel(5f, level, 2f, .25f);
+            Check(threshold > previous, "Threshold increases with each level");
+            previous = threshold;
+        }
         Near(ExperienceMath.Progress(1.15f, 5f), .23f, "Fractional grant percentage");
         Near(ExperienceMath.Progress(1.25f, 2.5f), .5f, "Fractional threshold percentage");
         Near(ExperienceMath.Progress(-1f, 5f), 0f, "Lower bound");
@@ -25,6 +39,6 @@ public static class ExperienceMathChecks
         Check(!ExperienceMath.CanLevelUp(0f, float.Epsilon), "Zero XP must never grant levels even at a tiny threshold");
         Check(!ExperienceMath.IsPositiveFinite(-1f) && !ExperienceMath.IsPositiveFinite(float.NaN) &&
             !ExperienceMath.IsPositiveFinite(float.PositiveInfinity), "Invalid grants are rejected");
-        Console.WriteLine("PASS: production float XP progress, fractional thresholds, rounding boundaries and invalid-value guards.");
+        Console.WriteLine("PASS: progressive XP curve, float XP progress, fractional thresholds, rounding boundaries and invalid-value guards.");
     }
 }

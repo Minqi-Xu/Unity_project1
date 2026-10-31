@@ -31,6 +31,7 @@ public class UpgradeDefinition : ScriptableObject
     [Header("Weapon rewards")]
     public WeaponDefinition grantedWeapon;
     public bool weaponSpecific;
+    public bool primarySpecialization;
     public WeaponKind targetWeapon;
     public WeaponBuffEffect weaponEffect;
     public float weaponValue;

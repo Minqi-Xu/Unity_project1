@@ -29,12 +29,13 @@ public class ZoneRewardArea : MonoBehaviour
     private LineRenderer boundary;
     private LineRenderer progressRing;
 
-    public void Configure(ZoneRewardDefinition definition, bool locked, float radiusMultiplier = 1f, float sealHealth = 1500f)
+    public void Configure(ZoneRewardDefinition definition, bool locked, float areaRadius, float sealHealth, float stayTime)
     {
-        requiredStayTime = definition.requiredStayTime; exitGraceTime = definition.exitGraceTime;
+        requiredStayTime = Mathf.Max(.1f, stayTime);
+        exitGraceTime = definition.exitGraceTime;
         rewardType = definition.rewardType; oneShot = definition.oneShot;
         spawnEnemiesWhileInside = definition.spawnEnemiesWhileInside; enemyWaveSize = definition.enemyWaveSize;
-        radius = Mathf.Max(.5f, definition.radius * Mathf.Clamp(radiusMultiplier, .1f, 1f));
+        radius = Mathf.Max(.5f, areaRadius);
         displayName = definition.displayName; color = definition.color;
         discoveryAnnouncement = definition.announcement;
         IsRevealed = false;

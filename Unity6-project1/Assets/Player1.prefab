@@ -194,6 +194,8 @@ MonoBehaviour:
   damageMultiplier: 1
   levelText: {fileID: 0}
   experienceThreshold: 5
+  experienceLinearGrowth: 1
+  experienceQuadraticGrowth: 0.03
   bulletCooldownIndicator: {fileID: 0}
   dashCooldownIndicator: {fileID: 0}
   bombCooldownIndicator: {fileID: 0}
@@ -215,7 +217,7 @@ MonoBehaviour:
   healthBar: {fileID: 0}
   damageOverlay: {fileID: 0}
   healthPercentText: {fileID: 0}
-  damageReceiveIncreasingRate: 0.002
+  damageReceiveIncreasingRate: 0.005
   damageMultiplier: 1
   maxReceivingDmg: 80
   gameOverUI: {fileID: 0}

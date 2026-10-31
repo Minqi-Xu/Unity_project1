@@ -15,6 +15,7 @@ public static class ExperienceSmokeTests
         try
         {
             PlayerController player = CreatePlayer(root.transform, "FractionalReward");
+            player.experienceLinearGrowth = player.experienceQuadraticGrowth = 0f;
             RewardManager rewards = root.AddComponent<RewardManager>();
             player.Stats.experienceGainMultiplier = 1.15f;
             rewards.GrantExperience(player, 1f);
@@ -42,6 +43,12 @@ public static class ExperienceSmokeTests
             for (int i = 0; i < 50; i++) small.CollectExperience(.1f);
             Check(small.level == 2, "Float accumulation error cannot delay leveling");
             Near(small.CurrentExperience, 0f, "No negative rounding residue");
+            PlayerController growing = CreatePlayer(root.transform, "GrowingThreshold");
+            growing.CollectExperience(25f); // 5 + 8 + 10, then two XP toward the next level.
+            Check(growing.level == 4, "Multi-level grant recalculates the threshold after each level");
+            Near(growing.CurrentExperience, 2f, "Growing thresholds preserve overflow");
+            Near(growing.CurrentExperienceThreshold, 14f, "Next threshold follows current level");
+            Near(growing.ExperienceProgress, 2f / 14f, "HUD ratio uses the growing threshold");
             Check(typeof(PlayerController).GetField("experienceThreshold").FieldType == typeof(float) &&
                 typeof(PlayerController).GetField("currentExperience", BindingFlags.NonPublic | BindingFlags.Instance).FieldType == typeof(float),
                 "Both experience fields use float");

@@ -107,10 +107,9 @@ public class Bullet : MonoBehaviour
         {
             if (!hitSeals.Add(seal)) return;
             PlayerStats sealStats = playerController != null ? playerController.Stats : null;
-            float raw = baseDamage * weaponScale * (weapon != null ? weapon.LevelDamageMultiplier *
-                (1f + weapon.Get(WeaponBuffEffect.Damage)) * weapon.CharacterDamageMultiplier : 1f);
+            float raw = baseDamage * weaponScale * (weapon != null ? weapon.CharacterDamageMultiplier : 1f);
             seal.TakeDamage(sealStats != null ? sealStats.CalculateDamage(raw, playerController.damageMultiplier,
-                weapon == null || weapon.IsPrimaryWeapon) : raw);
+                weapon == null || weapon.IsPrimaryWeapon, weapon != null ? weapon.AdditiveDamageBonus : 0f) : raw);
             remainingHits--;
             if (remainingHits <= 0) { spent = true; Destroy(gameObject); }
             return;

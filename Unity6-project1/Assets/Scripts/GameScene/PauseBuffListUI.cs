@@ -85,11 +85,14 @@ public class PauseBuffListUI : MonoBehaviour
         level.enableAutoSizing = true;
         level.fontSizeMin = 12f;
         level.fontSizeMax = 18f;
+        if (entry.HighestRarity == UpgradeRarity.Myth) UpgradeUIColors.StyleMythCard(row.gameObject);
         PauseBuffListItem hover = row.gameObject.AddComponent<PauseBuffListItem>();
         hover.Reveal = () =>
         {
             hovered = entry;
             detail.text = entry.Details();
+            detail.enableVertexGradient = detail.overrideColorTags = false;
+            if (entry.HighestRarity == UpgradeRarity.Myth) UpgradeUIColors.StyleMythText(detail);
             Canvas.ForceUpdateCanvases();
             detailScroll.verticalNormalizedPosition = 1f;
         };

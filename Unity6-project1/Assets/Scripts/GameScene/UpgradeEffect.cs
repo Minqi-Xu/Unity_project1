@@ -6,7 +6,8 @@ public enum UpgradeRarity
     Common,
     Rare,
     Epic,
-    Legendary
+    Legendary,
+    Myth
 }
 
 // Gameplay stat bucket affected by an upgrade effect.

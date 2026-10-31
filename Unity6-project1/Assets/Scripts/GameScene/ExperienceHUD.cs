@@ -79,7 +79,7 @@ public class ExperienceHUD : MonoBehaviour
     private void LateUpdate()
     {
         if (player == null || fill == null) return;
-        if (shownLevel != player.level || shownExperience != player.CurrentExperience || shownThreshold != player.experienceThreshold) Refresh();
+        if (shownLevel != player.level || shownExperience != player.CurrentExperience || shownThreshold != player.CurrentExperienceThreshold) Refresh();
     }
 
     private void Refresh()
@@ -91,7 +91,7 @@ public class ExperienceHUD : MonoBehaviour
         percentage.text = "EXP " + (progress * 100f).ToString("0.#") + "%";
         shownLevel = player.level;
         shownExperience = player.CurrentExperience;
-        shownThreshold = player.experienceThreshold;
+        shownThreshold = player.CurrentExperienceThreshold;
     }
 
     private static RectTransform Panel(string name, Transform parent, Color color, Vector2 min, Vector2 max)

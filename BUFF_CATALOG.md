@@ -2,7 +2,7 @@
 
 从当前 UpgradeManager 与 WeaponUpgradeCatalog 源码生成。
 
-共 **196 个 Buff 稀有度版本**；另有 **5 张稀有自律武器获取卡**，总奖励池 201 张。
+共 **205 个 Buff 稀有度版本**；另有 **5 张稀有自律武器获取卡**，总奖励池 210 张。
 
 数值为每次获取效果；同名家族不同稀有度共享叠加上限。武器专属 Buff 需持有对应武器。
 
@@ -14,6 +14,7 @@
 | 稀有 Rare | 73 |
 | 史诗 Epic | 59 |
 | 传说 Legendary | 44 |
+| 神话 Myth | 9 |
 
 ## 一、自律武器 → 稀有度 → 专属 Buff
 
@@ -206,36 +207,36 @@
 
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
-| Battle Boots | 5 | Movement speed bonus +8%. |
+| Battle Boots | 5 | Movement speed bonus +4%. |
 | Dash Practice | 5 | Dash cooldown -10% (multiplicative). |
-| Long Dash | 5 | Dash distance bonus +15% via dash speed. |
+| Long Dash | 5 | Dash distance bonus +7.5% via dash speed. |
 | Magnet | 5 | Pickup radius bonus +20%. |
 
 #### 稀有 Rare
 
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
-| Battle Boots | 5 | Movement speed bonus +12%. |
+| Battle Boots | 5 | Movement speed bonus +6%. |
 | Dash Practice | 5 | Dash cooldown -15% (multiplicative). |
-| Long Dash | 5 | Dash distance bonus +22.5% via dash speed. |
+| Long Dash | 5 | Dash distance bonus +11.25% via dash speed. |
 | Magnet | 5 | Pickup radius bonus +30%. |
 
 #### 史诗 Epic
 
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
-| Battle Boots | 5 | Movement speed bonus +16%. |
+| Battle Boots | 5 | Movement speed bonus +8%. |
 | Dash Practice | 5 | Dash cooldown -20% (multiplicative). |
-| Long Dash | 5 | Dash distance bonus +30% via dash speed. |
+| Long Dash | 5 | Dash distance bonus +15% via dash speed. |
 | Magnet | 5 | Pickup radius bonus +40%. |
 
 #### 传说 Legendary
 
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
-| Battle Boots | 5 | Movement speed bonus +24%. |
+| Battle Boots | 5 | Movement speed bonus +12%. |
 | Dash Practice | 5 | Dash cooldown -30% (multiplicative). |
-| Long Dash | 5 | Dash distance bonus +45% via dash speed. |
+| Long Dash | 5 | Dash distance bonus +22.5% via dash speed. |
 | Magnet | 5 | Pickup radius bonus +60%. |
 
 ### 成长
@@ -244,7 +245,7 @@
 
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
-| Potential | 5 | Future level-ups add +2% all damage bonus. |
+| Potential | 5 | Future level-ups add +1% all damage bonus. |
 | Renewal | 5 | Future level-ups restore +10% of max health. |
 | Scholar | 5 | Experience gain bonus +15%. |
 | Swift Pickups | 5 | Pickup attraction speed bonus +20%. |
@@ -253,7 +254,7 @@
 
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
-| Potential | 5 | Future level-ups add +3% all damage bonus. |
+| Potential | 5 | Future level-ups add +1.5% all damage bonus. |
 | Renewal | 5 | Future level-ups restore +15% of max health. |
 | Scholar | 5 | Experience gain bonus +22.5%. |
 | Swift Pickups | 5 | Pickup attraction speed bonus +30%. |
@@ -262,7 +263,7 @@
 
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
-| Potential | 5 | Future level-ups add +4% all damage bonus. |
+| Potential | 5 | Future level-ups add +2% all damage bonus. |
 | Renewal | 5 | Future level-ups restore +20% of max health. |
 | Scholar | 5 | Experience gain bonus +30%. |
 | Swift Pickups | 5 | Pickup attraction speed bonus +40%. |
@@ -271,7 +272,7 @@
 
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
-| Potential | 5 | Future level-ups add +6% all damage bonus. |
+| Potential | 5 | Future level-ups add +3% all damage bonus. |
 | Renewal | 5 | Future level-ups restore +30% of max health. |
 | Scholar | 5 | Experience gain bonus +45%. |
 | Swift Pickups | 5 | Pickup attraction speed bonus +60%. |
@@ -283,14 +284,14 @@
 | 词条 | 等级上限 | 每次获取效果 |
 |---|---:|---|
 | Boss Slayer | 3 | Damage to mini bosses and final bosses +20%. |
-| Dash Logistics | 3 | Dash cooldown -8% (multiplicative).；Dash distance bonus +10% via dash speed. |
+| Dash Logistics | 3 | Dash cooldown -8% (multiplicative).；Dash distance bonus +5% via dash speed. |
 | Demolition Kit | 3 | Explosion radius bonus +15%.；Bomb cooldown -8% (multiplicative). |
 | Elite Breaker | 3 | Damage to elites +20%; excludes bosses. |
 | Field Scholar | 3 | Experience gain bonus +10%.；Pickup radius bonus +15%. |
 | Fortune Bundle | 3 | 立即获得 2 个不同的史诗基础 Buff，消耗正常家族等级。 |
-| Mobile Gunnery | 3 | Primary weapon damage +8%; excludes auxiliary weapons and RMB bombs.；Movement speed bonus +6%. |
+| Mobile Gunnery | 3 | Primary weapon damage +8%; excludes auxiliary weapons and RMB bombs.；Movement speed bonus +3%. |
 | Monster Hunter | 5 | Damage to normal enemies +15%. |
-| Renewing Potential | 3 | Future level-ups restore +5% of max health.；Future level-ups add +1% all damage bonus. |
+| Renewing Potential | 3 | Future level-ups restore +5% of max health.；Future level-ups add +0.5% all damage bonus. |
 | Salvage Engine | 3 | Pickup attraction speed bonus +20%.；Pickup radius bonus +15%. |
 | Survivor Instinct | 3 | Damage reduction +4% (90% cap).；Post-hit invulnerability +0.15 seconds. |
 | Universal Haste | 5 | All weapon and dash cooldowns -10%. |
@@ -306,19 +307,19 @@
 | Battle Medic | 2 | Max health +30; heal the same amount.；Restore 1 health every 5 seconds.；Future level-ups restore +5% of max health. |
 | Boss Slayer | 3 | Damage to mini bosses and final bosses +30%. |
 | Critical Engine | 2 | Critical chance +5% (100% cap).；Critical damage multiplier +0.3x. |
-| Dash Frenzy | 1 | Movement speed bonus +16%.；After dashing: +30% primary weapon attack speed for 3s, multiplied by move-speed multiplier. |
-| Dash Logistics | 3 | Dash cooldown -12% (multiplicative).；Dash distance bonus +15% via dash speed. |
+| Dash Frenzy | 1 | Movement speed bonus +8%.；After dashing: +30% primary weapon attack speed for 3s; adds to other attack-speed bonuses. |
+| Dash Logistics | 3 | Dash cooldown -12% (multiplicative).；Dash distance bonus +7.5% via dash speed. |
 | Demolition Kit | 3 | Explosion radius bonus +22.5%.；Bomb cooldown -12% (multiplicative). |
 | Desperate Precision | 1 | Gain up to +50% critical chance, proportional to missing health. |
 | Elite Breaker | 3 | Damage to elites +30%; excludes bosses. |
 | Empowered Rounds | 3 | Bullet and arrow hits add 4 fixed damage after multipliers; includes turret and drone bullets, excludes secondary procs. |
 | Field Scholar | 3 | Experience gain bonus +15%.；Pickup radius bonus +22.5%. |
 | Fortune Bundle | 3 | 立即获得 2 个不同的传说基础 Buff，消耗正常家族等级。 |
-| Growth Core | 2 | Experience gain bonus +15%.；Future level-ups add +1.5% all damage bonus. |
-| Mobile Gunnery | 3 | Primary weapon damage +12%; excludes auxiliary weapons and RMB bombs.；Movement speed bonus +9%. |
+| Growth Core | 2 | Experience gain bonus +15%.；Future level-ups add +0.75% all damage bonus. |
+| Mobile Gunnery | 3 | Primary weapon damage +12%; excludes auxiliary weapons and RMB bombs.；Movement speed bonus +4.5%. |
 | Monster Hunter | 5 | Damage to normal enemies +22.5%. |
 | Piercing Blast | 1 | Additional targets pierced +1.；Final projectile hit explodes in radius 2 for 100% bullet damage. |
-| Renewing Potential | 3 | Future level-ups restore +7.5% of max health.；Future level-ups add +1.5% all damage bonus. |
+| Renewing Potential | 3 | Future level-ups restore +7.5% of max health.；Future level-ups add +0.75% all damage bonus. |
 | Salvage Engine | 3 | Pickup attraction speed bonus +30%.；Pickup radius bonus +22.5%. |
 | Survivor Instinct | 3 | Damage reduction +6% (90% cap).；Post-hit invulnerability +0.225 seconds. |
 | Universal Haste | 5 | All weapon and dash cooldowns -15%. |
@@ -334,8 +335,8 @@
 | Battle Medic | 2 | Max health +45; heal the same amount.；Restore 1.5 health every 5 seconds.；Future level-ups restore +7.5% of max health. |
 | Boss Slayer | 3 | Damage to mini bosses and final bosses +40%. |
 | Critical Engine | 2 | Critical chance +7.5% (100% cap).；Critical damage multiplier +0.45x. |
-| Dash Frenzy | 1 | Movement speed bonus +24%.；After dashing: +45% primary weapon attack speed for 3s, multiplied by move-speed multiplier. |
-| Dash Logistics | 3 | Dash cooldown -16% (multiplicative).；Dash distance bonus +20% via dash speed. |
+| Dash Frenzy | 1 | Movement speed bonus +12%.；After dashing: +45% primary weapon attack speed for 3s; adds to other attack-speed bonuses. |
+| Dash Logistics | 3 | Dash cooldown -16% (multiplicative).；Dash distance bonus +10% via dash speed. |
 | Demolition Kit | 3 | Explosion radius bonus +30%.；Bomb cooldown -16% (multiplicative). |
 | Desperate Precision | 1 | Gain up to +75% critical chance, proportional to missing health. |
 | Elite Breaker | 3 | Damage to elites +40%; excludes bosses. |
@@ -343,11 +344,11 @@
 | Field Scholar | 3 | Experience gain bonus +20%.；Pickup radius bonus +30%. |
 | Final Verdict | 2 | Damage to enemies at or below 30% HP +35%; checked before the hit. |
 | Giant Bane | 1 | Damage to elites +15%; excludes bosses.；Damage to mini bosses and final bosses +15%.；Direct hits add 5 fixed damage after multipliers; excludes damage-over-time and secondary procs. |
-| Growth Core | 2 | Experience gain bonus +22.5%.；Future level-ups add +2.25% all damage bonus. |
-| Mobile Gunnery | 3 | Primary weapon damage +16%; excludes auxiliary weapons and RMB bombs.；Movement speed bonus +12%. |
+| Growth Core | 2 | Experience gain bonus +22.5%.；Future level-ups add +1.125% all damage bonus. |
+| Mobile Gunnery | 3 | Primary weapon damage +16%; excludes auxiliary weapons and RMB bombs.；Movement speed bonus +6%. |
 | Monster Hunter | 5 | Damage to normal enemies +30%. |
 | Piercing Blast | 1 | Additional targets pierced +2.；Final projectile hit explodes in radius 2 for 150% bullet damage. |
-| Renewing Potential | 3 | Future level-ups restore +10% of max health.；Future level-ups add +2% all damage bonus. |
+| Renewing Potential | 3 | Future level-ups restore +10% of max health.；Future level-ups add +1% all damage bonus. |
 | Salvage Engine | 3 | Pickup attraction speed bonus +40%.；Pickup radius bonus +30%. |
 | Survivor Instinct | 3 | Damage reduction +8% (90% cap).；Post-hit invulnerability +0.3 seconds. |
 | Universal Haste | 5 | All weapon and dash cooldowns -20%. |
@@ -420,6 +421,20 @@
 | Thunder Echo（精准闪电） | 1 | Strike the same targets again after 0.3s for 50% damage. Dead targets are skipped. |
 | Echo Pulse（旋风守卫） | 2 | Add 1 automatic pulse per cycle per level; pulses are separated by 0.12s. |
 | Last Stand（炮塔） | 2 | Natural expiry explodes in radius 2 for 150% weapon damage per level. Replacement does not trigger it. |
+
+#### 神话 Myth
+
+| 词条 | 等级上限 | 每次获取效果 |
+|---|---:|---|
+| Earthshatter（战斧） | 2 | PRIMARY ONLY: The first hit per swing splashes 40% hit damage within 1.8 units. Up to 8 other targets; no secondary hit procs. |
+| Execution Burst（战斧） | 2 | PRIMARY ONLY: The first direct kill per swing explodes for 60% hit damage within 2 units. Up to 8 other targets; explosions cannot chain. |
+| Implosion Core（炸弹发射器） | 2 | PRIMARY ONLY: Before exploding, pull up to 16 enemies within 1.5x blast radius inward by up to 1.5 units. Elites move half as far; bosses are immune. |
+| Siege Ring（炸弹发射器） | 2 | PRIMARY ONLY: Add an outer blast from 1x to 1.7x explosion radius for 35% damage. Up to 8 enemies outside the main blast; no secondary hit procs. |
+| Penetrating Nova（穿透弓） | 2 | PRIMARY ONLY: Every second enemy pierced splashes 40% arrow damage within 1.6 units. Up to 8 other targets; no secondary hit procs. |
+| Ricochet Rounds（手枪） | 2 | PRIMARY ONLY: Start one chain per volley. Bounce to +1 distinct enemies within 3 units per level, up to 4; each bounce retains 60% damage. No secondary hit procs. |
+| Concussive Volley（霰弹枪） | 2 | PRIMARY ONLY: The first hit per volley splashes 20% of (hit damage x pellets per volley) within 1.5 units. Up to 8 other targets; no secondary hit procs. |
+| Crowd Piercer（霰弹枪） | 2 | PRIMARY ONLY: Each pellet gains +1 innate pierce. Does not change pellets per volley. |
+| Explosive Fire Control（炮塔） | 2 | PRIMARY ONLY: Bullets splash 35% of hit damage to other enemies within 1.5 units. Up to 8 extra targets; no secondary hit procs. |
 
 ## 三、自律武器获取卡（均为稀有）
 

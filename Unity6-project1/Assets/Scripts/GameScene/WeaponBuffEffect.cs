@@ -13,5 +13,7 @@ public enum WeaponBuffEffect
     LightningRepeat,
     AxeArc, AxeWindup, AxeExecute,
     SummonCount,
-    Waves
+    Waves,
+    PistolRicochet, TurretSplash, ShotgunPierce, ShotgunShockwave, BowNova,
+    AxeShockwave, AxeKillBurst, BombVacuum, BombOuterRing
 }

@@ -41,8 +41,12 @@ public class PlayerController : MonoBehaviour
     // Legacy level label; the experience HUD replaces its numeric progress display.
     public TextMeshProUGUI levelText; // Link to a UI text element to display level
 
-    // Experience required to gain one level.
+    // Base experience required at level one; growth is based on current level.
     [Min(.01f)] public float experienceThreshold = 5f;
+    [Tooltip("Additional XP per level after level one.")]
+    [Min(0f)] public float experienceLinearGrowth = 2f;
+    [Tooltip("Additional XP multiplied by (level - 1) squared.")]
+    [Min(0f)] public float experienceQuadraticGrowth = 0.25f;
 
     // Cooldown indicator for bullet firing.
     public CooldownIndicator bulletCooldownIndicator; // Bullet cooldown indicator
@@ -80,7 +84,9 @@ public class PlayerController : MonoBehaviour
     public float PrimaryCooldownDuration => GetPrimaryWeaponCooldown();
     private float currentExperience = 0f;
     public float CurrentExperience => currentExperience;
-    public float ExperienceProgress => ExperienceMath.Progress(currentExperience, experienceThreshold);
+    public float CurrentExperienceThreshold => ExperienceMath.ThresholdForLevel(
+        experienceThreshold, level, experienceLinearGrowth, experienceQuadraticGrowth);
+    public float ExperienceProgress => ExperienceMath.Progress(currentExperience, CurrentExperienceThreshold);
 
     // Camera references used for screen bounds and resolution-aware movement scaling.
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
@@ -124,6 +130,7 @@ public class PlayerController : MonoBehaviour
         // Get input from the player (arrow keys or WASD)
         movement.x = Input.GetAxisRaw("Horizontal");  // Left/Right movement
         movement.y = Input.GetAxisRaw("Vertical");    // Up/Down movement
+        movement = Vector2.ClampMagnitude(movement, 1f);
         if (movement.sqrMagnitude > 0f)
         {
             lastMoveDirection = movement.normalized;
@@ -348,14 +355,14 @@ public class PlayerController : MonoBehaviour
             experienceThreshold = 1f;
         }
         float total = currentExperience + amount;
-        if (float.IsInfinity(total) || total - experienceThreshold == total) return;
+        if (float.IsInfinity(total) || total - CurrentExperienceThreshold == total) return;
         currentExperience = total;
 
         // check if current experience meets the threshold
-        while (ExperienceMath.CanLevelUp(currentExperience, experienceThreshold))
+        while (ExperienceMath.CanLevelUp(currentExperience, CurrentExperienceThreshold))
         {
             // Reset experience
-            currentExperience = Mathf.Max(0f, currentExperience - experienceThreshold);
+            currentExperience = Mathf.Max(0f, currentExperience - CurrentExperienceThreshold);
             LevelUp();
         }
 
@@ -380,7 +387,8 @@ public class PlayerController : MonoBehaviour
         if (weapon != null && weapon.Definition != null)
         {
             float primary = Stats != null ? Stats.primaryWeaponDamageMultiplier : 1f;
-            return weapon.Definition.damage * GetDamageMultiplier() * primary *
+            return weapon.Definition.damage * AdditiveStatMath.DamageMultiplier(damageMultiplier,
+                Stats != null ? Stats.damageMultiplier : 1f, primary, weapon.AdditiveDamageBonus) *
                 (weapon.Definition.kind == WeaponKind.Bomb ? 1f : weapon.CharacterDamageMultiplier);
         }
         if (bulletPrefab != null)
@@ -388,7 +396,8 @@ public class PlayerController : MonoBehaviour
             Bullet bullet = bulletPrefab.GetComponent<Bullet>();
             if (bullet != null)
             {
-                return bullet.baseDamage * GetDamageMultiplier() * (Stats != null ? Stats.primaryWeaponDamageMultiplier : 1f);
+                return bullet.baseDamage * AdditiveStatMath.DamageMultiplier(damageMultiplier,
+                    Stats != null ? Stats.damageMultiplier : 1f, Stats != null ? Stats.primaryWeaponDamageMultiplier : 1f, 0f);
             }
         }
 
@@ -403,7 +412,7 @@ public class PlayerController : MonoBehaviour
         bool rewardApplied = UpgradeManager.Instance != null && UpgradeManager.Instance.TryOfferLevelUpRewards(this);
         if (!rewardApplied)
         {
-            damageMultiplier += 0.1f * (Stats != null ? Stats.levelDamageGrowthMultiplier : 1f);
+            damageMultiplier += 0.05f * (Stats != null ? Stats.levelDamageGrowthMultiplier : 1f);
         }
 
         DebugLogPlayerStatus(rewardApplied ? "Level Up Reward" : "Level Up", 0f);

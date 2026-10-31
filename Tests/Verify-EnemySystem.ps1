@@ -30,6 +30,9 @@ $checksRsp = Join-Path $output 'checks.rsp'
     ('"' + $project + '/Assets/Scripts/GameScene/EnemyDefinition.cs"');
     ('"' + $project + '/Assets/Scripts/GameScene/EnemyMovementBalance.cs"');
     ('"' + $project + '/Assets/Scripts/GameScene/EnemyDamageRules.cs"');
+    ('"' + $project + '/Assets/Scripts/GameScene/ChestRarityRoll.cs"');
+    ('"' + $project + '/Assets/Scripts/GameScene/RunRandomSeed.cs"');
+    ('"' + $PSScriptRoot + '/ChestRewardChecks.cs"');
     ('"' + $PSScriptRoot + '/EnemyDamageChecks.cs"'); ('"' + $PSScriptRoot + '/EnemyScheduleChecks.cs"')) | Set-Content $checksRsp
 & dotnet $compiler ('@' + $checksRsp)
 if ($LASTEXITCODE -ne 0) { throw 'Schedule check compilation failed' }

@@ -14,7 +14,7 @@ Each buff's complete description panel has a rarity-tinted background and matchi
 
 ## Catalog
 
-There are 100 buff families and 196 rarity variants, plus five Rare weapon unlock cards (201 total reward definitions). The codex shares the actual gameplay factories and Resources character/weapon data; browsing does not initialize run managers or modify player selection.
+There are 109 buff families and 205 rarity variants, plus five Rare weapon unlock cards (210 total reward definitions). The Index shares the actual gameplay factories and Resources character/weapon data; browsing does not initialize run managers or modify player selection. Nine primary-weapon AOE families are marked PRIMARY ONLY and use the Myth rarity, with rainbow card backgrounds and multicolour text. Each has one Myth version rather than separate Rare/Epic/Legendary versions.
 
 The complete snapshot is in BUFF_CATALOG.md. Regenerate it with `python Tests/export_buff_catalog.py`. The optional Unity command `Tools > Codex > Export Current Catalog to Markdown` exports an English live catalog to GAME_CODEX_EXPORT.md.
 

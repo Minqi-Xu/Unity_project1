@@ -119,6 +119,23 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &8001000
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 11400000, guid: ffc6b38423b44865b3814cb4e2816cb5, type: 3}
+      propertyPath: firstWaveTime
+      value: 180
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ffc6b38423b44865b3814cb4e2816cb5, type: 3}
 --- !u!1 &24205802
 GameObject:
   m_ObjectHideFlags: 0
@@ -1820,6 +1837,7 @@ GameObject:
   - component: {fileID: 717066324}
   - component: {fileID: 717066323}
   - component: {fileID: 717066325}
+  - component: {fileID: 717066326}
   m_Layer: 0
   m_Name: EmptyObject
   m_TagString: Untagged
@@ -1872,8 +1890,20 @@ MonoBehaviour:
   survivalTimeText: {fileID: 1095103833}
   gameOverPanel: {fileID: 1443379874}
   gameOverWindow: {fileID: 1890028088}
-  targetGameTime: 1200
   characterDefinitions: []
+--- !u!114 &717066326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 717066322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 874cc91b61b2491e9c09b2e54cfe338c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  primaryWeaponChestChance: 0.25
 --- !u!1 &795268480
 GameObject:
   m_ObjectHideFlags: 0
@@ -5082,65 +5112,84 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyPrefab: {fileID: 1409974815921776139, guid: 0f3584497ccec0f43a1de6def389d16b, type: 3}
-  initialSpawnDelay: 2
+  initialSpawnDelay: 0
   spawnRate: 4
   spawnIncreaseRate: 0.1
   minimumSpawnInterval: 0.8
   healIncreaseRate: 20
   healIncreaseTime: 30
   enemyTypes: []
+  normalEnemySchedule:
+  - kind: 0
+    unlockTime: 0
+    weight: 1
+  - kind: 1
+    unlockTime: 60
+    weight: 1
+  - kind: 2
+    unlockTime: 180
+    weight: 1
+  - kind: 3
+    unlockTime: 300
+    weight: 1
   encounters:
   - time: 120
     title: 'Elite: Swift Hunter'
     rank: 1
     kind: 1
     affixes: 1
+    guaranteePrimaryWeaponBuff: 0
     bossMovementMultiplier: 1
     bossRelativeSpeedLimit: 1.05
-  - time: 300
+  - time: 240
     title: 'Elite: War Banner'
     rank: 1
     kind: 2
     affixes: 6
+    guaranteePrimaryWeaponBuff: 0
     bossMovementMultiplier: 1
     bossRelativeSpeedLimit: 1.05
-  - time: 480
+  - time: 360
     title: 'Mini Boss: Ravager'
     rank: 2
     kind: 0
     affixes: 16
+    guaranteePrimaryWeaponBuff: 1
     bossMovementMultiplier: 1
     bossRelativeSpeedLimit: 1.05
-  - time: 600
+  - time: 420
     title: 'Elite: Volatile Archer'
     rank: 1
     kind: 3
     affixes: 8
+    guaranteePrimaryWeaponBuff: 0
     bossMovementMultiplier: 1
     bossRelativeSpeedLimit: 1.05
-  - time: 720
+  - time: 540
     title: 'Mini Boss: Siege Beast'
     rank: 2
     kind: 2
     affixes: 10
+    guaranteePrimaryWeaponBuff: 0
     bossMovementMultiplier: 1.25
     bossRelativeSpeedLimit: 1.15
-  - time: 1080
+  - time: 600
     title: 'Elite: Storm Leader'
     rank: 1
     kind: 1
     affixes: 21
+    guaranteePrimaryWeaponBuff: 0
     bossMovementMultiplier: 1
     bossRelativeSpeedLimit: 1.05
-  - time: 1200
+  - time: 720
     title: 'Final Boss: Overlord'
     rank: 3
     kind: 3
     affixes: 18
+    guaranteePrimaryWeaponBuff: 0
     bossMovementMultiplier: 1.35
     bossRelativeSpeedLimit: 1.2
   encounterWarningTime: 2
-  finalBossRequired: 1
 --- !u!4 &1961776174
 Transform:
   m_ObjectHideFlags: 0
@@ -5364,24 +5413,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2106521063}
   m_CullTransparentMesh: 1
---- !u!1001 &8001000
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications: []
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: ffc6b38423b44865b3814cb4e2816cb5, type: 3}
---- !u!4 &8001001 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400000, guid: ffc6b38423b44865b3814cb4e2816cb5, type: 3}
-  m_PrefabInstance: {fileID: 8001000}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -5391,4 +5422,4 @@ SceneRoots:
   - {fileID: 459004018}
   - {fileID: 717066324}
   - {fileID: 706341364}
-  - {fileID: 8001001}
+  - {fileID: 8001000}

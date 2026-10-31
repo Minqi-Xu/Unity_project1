@@ -262,6 +262,7 @@ public class GameCodexUI : MonoBehaviour
         label.rectTransform.offsetMin = new Vector2(14f, 12f);
         label.rectTransform.offsetMax = new Vector2(-14f, -12f);
         label.color = accent ?? new Color(.87f,.91f,.96f);
+        if (rarity == UpgradeRarity.Myth) UpgradeUIColors.StyleMythCard(panel.gameObject);
         float width = details.rect.width > 80f ? details.rect.width - 40f : 760f;
         LayoutElement layout = panel.gameObject.AddComponent<LayoutElement>();
         layout.preferredHeight = Mathf.Max(70f, label.GetPreferredValues(label.text, width, Mathf.Infinity).y + 28f);

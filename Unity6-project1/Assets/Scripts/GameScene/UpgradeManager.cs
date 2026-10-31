@@ -19,6 +19,13 @@ public class UpgradeManager : MonoBehaviour
     [Min(0f)] public float rareWeight = 25f;
     [Min(0f)] public float epicWeight = 12f;
     [Min(0f)] public float legendaryWeight = 3f;
+    [Min(0f)] public float mythWeight = 1f;
+
+    [Header("Advanced chest rarity weights (roll rarity, then an eligible buff)")]
+    [Min(0f)] public float chestRareWeight = 25f;
+    [Min(0f)] public float chestEpicWeight = 55f;
+    [Min(0f)] public float chestLegendaryWeight = 15f;
+    [Min(0f)] public float chestMythWeight = 5f;
 
     // Automatically applies the first choice until a selection UI exists.
     public bool autoPickFirstChoiceForPrototype = false;
@@ -32,6 +39,7 @@ public class UpgradeManager : MonoBehaviour
         public PlayerController player;
         public int level;
         public bool rare;
+        public bool primaryOnly;
         public string title;
     }
     private readonly Queue<PendingReward> pendingPlayers = new Queue<PendingReward>();
@@ -46,6 +54,13 @@ public class UpgradeManager : MonoBehaviour
 
     // Applied level count for each upgrade key during this run.
     private readonly Dictionary<string, int> upgradeLevels = new Dictionary<string, int>();
+
+    // All rarity variants use the same family key, including rewards granted from chests/bundles.
+    public int GetUpgradeLevel(UpgradeDefinition upgrade)
+    {
+        if (upgrade == null) return 0;
+        return upgradeLevels.TryGetValue(GetUpgradeKey(upgrade), out int level) ? level : 0;
+    }
 
     // Initializes the singleton and creates prototype upgrades if no pool is configured.
     void Awake()
@@ -81,12 +96,15 @@ public class UpgradeManager : MonoBehaviour
 
     public bool TryOfferRareRewards(PlayerController player, int rewardIndex = 1, int rewardCount = 1) =>
         player != null && OfferRewards(player, player.level, true,
-            $"Treasure Chest {rewardIndex}/{rewardCount} | Choose a Rare Upgrade");
+            $"Treasure Chest {rewardIndex}/{rewardCount} | Choose 1 of 3 (Rare+)");
 
     public bool TryOfferZoneRewards(PlayerController player, bool rare) => player != null &&
-        OfferRewards(player, player.level, rare, rare ? "Map Treasure | Choose a Rare Upgrade" : "Ancient Altar | Choose an Upgrade");
+        OfferRewards(player, player.level, true, rare ? "Map Treasure | Choose 1 of 3 (Rare+)" : "Ancient Altar | Choose 1 of 3 (Rare+)");
 
-    private bool OfferRewards(PlayerController player, int earnedLevel, bool rare, string rewardTitle = null)
+    public bool TryOfferPrimaryWeaponRewards(PlayerController player, string title = "Guaranteed Primary Weapon Upgrade") =>
+        player != null && OfferRewards(player, player.level, true, title, true);
+
+    private bool OfferRewards(PlayerController player, int earnedLevel, bool rare, string rewardTitle = null, bool primaryOnly = false)
     {
         if (player == null)
         {
@@ -95,11 +113,16 @@ public class UpgradeManager : MonoBehaviour
 
         if (IsSelecting)
         {
-            pendingPlayers.Enqueue(new PendingReward { player = player, level = earnedLevel, rare = rare, title = rewardTitle });
+            pendingPlayers.Enqueue(new PendingReward { player = player, level = earnedLevel, rare = rare, title = rewardTitle, primaryOnly = primaryOnly });
             return true;
         }
 
-        List<UpgradeDefinition> choices = rare ? PickRareChoices(player) : PickLevelUpChoices(player);
+        List<UpgradeDefinition> choices = primaryOnly ? BuildPrimaryWeaponOffer(player) : rare ? PickRareChoices(player) : PickLevelUpChoices(player);
+        if (primaryOnly && choices.Count == 0)
+        {
+            choices = PickRareChoices(player);
+            rewardTitle = "Primary Upgrades Maxed | Choose 1 of 3 (Rare+)";
+        }
         if (choices.Count == 0)
         {
             if ((rare || rewardTitle != null) && RewardManager.Instance != null) RewardManager.Instance.GrantExhaustedChestReward(player);
@@ -138,7 +161,7 @@ public class UpgradeManager : MonoBehaviour
         while (pendingPlayers.Count > 0)
         {
             PendingReward nextReward = pendingPlayers.Dequeue();
-            if (nextReward.player != null && OfferRewards(nextReward.player, nextReward.level, nextReward.rare, nextReward.title) && IsSelecting)
+            if (nextReward.player != null && OfferRewards(nextReward.player, nextReward.level, nextReward.rare, nextReward.title, nextReward.primaryOnly) && IsSelecting)
             {
                 return;
             }
@@ -175,6 +198,7 @@ public class UpgradeManager : MonoBehaviour
         {
             PlayerWeaponSystem weapon = WeaponInventory.Ensure(player).Find(upgrade.targetWeapon);
             if (weapon == null) return false;
+            if (upgrade.primarySpecialization && !weapon.IsPrimaryWeapon) return false;
             weapon.ApplyBuff(upgrade.weaponEffect, upgrade.weaponValue);
         }
 
@@ -224,15 +248,87 @@ public class UpgradeManager : MonoBehaviour
     }
 
     private List<UpgradeDefinition> PickRareChoices(PlayerController player)
+        => PickChestChoices(GetChestCandidates(player, UpgradeRarity.Rare), 3);
+
+    private List<UpgradeDefinition> GetChestCandidates(PlayerController player, UpgradeRarity minimum)
     {
         WeaponInventory inventory = WeaponInventory.Ensure(player);
-        return PickWeightedChoices(GetAvailableUpgrades().FindAll(item => item.rarity >= UpgradeRarity.Rare &&
+        return GetAvailableUpgrades().FindAll(item => item.rarity >= minimum &&
             (item.grantedWeapon == null || inventory.CanAcquire(item.grantedWeapon)) &&
-            (!item.weaponSpecific || inventory.Find(item.targetWeapon) != null) && IsUsefulForLoadout(item, inventory)), 2);
+            (!item.weaponSpecific || inventory.Find(item.targetWeapon) != null) && IsUsefulForLoadout(item, inventory));
+    }
+
+    private List<UpgradeDefinition> BuildPrimaryWeaponOffer(PlayerController player)
+    {
+        List<UpgradeDefinition> choices = PickPrimaryWeaponChoices(player);
+        if (choices.Count == 0) return choices;
+        string primaryKey = GetUpgradeKey(choices[0]);
+        List<UpgradeDefinition> alternatives = GetChestCandidates(player, UpgradeRarity.Epic);
+        alternatives.RemoveAll(item => GetUpgradeKey(item) == primaryKey);
+        choices.AddRange(PickChestChoices(alternatives, 2));
+        return choices;
+    }
+
+    private List<UpgradeDefinition> PickPrimaryWeaponChoices(PlayerController player)
+    {
+        PlayerWeaponSystem primary = player != null ? player.GetComponent<PlayerWeaponSystem>() : null;
+        if (primary == null || primary.Definition == null) return new List<UpgradeDefinition>();
+        List<UpgradeDefinition> eligible = GetAvailableUpgrades().FindAll(item => item.weaponSpecific &&
+            item.targetWeapon == primary.Definition.kind && item.rarity >= UpgradeRarity.Rare);
+        List<UpgradeDefinition> specializations = eligible.FindAll(item => item.primarySpecialization);
+        return PickChestChoices(specializations.Count > 0 ? specializations : eligible, 1);
+    }
+
+    // Choose the rarity bucket first: catalog size must not silently change the requested rarity odds.
+    private List<UpgradeDefinition> PickChestChoices(List<UpgradeDefinition> candidates, int count)
+    {
+        List<UpgradeDefinition> choices = new List<UpgradeDefinition>();
+        for (int slot = 0; slot < count && candidates.Count > 0; slot++)
+        {
+            float[] weights = new float[4];
+            bool[] available = new bool[4];
+            for (int tier = (int)UpgradeRarity.Rare; tier <= (int)UpgradeRarity.Myth; tier++)
+            {
+                UpgradeRarity rarity = (UpgradeRarity)tier;
+                int index = tier - (int)UpgradeRarity.Rare;
+                weights[index] = GetChestRarityWeight(rarity);
+                available[index] = candidates.Exists(item => item.rarity == rarity);
+            }
+            int bucketIndex = ChestRarityRoll.Select(UnityEngine.Random.value, weights, available);
+            UpgradeDefinition selected;
+            if (bucketIndex < 0) selected = candidates[UnityEngine.Random.Range(0, candidates.Count)];
+            else
+            {
+                UpgradeRarity selectedRarity = (UpgradeRarity)(bucketIndex + (int)UpgradeRarity.Rare);
+                List<UpgradeDefinition> bucket = candidates.FindAll(item => item.rarity == selectedRarity);
+                selected = bucket[UnityEngine.Random.Range(0, bucket.Count)];
+            }
+            choices.Add(selected);
+            string key = GetUpgradeKey(selected);
+            candidates.RemoveAll(item => GetUpgradeKey(item) == key);
+        }
+        return choices;
+    }
+
+    private float GetChestRarityWeight(UpgradeRarity rarity)
+    {
+        switch (rarity)
+        {
+            case UpgradeRarity.Rare: return Mathf.Max(0f, chestRareWeight);
+            case UpgradeRarity.Epic: return Mathf.Max(0f, chestEpicWeight);
+            case UpgradeRarity.Legendary: return Mathf.Max(0f, chestLegendaryWeight);
+            case UpgradeRarity.Myth: return Mathf.Max(0f, chestMythWeight);
+            default: return 0f;
+        }
     }
 
     private static bool IsUsefulForLoadout(UpgradeDefinition upgrade, WeaponInventory inventory)
     {
+        if (upgrade.primarySpecialization)
+        {
+            PlayerWeaponSystem primary = inventory.GetComponent<PlayerWeaponSystem>();
+            if (primary == null || primary.Definition == null || primary.Definition.kind != upgrade.targetWeapon) return false;
+        }
         if (upgrade.effects == null) return true;
         foreach (UpgradeEffect effect in upgrade.effects)
         {
@@ -301,6 +397,7 @@ public class UpgradeManager : MonoBehaviour
             case UpgradeRarity.Rare: return Mathf.Max(0f, rareWeight);
             case UpgradeRarity.Epic: return Mathf.Max(0f, epicWeight);
             case UpgradeRarity.Legendary: return Mathf.Max(0f, legendaryWeight);
+            case UpgradeRarity.Myth: return Mathf.Max(0f, mythWeight);
             default: return Mathf.Max(0f, commonWeight);
         }
     }
@@ -349,7 +446,7 @@ public class UpgradeManager : MonoBehaviour
     {
         List<UpgradeDefinition> result = new List<UpgradeDefinition>();
         HashSet<string> keys = new HashSet<string>();
-        if (availableUpgrades == null || bundle.rarity == UpgradeRarity.Legendary) return result;
+        if (availableUpgrades == null || bundle.rarity >= UpgradeRarity.Legendary) return result;
         foreach (UpgradeDefinition candidate in availableUpgrades)
         {
             if (candidate == null || candidate.weaponSpecific || candidate.grantedWeapon != null || candidate.category == UpgradeCategory.Universal || GetBundleCount(candidate) > 0
@@ -401,14 +498,14 @@ public class UpgradeManager : MonoBehaviour
             Basic("armor_training", "Armor Training", UpgradeCategory.Survival, UpgradeEffectType.DamageReduction, 0.08f),
             Basic("regeneration", "Regeneration", UpgradeCategory.Survival, UpgradeEffectType.Regeneration, 1f),
             Basic("second_wind", "Second Wind", UpgradeCategory.Survival, UpgradeEffectType.HitInvulnerability, 0.2f),
-            Basic("battle_boots", "Battle Boots", UpgradeCategory.Mobility, UpgradeEffectType.MoveSpeedMultiplier, 0.08f),
+            Basic("battle_boots", "Battle Boots", UpgradeCategory.Mobility, UpgradeEffectType.MoveSpeedMultiplier, 0.04f),
             Basic("dash_practice", "Dash Practice", UpgradeCategory.Mobility, UpgradeEffectType.DashCooldownReduction, 0.1f),
-            Basic("long_dash", "Long Dash", UpgradeCategory.Mobility, UpgradeEffectType.DashSpeedMultiplier, 0.15f),
+            Basic("long_dash", "Long Dash", UpgradeCategory.Mobility, UpgradeEffectType.DashSpeedMultiplier, 0.075f),
             Basic("magnet", "Magnet", UpgradeCategory.Mobility, UpgradeEffectType.PickupRadiusMultiplier, 0.2f),
             Basic("scholar", "Scholar", UpgradeCategory.Growth, UpgradeEffectType.ExperienceGainMultiplier, 0.15f),
             Basic("swift_pickups", "Swift Pickups", UpgradeCategory.Growth, UpgradeEffectType.PickupSpeedMultiplier, 0.2f),
             Basic("renewal", "Renewal", UpgradeCategory.Growth, UpgradeEffectType.LevelUpHealing, 0.1f),
-            Basic("potential", "Potential", UpgradeCategory.Growth, UpgradeEffectType.LevelUpDamage, 0.02f)
+            Basic("potential", "Potential", UpgradeCategory.Growth, UpgradeEffectType.LevelUpDamage, 0.01f)
         };
         List<UpgradeDefinition> pool = new List<UpgradeDefinition>();
         foreach (UpgradeDefinition common in basics)
@@ -426,7 +523,7 @@ public class UpgradeManager : MonoBehaviour
             new UpgradeEffect(UpgradeEffectType.PierceCount, 1f),
             new UpgradeEffect(UpgradeEffectType.FinalPierceExplosion, 1f));
         AddSpecial(pool, "dash_frenzy", "Dash Frenzy", UpgradeRarity.Epic, 1,
-            new UpgradeEffect(UpgradeEffectType.MoveSpeedMultiplier, 0.16f),
+            new UpgradeEffect(UpgradeEffectType.MoveSpeedMultiplier, 0.08f),
             new UpgradeEffect(UpgradeEffectType.DashAttackSpeed, 0.3f));
         AddSpecial(pool, "desperate_precision", "Desperate Precision", UpgradeRarity.Epic, 1,
             new UpgradeEffect(UpgradeEffectType.LowHealthCriticalChance, 0.5f));
@@ -442,7 +539,7 @@ public class UpgradeManager : MonoBehaviour
         AddSpecial(pool, "vanguard_provisions", "Vanguard Provisions", UpgradeRarity.Rare, 3,
             new UpgradeEffect(UpgradeEffectType.MaxHealth, 20f), new UpgradeEffect(UpgradeEffectType.Regeneration, .5f));
         AddSpecial(pool, "mobile_gunnery", "Mobile Gunnery", UpgradeRarity.Rare, 3,
-            new UpgradeEffect(UpgradeEffectType.PrimaryWeaponDamageMultiplier, .08f), new UpgradeEffect(UpgradeEffectType.MoveSpeedMultiplier, .06f));
+            new UpgradeEffect(UpgradeEffectType.PrimaryWeaponDamageMultiplier, .08f), new UpgradeEffect(UpgradeEffectType.MoveSpeedMultiplier, .03f));
         AddSpecial(pool, "demolition_kit", "Demolition Kit", UpgradeRarity.Rare, 3,
             new UpgradeEffect(UpgradeEffectType.ExplosionRadiusMultiplier, .15f), new UpgradeEffect(UpgradeEffectType.BombCooldownReduction, .08f));
         AddSpecial(pool, "survivor_instinct", "Survivor Instinct", UpgradeRarity.Rare, 3,
@@ -452,9 +549,9 @@ public class UpgradeManager : MonoBehaviour
         AddSpecial(pool, "salvage_engine", "Salvage Engine", UpgradeRarity.Rare, 3,
             new UpgradeEffect(UpgradeEffectType.PickupSpeedMultiplier, .2f), new UpgradeEffect(UpgradeEffectType.PickupRadiusMultiplier, .15f));
         AddSpecial(pool, "renewing_potential", "Renewing Potential", UpgradeRarity.Rare, 3,
-            new UpgradeEffect(UpgradeEffectType.LevelUpHealing, .05f), new UpgradeEffect(UpgradeEffectType.LevelUpDamage, .01f));
+            new UpgradeEffect(UpgradeEffectType.LevelUpHealing, .05f), new UpgradeEffect(UpgradeEffectType.LevelUpDamage, .005f));
         AddSpecial(pool, "dash_logistics", "Dash Logistics", UpgradeRarity.Rare, 3,
-            new UpgradeEffect(UpgradeEffectType.DashCooldownReduction, .08f), new UpgradeEffect(UpgradeEffectType.DashSpeedMultiplier, .1f));
+            new UpgradeEffect(UpgradeEffectType.DashCooldownReduction, .08f), new UpgradeEffect(UpgradeEffectType.DashSpeedMultiplier, .05f));
         AddSpecial(pool, "battle_medic", "Battle Medic", UpgradeRarity.Epic, 2,
             new UpgradeEffect(UpgradeEffectType.MaxHealth, 30f), new UpgradeEffect(UpgradeEffectType.Regeneration, 1f),
             new UpgradeEffect(UpgradeEffectType.LevelUpHealing, .05f));
@@ -463,7 +560,7 @@ public class UpgradeManager : MonoBehaviour
         AddSpecial(pool, "arcane_overdrive", "Arcane Overdrive", UpgradeRarity.Epic, 2,
             new UpgradeEffect(UpgradeEffectType.GlobalCooldownReduction, .06f), new UpgradeEffect(UpgradeEffectType.DamageMultiplier, .1f));
         AddSpecial(pool, "growth_core", "Growth Core", UpgradeRarity.Epic, 2,
-            new UpgradeEffect(UpgradeEffectType.ExperienceGainMultiplier, .15f), new UpgradeEffect(UpgradeEffectType.LevelUpDamage, .015f));
+            new UpgradeEffect(UpgradeEffectType.ExperienceGainMultiplier, .15f), new UpgradeEffect(UpgradeEffectType.LevelUpDamage, .0075f));
         AddSpecial(pool, "monster_hunter", "Monster Hunter", UpgradeRarity.Rare, 5,
             new UpgradeEffect(UpgradeEffectType.NormalEnemyDamageBonus, .15f));
         AddSpecial(pool, "elite_breaker", "Elite Breaker", UpgradeRarity.Rare, 3,
@@ -525,7 +622,7 @@ public class UpgradeManager : MonoBehaviour
         return variant;
     }
 
-    // Descriptions distinguish additive stat bonuses from multiplicative cooldown reductions.
+    // Descriptions use base-relative additive bonuses and cooldown reductions.
     public static string DescribeEffect(UpgradeEffect effect)
     {
         string value = effect.value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
@@ -562,7 +659,7 @@ public class UpgradeManager : MonoBehaviour
             case UpgradeEffectType.LevelUpHealing: return "Future level-ups restore +" + percent + " of max health.";
             case UpgradeEffectType.LevelUpDamage: return "Future level-ups add +" + percent + " all damage bonus.";
             case UpgradeEffectType.FinalPierceExplosion: return "Final projectile hit explodes in radius 2 for " + percent + " bullet damage.";
-            case UpgradeEffectType.DashAttackSpeed: return "After dashing: +" + percent + " primary weapon attack speed for 3s, multiplied by move-speed multiplier.";
+            case UpgradeEffectType.DashAttackSpeed: return "After dashing: +" + percent + " primary weapon attack speed for 3s; adds to other attack-speed bonuses.";
             case UpgradeEffectType.LowHealthCriticalChance: return "Gain up to +" + percent + " critical chance, proportional to missing health.";
             default: return effect.effectType + ": " + value;
         }

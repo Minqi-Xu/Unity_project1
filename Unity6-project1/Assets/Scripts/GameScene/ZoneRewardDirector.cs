@@ -15,7 +15,15 @@ public class ZoneRewardDirector : MonoBehaviour
     [Min(1f)] public float minTravelTime = 10f;
     [Min(1f)] public float maxTravelTime = 25f;
     [Min(1f)] public float revealDistance = 10f;
-    [Range(.1f, 1f)] public float areaRadiusMultiplier = .6f;
+    [Tooltip("Radius of each reward area in world units.")]
+    [Min(.5f)] public float areaRadius = 1.8f;
+    [Header("Occupation time (seconds)")]
+    [Min(.1f)] public float altarStayTime = 5f;
+    [Min(.1f)] public float healingSpringStayTime = 2.5f;
+    [Min(.1f)] public float weaponWreckageStayTime = 4f;
+    [Min(.1f)] public float dangerousChestStayTime = 10f;
+    [Min(.1f)] public float experienceFieldStayTime = 3f;
+    [Header("Announcements")]
     [Min(1f)] public float announcementDuration = 3.5f;
     [Range(0f, 1f)] public float announcementVerticalPosition = .38f;
     public readonly List<ZoneRewardArea> Areas = new List<ZoneRewardArea>();
@@ -90,14 +98,15 @@ public class ZoneRewardDirector : MonoBehaviour
             if (definition == null) continue;
             float angle = (rotation + i * 360f / definitions.Length) * Mathf.Deg2Rad;
             float travelDistance = GetTargetTravelDistance(camera);
-            float zoneRadius = Mathf.Max(.5f, definition.radius * Mathf.Clamp(areaRadiusMultiplier, .1f, 1f));
+            float zoneRadius = Mathf.Max(.5f, areaRadius);
             // Aim for reaching the boundary at the requested time, rather than the center.
             float zoneDistance = travelDistance + zoneRadius;
             GameObject obj = new GameObject((sealedWave ? "Sealed " : "") + definition.displayName);
             obj.transform.SetParent(transform);
             obj.transform.position = player.transform.position + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * zoneDistance;
             ZoneRewardArea area = obj.AddComponent<ZoneRewardArea>();
-            area.Configure(definition, sealedWave, areaRadiusMultiplier, sealedWaveSealHealth); Areas.Add(area);
+            area.Configure(definition, sealedWave, zoneRadius, sealedWaveSealHealth, GetRequiredStayTime(definition.rewardType));
+            Areas.Add(area);
             spawned = true;
         }
         if (spawned) Announce("Altars have appeared in the distance...", Color.white);
@@ -114,6 +123,20 @@ public class ZoneRewardDirector : MonoBehaviour
     }
 
     public void Announce(string message, Color color) => notices.Enqueue(new Notice { text = message, color = color });
+
+    public float GetRequiredStayTime(ZoneRewardType type)
+    {
+        float seconds;
+        switch (type)
+        {
+            case ZoneRewardType.HealingSpring: seconds = healingSpringStayTime; break;
+            case ZoneRewardType.WeaponWreckage: seconds = weaponWreckageStayTime; break;
+            case ZoneRewardType.DangerousChest: seconds = dangerousChestStayTime; break;
+            case ZoneRewardType.ExperienceMagnet: seconds = experienceFieldStayTime; break;
+            default: seconds = altarStayTime; break;
+        }
+        return Mathf.Max(.1f, seconds);
+    }
 
     private void EnsureStyles()
     {
@@ -166,7 +189,7 @@ public class ZoneRewardDirector : MonoBehaviour
             {
                 Rect label = new Rect(targetPoint.x - 140f, targetPoint.y - 74f, 280f, 68f);
                 GUI.Box(label, GUIContent.none);
-                GUI.Label(label, text + "\n" + (area.IsRevealed ? state + "  " + area.Elapsed.ToString("0.0") + " / " + area.requiredStayTime.ToString("0") + "s" : "Move closer to identify"), labelStyle);
+                GUI.Label(label, text + "\n" + (area.IsRevealed ? state + "  " + area.Elapsed.ToString("0.0") + " / " + area.requiredStayTime.ToString("0.#") + "s" : "Move closer to identify"), labelStyle);
                 if (area.IsRevealed && area.IsLocked && area.Seal != null)
                 {
                     ZoneSeal seal = area.Seal;

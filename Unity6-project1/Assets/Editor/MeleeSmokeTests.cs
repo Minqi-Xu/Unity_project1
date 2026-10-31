@@ -61,7 +61,7 @@ public static class MeleeSmokeTests
             whirlwind.Hit(enemy, whirlwind.Definition.damage, Vector2.zero);
             Near(target.transform.position.x, 1.85f, "Dedicated knockback stacks on innate push");
             Check(catalog.Count(x => x.weaponSpecific && x.targetWeapon == WeaponKind.Melee) == 6, "Six whirlwind buffs");
-            Check(catalog.Count(x => x.weaponSpecific && x.targetWeapon == WeaponKind.Axe) == 6, "Six axe buffs");
+            Check(catalog.Count(x => x.weaponSpecific && x.targetWeapon == WeaponKind.Axe) == 8, "Six original axe buffs and two Myth specializations");
             PlayerBuffCollection collection = PlayerBuffCollection.Ensure(player);
             collection.Record(unlock, unlock.upgradeId);
             Check(collection.Entries[0].IsWeaponUnlock && collection.Entries[0].DisplayColor == UpgradeUIColors.NewWeapon,

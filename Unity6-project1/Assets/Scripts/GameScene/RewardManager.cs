@@ -5,6 +5,8 @@ public class RewardManager : MonoBehaviour
 {
     public const int EliteChestBuffCount = 2;
     public const int BossChestBuffCount = 3;
+    [Range(0f, 1f), Tooltip("Extra chance for the first roll of other enemy chests to offer only primary-weapon specializations.")]
+    public float primaryWeaponChestChance = .25f;
     public static int GetEnemyChestBuffCount(EnemyRank rank) =>
         rank == EnemyRank.Elite ? EliteChestBuffCount :
         rank == EnemyRank.MiniBoss || rank == EnemyRank.FinalBoss ? BossChestBuffCount : 0;
@@ -23,7 +25,7 @@ public class RewardManager : MonoBehaviour
         Instance = this;
     }
 
-    public void DropEnemyChest(Vector2 position, SpriteRenderer source, EnemyRank rank)
+    public void DropEnemyChest(Vector2 position, SpriteRenderer source, EnemyRank rank, bool guaranteePrimaryWeapon = false)
     {
         if (GetEnemyChestBuffCount(rank) == 0) return;
         GameObject chest = new GameObject("Elite Treasure Chest");
@@ -37,16 +39,21 @@ public class RewardManager : MonoBehaviour
         }
         visual.color = new Color(1f, .8f, .15f);
         visual.sortingOrder = 10;
-        chest.AddComponent<RewardChest>().enemyRank = rank;
+        RewardChest reward = chest.AddComponent<RewardChest>();
+        reward.enemyRank = rank;
+        reward.guaranteePrimaryWeaponBuff = guaranteePrimaryWeapon;
     }
 
-    public bool GrantEnemyChest(PlayerController player, EnemyRank rank)
+    public bool GrantEnemyChest(PlayerController player, EnemyRank rank, bool guaranteePrimaryWeapon = false)
     {
         if (player == null || UpgradeManager.Instance == null) return false;
         int count = GetEnemyChestBuffCount(rank);
         if (count == 0) return false;
+        bool primaryFirst = guaranteePrimaryWeapon || Random.value < primaryWeaponChestChance;
         for (int i = 1; i <= count; i++)
-            UpgradeManager.Instance.TryOfferRareRewards(player, i, count);
+            if (i == 1 && primaryFirst)
+                UpgradeManager.Instance.TryOfferPrimaryWeaponRewards(player, $"Treasure Chest {i}/{count} | Primary Weapon Specialization");
+            else UpgradeManager.Instance.TryOfferRareRewards(player, i, count);
         return true;
     }
 
@@ -66,11 +73,12 @@ public class RewardManager : MonoBehaviour
         switch (type)
         {
             case ZoneRewardType.Altar:
+                if (UpgradeManager.Instance == null) return false;
+                UpgradeManager.Instance.TryOfferZoneRewards(player, false);
+                return true;
             case ZoneRewardType.DangerousChest:
                 if (UpgradeManager.Instance == null) return false;
-                // An exhausted pool is still a consumed reward; use the existing heal fallback.
-                bool rare = type == ZoneRewardType.DangerousChest;
-                UpgradeManager.Instance.TryOfferZoneRewards(player, rare);
+                UpgradeManager.Instance.TryOfferPrimaryWeaponRewards(player, "Dangerous Chest | Guaranteed Primary Weapon Specialization");
                 return true;
             case ZoneRewardType.HealingSpring:
                 HealPlayer(health, health.maxHealth * .5f);
@@ -82,15 +90,10 @@ public class RewardManager : MonoBehaviour
                 Debug.Log($"[Reward] {weapon.Definition.displayName} level {weapon.WeaponLevel}, damage +15% per level.");
                 return true;
             case ZoneRewardType.ExperienceMagnet:
-                Camera camera = Camera.main;
-                if (camera == null) return false;
+                // Collect all existing map drops, including those outside the camera view.
                 // Snapshot before collecting: level-up pauses do not cancel the rest of the reward.
                 foreach (ExperienceDrop drop in FindObjectsByType<ExperienceDrop>())
-                {
-                    Vector3 viewport = camera.WorldToViewportPoint(drop.transform.position);
-                    if (viewport.z > 0f && viewport.x >= 0f && viewport.x <= 1f && viewport.y >= 0f && viewport.y <= 1f)
-                        drop.Collect(player);
-                }
+                    drop.Collect(player);
                 return true;
             default: return false;
         }

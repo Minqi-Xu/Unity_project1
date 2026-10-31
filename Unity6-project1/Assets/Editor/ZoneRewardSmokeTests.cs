@@ -86,7 +86,8 @@ public static class ZoneRewardSmokeTests
             float maxDistance = ZoneTravelDistance.Estimate(Mathf.Max(director.minTravelTime, director.maxTravelTime), director.referenceMoveSpeed, worldScale);
             Check(travel >= minDistance - .01f && travel <= maxDistance + .01f, "Each area uses the random reference-speed travel bounds");
             ZoneRewardDefinition definition = definitions.First(x => x.rewardType == area.rewardType);
-            Near(area.radius, Mathf.Max(.5f, definition.radius * director.areaRadiusMultiplier), "Configured radius multiplier shrinks regions");
+            Near(area.radius, Mathf.Max(.5f, director.areaRadius), "Spawned areas use the absolute prefab radius");
+            Near(area.requiredStayTime, director.GetRequiredStayTime(definition.rewardType), "Spawned areas use the prefab occupation seconds");
         }
         ZoneRewardArea discovered = director.Areas[0];
         player.transform.position = discovered.transform.position + Vector3.right * (director.revealDistance + .1f);
@@ -129,7 +130,7 @@ public static class ZoneRewardSmokeTests
         PlayerWeaponSystem weapon = player.GetComponent<PlayerWeaponSystem>();
         float assetDamage = weapon.Definition.damage;
         Call(wreck, "Update"); Check(weapon.WeaponLevel == 2, "Wreck upgrades current weapon");
-        Near(weapon.LevelDamageMultiplier, 1.15f, "Weapon level adds fifteen percent damage");
+        Near(weapon.LevelDamageMultiplier, 1.05f, "Weapon level adds five percent damage");
         Near(weapon.Definition.damage, assetDamage, "Shared weapon definition is unchanged");
 
         ZoneRewardArea altar = director.Areas.First(x => x.rewardType == ZoneRewardType.Altar && !x.IsLocked);
@@ -140,17 +141,22 @@ public static class ZoneRewardSmokeTests
         player.transform.position += Vector3.right * 20f; Call(altar, "Update"); Near(altar.Elapsed, 0f, "Repeatable area rearms after exit");
 
         Camera camera = Camera.main;
+        foreach (ExperienceDrop existing in UnityEngine.Object.FindObjectsByType<ExperienceDrop>())
+            UnityEngine.Object.DestroyImmediate(existing.gameObject);
         GameObject visible = new GameObject("VisibleXP"); visible.transform.position = camera.ViewportToWorldPoint(new Vector3(.5f,.5f,10f));
         ExperienceDrop pickup = visible.AddComponent<ExperienceDrop>();
         GameObject hidden = new GameObject("OffscreenXP"); hidden.transform.position = camera.ViewportToWorldPoint(new Vector3(4f,4f,10f));
-        hidden.AddComponent<ExperienceDrop>();
+        ExperienceDrop offscreenPickup = hidden.AddComponent<ExperienceDrop>();
         float xp = player.CurrentExperience;
         Check(rewards.GrantZoneReward(player, ZoneRewardType.ExperienceMagnet), "Magnet grants");
-        Check(player.CurrentExperience > xp, "Magnet collects visible XP immediately");
+        Near(player.CurrentExperience, xp + player.Stats.GetExperienceAmount(1f) * 2f, "Magnet collects visible and offscreen map XP with gain multiplier");
         float gained = player.CurrentExperience;
         Check(!pickup.Collect(player), "Trigger after magnet cannot grant duplicate XP");
+        Check(!offscreenPickup.Collect(player), "Offscreen pickup is consumed by the map-wide magnet");
         Near(player.CurrentExperience, gained, "No duplicate experience");
-        Check(hidden != null, "Offscreen experience remains");
+        GameObject later = new GameObject("LaterXP");
+        ExperienceDrop laterPickup = later.AddComponent<ExperienceDrop>();
+        Check(laterPickup.Collect(player), "Drops created after the reward are not pre-collected");
 
         foreach (Enemy enemy in UnityEngine.Object.FindObjectsByType<Enemy>()) UnityEngine.Object.DestroyImmediate(enemy.gameObject);
         ZoneRewardArea locked = director.Areas.First(x => x.IsLocked);

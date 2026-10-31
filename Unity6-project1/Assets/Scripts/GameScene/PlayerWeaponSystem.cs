@@ -7,7 +7,7 @@ public partial class PlayerWeaponSystem : MonoBehaviour
 {
     public WeaponDefinition Definition { get; private set; }
     public int WeaponLevel { get; private set; } = 1;
-    public float LevelDamageMultiplier => 1f + .15f * (WeaponLevel - 1);
+    public float LevelDamageMultiplier => 1f + .05f * (WeaponLevel - 1);
     public void UpgradeLevel() { if (Definition != null) WeaponLevel++; }
     private PlayerController owner;
     private float nextAttack;
@@ -148,7 +148,8 @@ public partial class PlayerWeaponSystem : MonoBehaviour
         else return false;
         RecordShot();
         float actionCooldown = Definition.kind == WeaponKind.Turret
-            ? owner.Stats.GetPrimaryWeaponCooldown(Definition.deploymentCooldown * CharacterCooldownMultiplier * Mathf.Max(.4f, 1f - Get(WeaponBuffEffect.TurretDeployment))) : Cooldown;
+            ? owner.Stats.GetPrimaryWeaponCooldown(Definition.deploymentCooldown * CharacterCooldownMultiplier,
+                Mathf.Min(.6f, Get(WeaponBuffEffect.TurretDeployment))) : Cooldown;
         BeginCooldown(actionCooldown);
         return true;
     }
@@ -177,7 +178,7 @@ public partial class PlayerWeaponSystem : MonoBehaviour
             if (bullet == null) { Destroy(shot); continue; }
             bullet.baseDamage = Definition.damage;
             bullet.bulletSpeed = Definition.projectileSpeed;
-            bullet.Initialize(aim, owner, Definition.pierce + Mathf.RoundToInt(Get(WeaponBuffEffect.BowPierce)));
+            bullet.Initialize(aim, owner, Definition.pierce + Mathf.RoundToInt(Get(WeaponBuffEffect.BowPierce)) + Mathf.RoundToInt(Get(WeaponBuffEffect.ShotgunPierce)));
             bullet.SetWeapon(this, context, scale, procs);
             SpriteRenderer renderer = shot.GetComponent<SpriteRenderer>();
             if (renderer != null) renderer.color = Definition.tint;

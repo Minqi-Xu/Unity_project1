@@ -30,6 +30,21 @@ public static class BuffSmokeTests
             manager = root.AddComponent<UpgradeManager>();
             Call(manager, "Awake");
             UpgradeDefinition[] pool = manager.availableUpgrades.Where(x => !x.weaponSpecific && x.grantedWeapon == null).ToArray();
+            GameObject mobilityRoot = new GameObject("AdditiveMobilityChecks");
+            mobilityRoot.transform.SetParent(root.transform, false);
+            PlayerStats mobility = mobilityRoot.AddComponent<PlayerStats>();
+            foreach (string id in new[] { "battle_boots", "mobile_gunnery", "dash_frenzy", "long_dash", "dash_logistics" })
+            {
+                UpgradeDefinition strongest = pool.First(x => x.upgradeId == id && x.rarity == UpgradeRarity.Legendary);
+                for (int pick = 0; pick < strongest.maxLevel; pick++) mobility.ApplyUpgrade(strongest, null);
+            }
+            Near(mobility.GetMoveSpeed(5f), 9.5f, "All maximum legendary move-speed families sum to +90%, not compounded");
+            Near(mobility.GetDashSpeed(20f), 48.5f, "Dash speed families use additive half-strength bonuses");
+            Near(pool.First(x => x.upgradeId == "potential" && x.rarity == UpgradeRarity.Common).effects[0].value,
+                .01f, "Unbounded per-level damage growth is reduced to one percent");
+            mobility.levelUpDamage = .01f;
+            for (int earned = 0; earned < 50; earned++) mobility.OnLevelUp(null);
+            Near(mobility.damageMultiplier, 1.5f, "Fifty future levels grow linearly, not exponentially");
             Check(pool.Count(x => x.rarity == UpgradeRarity.Common) == 20, "Twenty common basics");
             Check(pool.Length == 141, "All basic, compound and seven new target/enchantment families");
             string[] newFamilies = { "vanguard_provisions", "mobile_gunnery", "demolition_kit", "survivor_instinct", "field_scholar", "salvage_engine", "renewing_potential", "dash_logistics",
@@ -53,6 +68,9 @@ public static class BuffSmokeTests
             }
             UpgradeDefinition damage = pool.First(x => x.upgradeId == "damage_training" && x.rarity == UpgradeRarity.Common);
             Check(manager.ApplyUpgrade(damage, player), "Apply bullet buff");
+            UpgradeDefinition legendaryDamage = pool.First(x => x.upgradeId == damage.upgradeId && x.rarity == UpgradeRarity.Legendary);
+            Check(manager.GetUpgradeLevel(damage) == 1 && manager.GetUpgradeLevel(legendaryDamage) == 1, "Level preview reads shared family levels across rarities");
+            Check(BuffSelectionUI.LevelPreview(legendaryDamage, manager.GetUpgradeLevel(legendaryDamage)) == "After pick: Lv 2 / 10", "Selection preview shows the level after picking, with the cap");
             Near(stats.CalculateDamage(10f, 1f, true), 11f, "Primary weapon bonus");
             Near(stats.CalculateDamage(10f, 1f, false), 10f, "Auxiliaries and RMB bomb unaffected");
             stats.criticalChance = 1f;
@@ -71,10 +89,12 @@ public static class BuffSmokeTests
             stats.dashAttackSpeed = 0.3f;
             stats.moveSpeedMultiplier = 1.5f;
             stats.OnDashCompleted();
-            Near(stats.GetPrimaryWeaponCooldown(1f), 0.9f / 1.45f, "Movement-scaled dash attack speed");
+            Near(stats.GetPrimaryWeaponCooldown(1f), 0.9f / 1.3f, "Dash attack speed is independent of movement speed");
             UpgradeDefinition commonPierce = pool.First(x => x.upgradeId == "piercing" && x.rarity == UpgradeRarity.Common);
             UpgradeDefinition legendaryPierce = pool.First(x => x.upgradeId == "piercing" && x.rarity == UpgradeRarity.Legendary);
             for (int i = 0; i < 3; i++) Check(manager.ApplyUpgrade(commonPierce, player), "Pierce stacking");
+            Check(BuffSelectionUI.LevelPreview(commonPierce, 2) == "After pick: Lv 3 / 3 (MAX)", "Last upgrade is clearly marked MAX");
+            Check(BuffSelectionUI.LevelPreview(pool.First(x => x.upgradeId == "piercing_blast"), 0) == "", "One-time unlocks do not show repeatable upgrade levels");
             Check(stats.GetPierceCount() == 3 && !manager.ApplyUpgrade(legendaryPierce, player), "Shared rarity level cap");
             UpgradeDefinition bundle = pool.First(x => x.upgradeId == "fortune_bundle" && x.rarity == UpgradeRarity.Rare);
             var levels = (System.Collections.Generic.Dictionary<string, int>)typeof(UpgradeManager)

@@ -8,7 +8,7 @@ public class EnemySpawner : MonoBehaviour
     public GameObject enemyPrefab;  // The enemy prefab to spawn
 
     // Delay before the first enemy spawn.
-    public float initialSpawnDelay = 2f; // Initial delay between spawns
+    public float initialSpawnDelay = 0f;
 
     // Initial interval between enemy spawns.
     public float spawnRate = 4f; // Seconds between early-game enemy spawns
@@ -30,15 +30,14 @@ public class EnemySpawner : MonoBehaviour
     private Camera mainCamera;
     [Header("Enemy roster and timed encounters")]
     public EnemyDefinition[] enemyTypes;
+    [Tooltip("Normal-enemy unlock times and relative weights. This overrides timing/weight on EnemyDefinition assets.")]
+    public NormalEnemySpawnRule[] normalEnemySchedule = NormalEnemySpawnRule.Defaults();
     public EnemyEncounter[] encounters = EnemyEncounter.Defaults();
     [Min(0f)] public float encounterWarningTime = 2f;
-    public bool finalBossRequired = true;
     private bool[] encounterSpawned;
     private bool ownsCatalog;
     public float StartingCharacterAverageSpeed { get; private set; } = 5f;
     public float ElapsedTime => gameTime;
-    public bool RequiresFinalBoss => enabled && finalBossRequired && encounters != null &&
-        System.Array.Exists(encounters, item => item != null && item.rank == EnemyRank.FinalBoss);
 
     // Validates required references and starts the spawn loop.
     void Start()
@@ -72,6 +71,7 @@ public class EnemySpawner : MonoBehaviour
             }
         }
         if (encounters == null) encounters = EnemyEncounter.Defaults();
+        if (normalEnemySchedule == null) normalEnemySchedule = NormalEnemySpawnRule.Defaults();
         encounterSpawned = new bool[encounters.Length];
         StartCoroutine(SpawnEnemies());
     }
@@ -92,7 +92,7 @@ public class EnemySpawner : MonoBehaviour
     // Repeatedly spawns enemies and reduces spawn interval down to a minimum.
     IEnumerator SpawnEnemies()
     {
-        yield return new WaitForSeconds(initialSpawnDelay);
+        if (initialSpawnDelay > 0f) yield return new WaitForSeconds(initialSpawnDelay);
 
         while (true)
         {
@@ -136,6 +136,9 @@ public class EnemySpawner : MonoBehaviour
             spawnPosition = new Vector2(xPos, yPos);
         }
 
+        EnemyDefinition type = encounter == null ? PickNormalType(gameTime) : FindType(encounter.kind);
+        if (type == null) return;
+
         // Spawn the enemy outside the screen
         GameObject enemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
 
@@ -152,11 +155,11 @@ public class EnemySpawner : MonoBehaviour
                 ? Mathf.Floor(gameTime / healIncreaseTime) * healIncreaseRate
                 : 0f; // increase heal every setting time
 
-            EnemyDefinition type = encounter == null ? PickNormalType(gameTime) : FindType(encounter.kind);
             if (type != null)
                 enemyScript.Configure(type, encounter != null ? encounter.rank : EnemyRank.Normal,
                     encounter != null ? encounter.affixes : EnemyAffix.None, additionalHealth, StartingCharacterAverageSpeed,
-                    encounter != null ? encounter.bossMovementMultiplier : 1f, encounter != null ? encounter.bossRelativeSpeedLimit : 1.05f);
+                    encounter != null ? encounter.bossMovementMultiplier : 1f, encounter != null ? encounter.bossRelativeSpeedLimit : 1.05f,
+                    encounter != null && encounter.guaranteePrimaryWeaponBuff);
             if (encounter != null) enemyScript.SetEncounterTitle(encounter.title);
             //Debug.Log($"Spawned enemy with {enemyScript.maxHealth} HP");
         }
@@ -166,20 +169,33 @@ public class EnemySpawner : MonoBehaviour
     {
         float total = 0f;
         foreach (EnemyDefinition type in enemyTypes)
-            if (type != null && type.unlockTime <= elapsed) total += Mathf.Max(0f, type.weight);
+            total += NormalSpawnWeight(type, elapsed);
+        if (total <= 0f) return null;
         float roll = Random.value * total;
+        EnemyDefinition fallback = null;
         foreach (EnemyDefinition type in enemyTypes)
         {
-            if (type == null || type.unlockTime > elapsed || type.weight <= 0f) continue;
-            roll -= type.weight;
+            float weight = NormalSpawnWeight(type, elapsed);
+            if (weight <= 0f) continue;
+            fallback = type;
+            roll -= weight;
             if (roll <= 0f) return type;
         }
-        return FindType(EnemyKind.Chaser);
+        return fallback;
+    }
+
+    private float NormalSpawnWeight(EnemyDefinition type, float elapsed)
+    {
+        if (type == null || normalEnemySchedule == null) return 0f;
+        foreach (NormalEnemySpawnRule rule in normalEnemySchedule)
+            if (rule != null && rule.kind == type.kind) return rule.IsAvailable(elapsed) ? rule.weight : 0f;
+        return 0f;
     }
 
     public bool SpawnZoneWave(Vector2 center, float radius, int count)
     {
         if (!isActiveAndEnabled || enemyPrefab == null || enemyTypes == null || enemyTypes.Length == 0) return false;
+        if (PickNormalType(gameTime) == null) return false;
         for (int i = 0; i < Mathf.Clamp(count, 1, 40); i++)
         {
             float angle = i * Mathf.PI * 2f / Mathf.Clamp(count, 1, 40);

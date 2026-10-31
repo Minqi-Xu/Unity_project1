@@ -66,8 +66,8 @@ public partial class PlayerWeaponSystem
             if (context.seals.Contains(seal) || !MeleeSweepShape.Contains((Vector2)seal.transform.position - origin,
                 aim, reach, sideReach, arc, progress)) continue;
             context.seals.Add(seal);
-            seal.TakeDamage(owner.Stats.CalculateDamage(Definition.damage * LevelDamageMultiplier *
-                (1f + Get(WeaponBuffEffect.Damage)) * CharacterDamageMultiplier, owner.damageMultiplier, IsPrimaryWeapon));
+            seal.TakeDamage(owner.Stats.CalculateDamage(Definition.damage * CharacterDamageMultiplier,
+                owner.damageMultiplier, IsPrimaryWeapon, AdditiveDamageBonus));
         }
         foreach (Collider2D collider in Physics2D.OverlapCircleAll(origin, reach))
         {

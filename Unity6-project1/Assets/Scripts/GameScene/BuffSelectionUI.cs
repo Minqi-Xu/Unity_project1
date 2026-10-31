@@ -17,6 +17,15 @@ public class BuffSelectionUI : MonoBehaviour
     private bool acceptingSelection;
     private int openedFrame;
 
+    public static string LevelPreview(UpgradeDefinition upgrade, int currentLevel)
+    {
+        if (upgrade == null || upgrade.grantedWeapon != null || upgrade.maxLevel == 1) return "";
+        int next = Mathf.Max(0, currentLevel) + 1;
+        if (upgrade.maxLevel <= 0) return "After pick: Lv " + next + " / Unlimited";
+        next = Mathf.Min(next, upgrade.maxLevel);
+        return "After pick: Lv " + next + " / " + upgrade.maxLevel + (next == upgrade.maxLevel ? " (MAX)" : "");
+    }
+
     // Builds the window lazily and pauses gameplay until a choice is made.
     public void Show(IReadOnlyList<UpgradeDefinition> choices, int level, Action<UpgradeDefinition> onSelected, string rewardTitle = null)
     {
@@ -152,9 +161,20 @@ public class BuffSelectionUI : MonoBehaviour
         TextMeshProUGUI nameLabel = Label("Name", row, upgrade.DisplayName, 23f,
             newWeapon ? UpgradeUIColors.NewWeapon : Color.white);
         nameLabel.fontStyle = FontStyles.Bold;
-        FitCardText(nameLabel, 0.62f, 0.82f, 23f);
+        FitCardText(nameLabel, 0.64f, 0.82f, 23f);
+        int currentLevel = UpgradeManager.Instance != null ? UpgradeManager.Instance.GetUpgradeLevel(upgrade) : 0;
+        string preview = LevelPreview(upgrade, currentLevel);
+        if (!string.IsNullOrEmpty(preview))
+        {
+            bool maxedAfterPick = upgrade.maxLevel > 0 && currentLevel + 1 >= upgrade.maxLevel;
+            TextMeshProUGUI levelLabel = Label("LevelPreview", row, preview, 16f,
+                maxedAfterPick ? new Color(.55f, 1f, .65f) : new Color(.95f, .82f, .45f));
+            levelLabel.fontStyle = FontStyles.Bold;
+            FitCardText(levelLabel, .54f, .61f, 16f);
+        }
         TextMeshProUGUI detail = Label("Description", row, upgrade.description, 17f, new Color(0.83f, 0.86f, 0.89f));
-        FitCardText(detail, 0.05f, 0.58f, 17f);
+        FitCardText(detail, 0.05f, string.IsNullOrEmpty(preview) ? 0.58f : 0.50f, 17f);
+        if (upgrade.rarity == UpgradeRarity.Myth) UpgradeUIColors.StyleMythCard(row.gameObject);
         return button;
     }
 

@@ -42,7 +42,7 @@ public sealed class GameCodexCatalog : IDisposable
     }
     public static string Rarity(UpgradeRarity rarity) =>
         rarity == UpgradeRarity.Common ? "Common" : rarity == UpgradeRarity.Rare ? "Rare" :
-        rarity == UpgradeRarity.Epic ? "Epic" : "Legendary";
+        rarity == UpgradeRarity.Epic ? "Epic" : rarity == UpgradeRarity.Myth ? "Myth" : "Legendary";
     public static string WeaponName(WeaponDefinition weapon) => weapon != null ? WeaponName(weapon.kind) + " / " + weapon.displayName : "No weapon";
     public static string WeaponName(WeaponKind kind)
     {

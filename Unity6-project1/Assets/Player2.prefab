@@ -190,6 +190,8 @@ MonoBehaviour:
   damageMultiplier: 1
   levelText: {fileID: 0}
   experienceThreshold: 5
+  experienceLinearGrowth: 2
+  experienceQuadraticGrowth: 0.25
   bulletCooldownIndicator: {fileID: 0}
   dashCooldownIndicator: {fileID: 0}
   bombCooldownIndicator: {fileID: 0}
