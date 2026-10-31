@@ -47,6 +47,7 @@ MonoBehaviour:
   definitions: []
   firstWaveTime: 180
   sealedWaveTime: 720
+  sealedWaveSealHealth: 500
   referenceMoveSpeed: 4.5
   minTravelTime: 10
   maxTravelTime: 25

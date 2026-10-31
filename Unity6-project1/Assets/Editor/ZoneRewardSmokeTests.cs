@@ -72,6 +72,8 @@ public static class ZoneRewardSmokeTests
         director.firstWaveTime = director.sealedWaveTime = 0f;
         Call(director, "Update");
         Check(director.Areas.Count == 10 && director.Areas.Count(x => x.IsLocked) == 5, "Both scheduled waves spawn exactly once");
+        foreach (ZoneRewardArea sealedArea in director.Areas.Where(x => x.IsLocked))
+            Near(sealedArea.Seal.requiredDamage, Mathf.Max(1f, director.sealedWaveSealHealth), "Second-wave seals inherit prefab health");
         Call(director, "Update"); Check(director.Areas.Count == 10, "No duplicate scheduled spawns");
         Check(director.Areas.All(x => !x.IsRevealed && x.NavigationName == "Unknown Altar"), "Remote arrows never disclose reward types");
         foreach (ZoneRewardArea area in director.Areas)

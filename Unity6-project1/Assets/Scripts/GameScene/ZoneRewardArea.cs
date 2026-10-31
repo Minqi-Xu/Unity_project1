@@ -29,7 +29,7 @@ public class ZoneRewardArea : MonoBehaviour
     private LineRenderer boundary;
     private LineRenderer progressRing;
 
-    public void Configure(ZoneRewardDefinition definition, bool locked, float radiusMultiplier = 1f)
+    public void Configure(ZoneRewardDefinition definition, bool locked, float radiusMultiplier = 1f, float sealHealth = 1500f)
     {
         requiredStayTime = definition.requiredStayTime; exitGraceTime = definition.exitGraceTime;
         rewardType = definition.rewardType; oneShot = definition.oneShot;
@@ -45,6 +45,7 @@ public class ZoneRewardArea : MonoBehaviour
             obj.transform.SetParent(transform, false);
             obj.transform.localPosition = Vector3.up * (radius + 1.5f);
             Seal = obj.AddComponent<ZoneSeal>();
+            Seal.requiredDamage = Mathf.Max(1f, sealHealth);
             Seal.Initialize(this);
         }
     }

@@ -8,6 +8,8 @@ public class ZoneRewardDirector : MonoBehaviour
     public ZoneRewardDefinition[] definitions;
     [Min(0f)] public float firstWaveTime = 180f;
     [Min(0f)] public float sealedWaveTime = 720f;
+    [Tooltip("Health of each seal spawned with the second wave. Copied to seals when they spawn.")]
+    [Min(1f)] public float sealedWaveSealHealth = 1500f;
     [Tooltip("Fixed walking speed used for spawn distance, independent of character buffs and dash.")]
     [Min(.1f)] public float referenceMoveSpeed = 4.5f;
     [Min(1f)] public float minTravelTime = 10f;
@@ -95,7 +97,7 @@ public class ZoneRewardDirector : MonoBehaviour
             obj.transform.SetParent(transform);
             obj.transform.position = player.transform.position + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * zoneDistance;
             ZoneRewardArea area = obj.AddComponent<ZoneRewardArea>();
-            area.Configure(definition, sealedWave, areaRadiusMultiplier); Areas.Add(area);
+            area.Configure(definition, sealedWave, areaRadiusMultiplier, sealedWaveSealHealth); Areas.Add(area);
             spawned = true;
         }
         if (spawned) Announce("Altars have appeared in the distance...", Color.white);

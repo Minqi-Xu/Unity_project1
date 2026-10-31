@@ -3,7 +3,7 @@ using UnityEngine;
 // Deliberately NOT an Enemy: enemy-only homing searches can never select a seal.
 public class ZoneSeal : MonoBehaviour
 {
-    [Min(1f)] public float requiredDamage = 150f;
+    [Min(1f)] public float requiredDamage = 1500f;
     [Min(.1f)] public float runeStayTime = 1.5f;
     public float DamageTaken { get; private set; }
     public int RunesActivated { get; private set; }
