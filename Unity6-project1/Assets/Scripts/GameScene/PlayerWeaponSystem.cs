@@ -100,6 +100,16 @@ public partial class PlayerWeaponSystem : MonoBehaviour
         if (Definition.kind == WeaponKind.Drone || Definition.kind == WeaponKind.Creature) return false;
         if (!ReadyToDraw()) return false;
         if (direction.sqrMagnitude < 0.001f) direction = Vector2.right;
+        // One trigger launches complete consecutive waves, each with its own hit context.
+        if (Definition.kind == WeaponKind.Pistol || Definition.kind == WeaponKind.Shotgun ||
+            Definition.kind == WeaponKind.Bow || Definition.kind == WeaponKind.Bomb)
+        {
+            if (Definition.kind == WeaponKind.Bomb ? owner.bombPrefab == null : owner.bulletPrefab == null) return false;
+            RecordShot();
+            BeginCooldown(Cooldown);
+            FirePrimaryWaves(direction.normalized);
+            return true;
+        }
         if (Definition.kind == WeaponKind.Axe)
         {
             StartCoroutine(AxeAttack(direction.normalized));
@@ -129,36 +139,25 @@ public partial class PlayerWeaponSystem : MonoBehaviour
             }
             SpawnSummon(placement, summons.Count);
         }
-        else if (Definition.kind == WeaponKind.Bomb)
-        {
-            if (owner.bombPrefab == null) return false;
-            GameObject shot = Instantiate(owner.bombPrefab, transform.position, Quaternion.identity);
-            Bomb bomb = shot.GetComponent<Bomb>();
-            if (bomb == null) { Destroy(shot); return false; }
-            bomb.basedamage = Definition.damage;
-            bomb.explosionRadius = Definition.radius;
-            bomb.maxDistance = Definition.range;
-            bomb.Initialize(direction, owner, this);
-            Destroy(shot, 10f);
-        }
         else if (Definition.kind == WeaponKind.FireOrb) CastFireballs();
         else if (Definition.kind == WeaponKind.Lightning)
         {
             // Searching is throttled separately; only a successful strike consumes the visible cooldown.
             if (!CastLightning()) { lightningSearchRetryUntil = Time.time + .15f; return false; }
         }
-        else
-        {
-            if (owner.bulletPrefab == null) return false;
-            FireProjectiles(transform.position, direction);
-        }
+        else return false;
         RecordShot();
         float actionCooldown = Definition.kind == WeaponKind.Turret
             ? owner.Stats.GetPrimaryWeaponCooldown(Definition.deploymentCooldown * CharacterCooldownMultiplier * Mathf.Max(.4f, 1f - Get(WeaponBuffEffect.TurretDeployment))) : Cooldown;
-        nextAttack = Time.time + actionCooldown;
-        activeCooldownDuration = actionCooldown;
-        if (gameObject == owner.gameObject) owner.bulletCooldownIndicator?.StartCooldown(actionCooldown);
+        BeginCooldown(actionCooldown);
         return true;
+    }
+
+    private void BeginCooldown(float duration)
+    {
+        nextAttack = Time.time + duration;
+        activeCooldownDuration = duration;
+        if (gameObject == owner.gameObject) owner.bulletCooldownIndicator?.StartCooldown(duration);
     }
 
     public void FireProjectiles(Vector2 position, Vector2 direction, float scale = 1f, bool procs = true, int shotCountOverride = 0)
@@ -183,7 +182,7 @@ public partial class PlayerWeaponSystem : MonoBehaviour
             SpriteRenderer renderer = shot.GetComponent<SpriteRenderer>();
             if (renderer != null) renderer.color = Definition.tint;
             if (Definition.kind == WeaponKind.Bow) shot.transform.localScale = Vector3.Scale(shot.transform.localScale, new Vector3(1.8f, 0.55f, 1f));
-            Destroy(shot, 5f);
+            Destroy(shot, Definition.kind == WeaponKind.Bow ? 8f : 5f);
         }
     }
 

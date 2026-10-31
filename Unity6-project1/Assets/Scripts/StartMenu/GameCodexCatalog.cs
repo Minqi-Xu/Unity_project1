@@ -101,12 +101,13 @@ public sealed class GameCodexCatalog : IDisposable
                 break;
             case WeaponKind.Turret:
                 text.AppendLine($"Deployment cooldown: {N(weapon.deploymentCooldown)}s    Unit limit: {weapon.summonCount}    Lifetime: {N(weapon.summonLifetime)}s");
-                text.AppendLine($"Projectiles per volley: {weapon.projectiles}    Projectile speed: {N(weapon.projectileSpeed)}    Target range: {N(weapon.range)}    Pierce: {weapon.pierce}");
+                text.AppendLine($"Projectiles per volley: {weapon.projectiles}    Projectile speed: {N(weapon.projectileSpeed)}    Bullet travel: {N(weapon.projectileRange)} units    Pierce: {weapon.pierce}");
                 break;
             default:
                 text.AppendLine($"Pellets per volley: {weapon.projectiles}    Spread: {N(weapon.spread)}°    Projectile speed: {N(weapon.projectileSpeed)}    Base pierce: {weapon.pierce}");
                 break;
         }
+        if (!weapon.IsAuxiliary && WeaponWaveRules.Supports(weapon.kind)) text.AppendLine("Multishot adds complete consecutive shotgun volleys; pellets per wave stay unchanged.");
         if (weapon.IsAuxiliary) text.AppendLine("Rare unlock card. Uses one auxiliary slot; default limit: 3 weapon types. Basic Multishot does not affect auxiliaries.");
         return text.ToString().TrimEnd();
     }

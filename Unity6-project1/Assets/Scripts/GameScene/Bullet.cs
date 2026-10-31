@@ -25,15 +25,21 @@ public class Bullet : MonoBehaviour
     private int initialHits;
     private float launched;
     private bool returning;
+    private float maxTravelDistance = 100f;
+    private float travelled;
 
     public void SetWeapon(PlayerWeaponSystem source, WeaponAttackContext context, float scale, bool procs)
     {
         weapon = source; attackContext = context; weaponScale = scale; allowProcs = procs;
+        WeaponDefinition definition = source != null ? source.Definition : null;
+        if (definition != null)
+            maxTravelDistance = Mathf.Max(.1f, definition.projectileRange);
     }
 
     private void BeginReturn()
     {
         returning = true;
+        travelled = 0f;
         hitEnemies.Clear();
         remainingHits = initialHits;
         hitIndex = 0;
@@ -53,6 +59,8 @@ public class Bullet : MonoBehaviour
     {
         direction = dir.normalized;
         spawnPosition = transform.position;
+        travelled = 0f;
+        maxTravelDistance = 100f;
         playerController = controller;  // Store the reference
         remainingHits = 1 + Mathf.Max(0, weaponPierce) + (controller != null && controller.Stats != null ? controller.Stats.GetPierceCount() : 0);
         spent = false;
@@ -79,11 +87,13 @@ public class Bullet : MonoBehaviour
         // get the camera's orthographic size
         cameraSizeFactor = GetCameraSizeFactor();
         // Move the bullet in the specified direction
-        transform.position += (Vector3)direction * bulletSpeed * Time.deltaTime * cameraSizeFactor;
-
-        // Optionally, destroy the bullet after a certain distance (e.g., 100 units)
-        if (Vector2.Distance(transform.position, spawnPosition) > 100f) // Adjust as needed
+        float step = Mathf.Min(bulletSpeed * Time.deltaTime * cameraSizeFactor, Mathf.Max(0f, maxTravelDistance - travelled));
+        transform.position += (Vector3)direction * step;
+        travelled += step;
+        if (travelled >= maxTravelDistance)
         {
+            spent = true;
+            foreach (Collider2D collider in GetComponentsInChildren<Collider2D>()) collider.enabled = false;
             Destroy(gameObject);
         }
     }

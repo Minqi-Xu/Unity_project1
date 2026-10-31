@@ -40,10 +40,11 @@ public static class WeaponBalanceSmokeTests
             primary.Hit(enemy, 8f, Vector2.zero);
             Near(5000f - enemy.currentHealth, 8.8f, "Primary damage applies");
             stats.projectileCount = 5;
-            Check(primary.ProjectileCount == primary.Definition.projectiles + 4, "Basic multishot applies to the default weapon");
+            Check(primary.AttackWaveCount == 1 && primary.ProjectileCount == primary.Definition.projectiles + 4, "Pistol quantity adds simultaneous projectiles, not waves");
             foreach (WeaponKind kind in new[] { WeaponKind.Drone, WeaponKind.Creature, WeaponKind.FireOrb, WeaponKind.Lightning, WeaponKind.Melee })
             {
                 PlayerWeaponSystem auxiliary = inventory.Find(kind);
+                Check(auxiliary.AttackWaveCount == 1, "Basic waves cannot leak into auxiliary weapons: " + kind);
                 Check(auxiliary.ProjectileCount == auxiliary.Definition.projectiles, "Basic multishot cannot increase auxiliary projectiles: " + kind);
                 Check(auxiliary.SummonCount == auxiliary.Definition.summonCount, "Basic multishot cannot increase auxiliary summons: " + kind);
                 Check(auxiliary.MeleePulseCount == 1, "Basic multishot cannot increase auxiliary pulses: " + kind);
@@ -65,7 +66,7 @@ public static class WeaponBalanceSmokeTests
                     Check(auxiliary.SummonCount == auxiliary.Definition.summonCount + 1 && auxiliary.ProjectileCount == auxiliary.Definition.projectiles + 1,
                         "Drone population and volley upgrades stay independent");
                 }
-                Check(primary.ProjectileCount == primary.Definition.projectiles + 4, "Auxiliary count upgrade leaves default weapon unchanged");
+                Check(primary.AttackWaveCount == 1 && primary.ProjectileCount == primary.Definition.projectiles + 4, "Auxiliary count upgrade leaves pistol multishot unchanged");
                 Near(auxiliary.Cooldown, auxiliary.Definition.cooldown, "Primary speed cannot leak into " + kind);
                 enemy.currentHealth = 5000f;
                 auxiliary.Hit(enemy, auxiliary.Definition.damage, Vector2.zero);
@@ -79,14 +80,21 @@ public static class WeaponBalanceSmokeTests
             stats.projectileCount = 1;
             Near(stats.CalculateDamage(100f, 1f, false), 100f, "RMB bomb unaffected by primary damage");
             primary.Configure(player, Resources.Load<WeaponDefinition>("Weapons/Shotgun"));
+            Near(primary.Definition.damage, 9f, "Shotgun damage is nine per pellet");
+            Check(primary.ProjectileCount == 6 && primary.AttackWaveCount == 1, "Default shotgun has six pellets in one wave");
+            stats.projectileCount = 2;
+            Check(primary.ProjectileCount == 6 && primary.AttackWaveCount == 2, "Basic quantity gives two complete six-pellet waves");
+            primary.ApplyBuff(WeaponBuffEffect.Waves, 1f);
+            Check(primary.ProjectileCount == 6 && primary.AttackWaveCount == 3, "Dedicated shotgun volleys add waves without adding pellets");
             enemy.currentHealth = 5000f;
             target.transform.position = Vector2.right;
             WeaponAttackContext volley = new WeaponAttackContext();
             for (int pellet = 0; pellet < 6; pellet++)
-                primary.Hit(enemy, 7f, Vector2.zero, context: volley, projectileHit: true);
+                primary.Hit(enemy, primary.Definition.damage, Vector2.zero, context: volley, projectileHit: true);
             Near(target.transform.position.x, 1.35f, "Shotgun knockback applies once per enemy per volley");
-            primary.Hit(enemy, 7f, Vector2.zero, context: new WeaponAttackContext(), projectileHit: true);
+            primary.Hit(enemy, primary.Definition.damage, Vector2.zero, context: new WeaponAttackContext(), projectileHit: true);
             Near(target.transform.position.x, 1.7f, "A new shotgun volley can push again");
+            stats.projectileCount = 1;
             primary.Configure(player, Resources.Load<WeaponDefinition>("Weapons/BombLauncher"));
             Near(primary.Definition.radius, 1.8f, "Reduced launcher radius");
             Near(primary.Cooldown, 2.8f / 1.08f, "Launcher benefits from primary attack speed");

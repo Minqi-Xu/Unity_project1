@@ -244,7 +244,7 @@ public class UpgradeManager : MonoBehaviour
             if (effect.effectType == UpgradeEffectType.ProjectileCount)
             {
                 PlayerWeaponSystem primary = inventory.GetComponent<PlayerWeaponSystem>();
-                if (primary == null || primary.Definition == null || primary.Definition.kind == WeaponKind.Bomb || primary.Definition.kind == WeaponKind.Axe)
+                if (primary == null || primary.Definition == null || !WeaponWaveRules.SupportsQuantity(primary.Definition.kind))
                     return false;
             }
         }
@@ -553,7 +553,7 @@ public class UpgradeManager : MonoBehaviour
             case UpgradeEffectType.ExplosionRadiusMultiplier: return "Explosion radius bonus +" + percent + ".";
             case UpgradeEffectType.MaxHealth: return "Max health +" + value + "; heal the same amount.";
             case UpgradeEffectType.Heal: return "Restore " + value + " health.";
-            case UpgradeEffectType.ProjectileCount: return "Primary weapon projectiles +" + value + "; excludes auxiliary weapons.";
+            case UpgradeEffectType.ProjectileCount: return "Primary weapon quantity +" + value + "; pistol/bow: extra simultaneous projectiles; shotgun: extra complete consecutive volleys; turret: extra units. Excludes auxiliaries, axe and RMB bombs.";
             case UpgradeEffectType.PierceCount: return "Additional targets pierced +" + value + ".";
             case UpgradeEffectType.CriticalChance: return "Critical chance +" + percent + " (100% cap).";
             case UpgradeEffectType.CriticalDamageMultiplier: return "Critical damage multiplier +" + value + "x.";

@@ -15,10 +15,11 @@ MonoBehaviour:
   displayName: Scattergun
   description: Six pellets in a wide fan; slow fire rate. Push each enemy 0.35 units away once per volley.
   cooldown: 0.95
-  damage: 7
+  damage: 9
   projectiles: 6
   spread: 50
   projectileSpeed: 23
   knockback: 0.35
   kind: 1
   tint: {r: 0.8, g: 0.6, b: 1, a: 1}
+  projectileRange: 8

@@ -280,17 +280,16 @@ public class PlayerController : MonoBehaviour
             //calculate the direction to the mouse
             Vector2 fireDirection = (mousePosition - transform.position).normalized;
 
-            // Spread additional projectiles symmetrically while keeping the fan within 60 degrees.
             int count = Stats != null ? Stats.GetProjectileCount() : 1;
             float step = count > 1 ? Mathf.Min(8f, 60f / (count - 1)) : 0f;
             for (int i = 0; i < count; i++)
             {
-                Vector2 shotDirection = Quaternion.Euler(0f, 0f, (i - (count - 1) * 0.5f) * step) * fireDirection;
+                Vector2 shotDirection = Quaternion.Euler(0f, 0f, (i - (count - 1) * .5f) * step) * fireDirection;
                 GameObject bullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
                 Bullet bulletScript = bullet.GetComponent<Bullet>();
                 if (bulletScript != null) bulletScript.Initialize(shotDirection, this);
                 float angle = Mathf.Atan2(shotDirection.y, shotDirection.x) * Mathf.Rad2Deg;
-                bullet.transform.rotation = Quaternion.Euler(0, 0, angle);
+                bullet.transform.rotation = Quaternion.Euler(0f, 0f, angle);
                 Destroy(bullet, 10f);
             }
 

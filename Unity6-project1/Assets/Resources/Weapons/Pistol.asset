@@ -18,3 +18,4 @@ MonoBehaviour:
   damage: 8
   kind: 0
   tint: {r: 1, g: 0.85, b: 0.3, a: 1}
+  projectileRange: 20

@@ -84,7 +84,7 @@ def append_table(output, selection):
 output = ["# 当前全部 Buff 清单", "", "从当前 UpgradeManager 与 WeaponUpgradeCatalog 源码生成。", "",
           "共 **196 个 Buff 稀有度版本**；另有 **5 张稀有自律武器获取卡**，总奖励池 201 张。", "",
           "数值为每次获取效果；同名家族不同稀有度共享叠加上限。武器专属 Buff 需持有对应武器。", "",
-          "基础主武器弹道数不作用于自律武器；固定附伤不被暴击/倍率再次放大，持续及衍生伤害不重复触发固定附伤。", ""]
+          "基础额外子弹：手枪/弓箭增加同时发射的弹丸，霰弹增加完整连续齐射波次，炮台增加单位；不作用于炸弹发射器、重斧或自律武器；固定附伤不被暴击/倍率再次放大，持续及衍生伤害不重复触发固定附伤。", ""]
 counts = collections.Counter(row["rarity"] for row in rows)
 output += ["| 稀有度 | Buff 版本数（不含获取卡） |", "|---|---:|"]
 output += [f"| {RARITY_CN[tier]} {RARITIES[tier]} | {counts[tier]} |" for tier in range(4)]

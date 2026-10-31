@@ -20,3 +20,4 @@ MonoBehaviour:
   projectileSpeed: 30
   kind: 2
   tint: {r: 0.4, g: 0.9, b: 0.5, a: 1}
+  projectileRange: 60

@@ -6,7 +6,7 @@
 
 数值为每次获取效果；同名家族不同稀有度共享叠加上限。武器专属 Buff 需持有对应武器。
 
-基础主武器弹道数不作用于自律武器；固定附伤不被暴击/倍率再次放大，持续及衍生伤害不重复触发固定附伤。
+基础额外子弹：手枪/弓箭增加同时发射的弹丸，霰弹增加完整连续齐射波次，炮台增加单位；不作用于炸弹发射器、重斧或自律武器；固定附伤不被暴击/倍率再次放大，持续及衍生伤害不重复触发固定附伤。
 
 | 稀有度 | Buff 版本数（不含获取卡） |
 |---|---:|
@@ -117,7 +117,7 @@
 | Blast Radius | 5 | Explosion radius bonus +15%. |
 | Bomb Tech | 5 | Bomb cooldown -10% (multiplicative). |
 | Deadly Aim | 5 | Critical damage multiplier +0.25x. |
-| Multishot | 3 | Primary weapon projectiles +1; excludes auxiliary weapons. |
+| Multishot | 3 | Primary weapon quantity +1; pistol/bow: extra simultaneous projectiles; shotgun: extra complete consecutive volleys; turret: extra units. Excludes auxiliaries, axe and RMB bombs. |
 | Piercing Rounds | 3 | Additional targets pierced +1. |
 | Precision | 5 | Critical chance +5% (100% cap). |
 | Primary Weapon Attack Speed | 5 | Primary weapon attack speed +8%; cooldown is divided by attack-speed multiplier. |
@@ -130,7 +130,7 @@
 | Blast Radius | 5 | Explosion radius bonus +22.5%. |
 | Bomb Tech | 5 | Bomb cooldown -15% (multiplicative). |
 | Deadly Aim | 5 | Critical damage multiplier +0.375x. |
-| Multishot | 3 | Primary weapon projectiles +2; excludes auxiliary weapons. |
+| Multishot | 3 | Primary weapon quantity +2; pistol/bow: extra simultaneous projectiles; shotgun: extra complete consecutive volleys; turret: extra units. Excludes auxiliaries, axe and RMB bombs. |
 | Piercing Rounds | 3 | Additional targets pierced +2. |
 | Precision | 5 | Critical chance +7.5% (100% cap). |
 | Primary Weapon Attack Speed | 5 | Primary weapon attack speed +12%; cooldown is divided by attack-speed multiplier. |
@@ -143,7 +143,7 @@
 | Blast Radius | 5 | Explosion radius bonus +30%. |
 | Bomb Tech | 5 | Bomb cooldown -20% (multiplicative). |
 | Deadly Aim | 5 | Critical damage multiplier +0.5x. |
-| Multishot | 3 | Primary weapon projectiles +3; excludes auxiliary weapons. |
+| Multishot | 3 | Primary weapon quantity +3; pistol/bow: extra simultaneous projectiles; shotgun: extra complete consecutive volleys; turret: extra units. Excludes auxiliaries, axe and RMB bombs. |
 | Piercing Rounds | 3 | Additional targets pierced +3. |
 | Precision | 5 | Critical chance +10% (100% cap). |
 | Primary Weapon Attack Speed | 5 | Primary weapon attack speed +16%; cooldown is divided by attack-speed multiplier. |
@@ -156,7 +156,7 @@
 | Blast Radius | 5 | Explosion radius bonus +45%. |
 | Bomb Tech | 5 | Bomb cooldown -30% (multiplicative). |
 | Deadly Aim | 5 | Critical damage multiplier +0.75x. |
-| Multishot | 3 | Primary weapon projectiles +4; excludes auxiliary weapons. |
+| Multishot | 3 | Primary weapon quantity +4; pistol/bow: extra simultaneous projectiles; shotgun: extra complete consecutive volleys; turret: extra units. Excludes auxiliaries, axe and RMB bombs. |
 | Piercing Rounds | 3 | Additional targets pierced +4. |
 | Precision | 5 | Critical chance +15% (100% cap). |
 | Primary Weapon Attack Speed | 5 | Primary weapon attack speed +24%; cooldown is divided by attack-speed multiplier. |
@@ -393,7 +393,7 @@
 | Warm Barrel（手枪） | 3 | Each consecutive shot reduces cooldown by 4% per level, capped at 40%. Resets after 1s idle. |
 | Choke（霰弹枪） | 3 | Reduce total spread by 15% of base per level; minimum 10 degrees. |
 | Concentrated Fire（霰弹枪） | 3 | The 3rd pellet hitting one enemy in a volley gains +100% weapon damage per level. |
-| Extra Pellets（霰弹枪） | 3 | Add 2 pellets per volley per level. |
+| Extra Volleys（霰弹枪） | 3 | Add 1 consecutive shotgun volley per attack per level; pellet count per volley is unchanged. |
 | Point Blank（霰弹枪） | 3 | Gain +20% weapon damage per level within 3 units of the muzzle. |
 | Durable Sentry（炮塔） | 3 | Add 10 seconds to turret lifetime per level, including deployed turrets. |
 | Linked Sentries（炮塔） | 3 | Each other turret within 4 units adds 10% shot damage per level, up to 3 neighbors. |

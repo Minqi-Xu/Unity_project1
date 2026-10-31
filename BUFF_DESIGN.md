@@ -11,7 +11,7 @@ or configured pool. See [WEAPON_BUFF_DESIGN.md](WEAPON_BUFF_DESIGN.md).
 | --- | --- | --- |
 | Attack | Primary Weapon Damage | Primary damage +10%; excludes auxiliaries and RMB bombs |
 | Attack | Primary Weapon Attack Speed | Primary attack frequency +8%; cooldown divided by speed multiplier |
-| Attack | Multishot | +1 projectile per shot |
+| Attack | Multishot | +1 simultaneous pistol/bow projectile; shotgun: +1 complete consecutive volley; turret: +1 unit |
 | Attack | Piercing Rounds | +1 additional target per bullet |
 | Attack | Blast Radius | Explosion radius +15% |
 | Attack | Bomb Tech | Bomb cooldown -10% |
@@ -32,7 +32,7 @@ or configured pool. See [WEAPON_BUFF_DESIGN.md](WEAPON_BUFF_DESIGN.md).
 
 Precision and Deadly Aim complete the requested list of 18 to 20 basics.
 Basic continuous effects scale by Common/Rare/Epic/Legendary = 1/1.5/2/3.
-Projectile and pierce bonuses use +1/+2/+3/+4 instead of fractions.
+Primary quantity and pierce bonuses use +1/+2/+3/+4 instead of fractions.
 Family caps: damage 10, multishot and piercing 3, other basics 5.
 Rarities share a family's level cap, and offers never repeat a family.
 
@@ -64,7 +64,8 @@ Each synergy family can be acquired once regardless of rarity.
   0.02s for bullets and 0.05s for bombs/dashes. Damage reduction caps at 90%.
 - Pierce 0 hits one target; pierce N hits N+1 distinct enemies. The penetration
   budget is captured when firing; damage modifiers are evaluated on impact.
-- Additional bullets form a symmetric fan, limited to 60 degrees total.
+- Multishot keeps simultaneous fan shots for pistol/bow and additional units for turrets. Only shotgun repeats complete 6-pellet volleys, at most 0.12s apart (shortened to fit cooldown). Dedicated Extra Volleys adds shotgun waves too; bombs, auxiliaries and axe do not inherit basic quantity.
+- Projectile travel: pistol travels 20 world units with a 5s lifetime; bow travels 60 units with an 8s lifetime; shotgun travels a fixed 8 world units, independent of camera zoom, aspect ratio and firing direction.
 - Timers use scaled gameplay time. No regeneration while paused or after death.
 - Growth rewards apply only to levels earned after acquiring the buff, not the
   level that offered it. A multi-level gain evaluates owned bonuses per level.

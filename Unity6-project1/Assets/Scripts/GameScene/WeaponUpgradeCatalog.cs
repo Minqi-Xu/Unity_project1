@@ -23,7 +23,7 @@ public static class WeaponUpgradeCatalog
         Add(result, WeaponKind.Pistol, WeaponBuffEffect.PistolRamp, "Warm Barrel", "Each consecutive shot reduces cooldown by 4% per level, capped at 40%. Resets after 1s idle.", .04f, 3);
         Add(result, WeaponKind.Pistol, WeaponBuffEffect.PistolKillShot, "Follow-up", "Kills fire 1 extra shot at a nearby enemy per level. Extra shots cannot trigger follow-ups.", 1f, 2);
         Add(result, WeaponKind.Shotgun, WeaponBuffEffect.ShotgunChoke, "Choke", "Reduce total spread by 15% of base per level; minimum 10 degrees.", .15f, 3);
-        Add(result, WeaponKind.Shotgun, WeaponBuffEffect.Count, "Extra Pellets", "Add 2 pellets per volley per level.", 2f, 3);
+        Add(result, WeaponKind.Shotgun, WeaponBuffEffect.Waves, "Extra Volleys", "Add 1 consecutive shotgun volley per attack per level; pellet count per volley is unchanged.", 1f, 3);
         Add(result, WeaponKind.Shotgun, WeaponBuffEffect.ShotgunClose, "Point Blank", "Gain +20% weapon damage per level within 3 units of the muzzle.", .2f, 3);
         Add(result, WeaponKind.Shotgun, WeaponBuffEffect.ShotgunConcentrated, "Concentrated Fire", "The 3rd pellet hitting one enemy in a volley gains +100% weapon damage per level.", 1f, 3);
         Add(result, WeaponKind.Bow, WeaponBuffEffect.BowPierce, "Long Arrow", "Add 1 innate pierce per level.", 1f, 3);

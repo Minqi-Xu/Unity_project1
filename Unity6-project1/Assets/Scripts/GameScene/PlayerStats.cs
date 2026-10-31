@@ -117,8 +117,8 @@ public class PlayerStats : MonoBehaviour
     public float dashCooldownMultiplier = 1f;
 
     [Header("Weapons")]
-    // Total projectiles fired per attack, including the original projectile.
-    [Min(1)]
+    // Primary quantity including the original shot; shotgun converts the bonus into volleys.
+    [Min(1), FormerlySerializedAs("primaryAttackWaveCount")]
     public int projectileCount = 1;
 
     // Additional enemies a projectile can hit after its first target; 0 means no piercing.
@@ -148,10 +148,10 @@ public class PlayerStats : MonoBehaviour
         return Mathf.Max(0f, legacyDamageMultiplier * damageMultiplier);
     }
 
-    // Returns the projectile count with a minimum of one, including runtime changes.
+    // Returns primary projectile quantity; shotgun interprets the bonus as extra volleys.
     public int GetProjectileCount()
     {
-        return Mathf.Max(1, projectileCount);
+        return Mathf.Clamp(projectileCount, 1, 32);
     }
 
     // Returns the nonnegative number of additional targets a projectile can hit.

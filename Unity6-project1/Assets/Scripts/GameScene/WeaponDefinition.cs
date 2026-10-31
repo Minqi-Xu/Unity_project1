@@ -15,6 +15,8 @@ public class WeaponDefinition : ScriptableObject
     [Min(0)] public int pierce;
     [Min(0.1f)] public float projectileSpeed = 25f;
     [Min(0.1f)] public float range = 12f;
+    [Header("Bullet travel (separate from targeting range)")]
+    [Min(.1f)] public float projectileRange = 100f;
     [Min(0.1f)] public float radius = 2f;
     [Min(0f)] public float knockback;
     [Header("Directional melee")]

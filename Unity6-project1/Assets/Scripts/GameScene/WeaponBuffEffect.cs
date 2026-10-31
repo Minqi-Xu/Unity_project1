@@ -12,5 +12,6 @@ public enum WeaponBuffEffect
     CreatureSpeed, CreatureReach, CreaturePounce, CreatureBleed, CreatureBreed,
     LightningRepeat,
     AxeArc, AxeWindup, AxeExecute,
-    SummonCount
+    SummonCount,
+    Waves
 }

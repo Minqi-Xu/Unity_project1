@@ -23,9 +23,11 @@ public partial class PlayerWeaponSystem
     public bool IsPrimaryWeapon => owner != null && gameObject == owner.gameObject;
     private int PrimaryProjectileBonus => IsPrimaryWeapon && owner.Stats != null ? owner.Stats.GetProjectileCount() - 1 : 0;
     public int ProjectileCount => Mathf.Clamp(Definition.projectiles + Mathf.RoundToInt(Get(WeaponBuffEffect.Count)) +
-        (Definition.kind == WeaponKind.Turret || Definition.kind == WeaponKind.Drone ? 0 : PrimaryProjectileBonus), 1, 64);
+        (Definition.kind == WeaponKind.Shotgun || Definition.kind == WeaponKind.Turret || Definition.kind == WeaponKind.Drone ? 0 : PrimaryProjectileBonus), 1, 64);
     public int SummonCount => Mathf.Clamp(Definition.summonCount + PrimaryProjectileBonus + Mathf.RoundToInt(Get(WeaponBuffEffect.SummonCount)), 1, 12);
-    public int MeleePulseCount => Mathf.Clamp(1 + PrimaryProjectileBonus + Mathf.RoundToInt(Get(WeaponBuffEffect.MeleeCombo)), 1, 32);
+    public int MeleePulseCount => Mathf.Clamp(1 + Mathf.RoundToInt(Get(WeaponBuffEffect.MeleeCombo)), 1, 32);
+    public int AttackWaveCount => Definition != null && IsPrimaryWeapon && WeaponWaveRules.Supports(Definition.kind)
+        ? WeaponWaveRules.Count(owner.Stats.GetProjectileCount(), Get(WeaponBuffEffect.Waves)) : 1;
 
     public float Get(WeaponBuffEffect effect) => buffs.TryGetValue(effect, out float value) ? value : 0f;
     public float Radius => Definition.radius * (1f + Get(WeaponBuffEffect.Radius));
