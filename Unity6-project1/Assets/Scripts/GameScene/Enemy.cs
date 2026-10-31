@@ -153,6 +153,8 @@ public class Enemy : MonoBehaviour
         {
             PlayerHealth playerHealth = collision.GetComponentInParent<PlayerHealth>();
             PlayerController playerController = collision.GetComponentInParent<PlayerController>();
+            // Dashing through an enemy must not consume it or start its contact cooldown.
+            if (playerController != null && playerController.IsDashInvulnerable) return;
             if(playerHealth != null)
             {
                 //Debug.Log($"Enemy deal {Mathf.Min(currentDamage * damageMultiplier, maxDamage)} dmg");

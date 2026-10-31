@@ -184,6 +184,7 @@ MonoBehaviour:
   moveSpeed: 5
   dashSpeed: 20
   dashDuration: 0.12
+  postDashInvulnerabilityDuration: 0.2
   dashCooldown: 5
   bulletPrefab: {fileID: 6142048407040956409, guid: f7c644bb00ebabc42b4c39343d979ded, type: 3}
   bombPrefab: {fileID: 4086324768786188996, guid: 9aef36d3e21e74b4886b9272f26d008b, type: 3}

@@ -63,6 +63,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (currentHealth <= 0f || damage <= 0f || Time.timeScale <= 0f || Time.time < invulnerableUntil) return;
         PlayerController playerController = player != null ? player : GetComponent<PlayerController>();
+        if (playerController != null && playerController.IsDashInvulnerable) return;
         float playerGameTime = playerController != null ? playerController.gameTime : 0f;
         float final_damage = damage * (damageMultiplier + damageReceiveIncreasingRate * playerGameTime);
         PlayerStats stats = playerController != null ? playerController.Stats : GetComponent<PlayerStats>();

@@ -78,6 +78,8 @@ public partial class PlayerWeaponSystem
         WeaponAttackContext context = null, float scale = 1f, bool procs = true, bool projectileHit = false)
     {
         if (enemy == null || !enemy.IsAlive || owner == null || owner.Stats == null) return;
+        bool shotgunPush = Definition.kind == WeaponKind.Shotgun && projectileHit &&
+            (context == null || !context.hits.ContainsKey(enemy));
         float multiplier = 1f + Get(WeaponBuffEffect.Damage);
         if (Definition.kind == WeaponKind.Pistol && procs)
         {
@@ -103,6 +105,14 @@ public partial class PlayerWeaponSystem
             IsPrimaryWeapon);
         enemy.TakeDamage(damage, owner.Stats, procs, projectileHit);
         bool killed = !enemy.IsAlive;
+        if (shotgunPush && !killed)
+        {
+            // All pellets share one volley context, so extra pellets do not multiply knockback.
+            Vector2 away = (Vector2)enemy.transform.position - origin;
+            if (away.sqrMagnitude < .0001f) away = (Vector2)(enemy.transform.position - owner.transform.position);
+            if (away.sqrMagnitude < .0001f) away = Vector2.right;
+            enemy.transform.position += (Vector3)away.normalized * Definition.knockback;
+        }
         if ((Definition.kind == WeaponKind.Melee || Definition.kind == WeaponKind.Axe) && !killed)
         {
             Vector2 away = (Vector2)(enemy.transform.position - owner.transform.position);

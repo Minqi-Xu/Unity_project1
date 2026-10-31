@@ -78,6 +78,15 @@ public static class WeaponBalanceSmokeTests
             }
             stats.projectileCount = 1;
             Near(stats.CalculateDamage(100f, 1f, false), 100f, "RMB bomb unaffected by primary damage");
+            primary.Configure(player, Resources.Load<WeaponDefinition>("Weapons/Shotgun"));
+            enemy.currentHealth = 5000f;
+            target.transform.position = Vector2.right;
+            WeaponAttackContext volley = new WeaponAttackContext();
+            for (int pellet = 0; pellet < 6; pellet++)
+                primary.Hit(enemy, 7f, Vector2.zero, context: volley, projectileHit: true);
+            Near(target.transform.position.x, 1.35f, "Shotgun knockback applies once per enemy per volley");
+            primary.Hit(enemy, 7f, Vector2.zero, context: new WeaponAttackContext(), projectileHit: true);
+            Near(target.transform.position.x, 1.7f, "A new shotgun volley can push again");
             primary.Configure(player, Resources.Load<WeaponDefinition>("Weapons/BombLauncher"));
             Near(primary.Definition.radius, 1.8f, "Reduced launcher radius");
             Near(primary.Cooldown, 2.8f / 1.08f, "Launcher benefits from primary attack speed");

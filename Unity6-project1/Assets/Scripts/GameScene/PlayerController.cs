@@ -14,6 +14,9 @@ public class PlayerController : MonoBehaviour
     // How long one dash lasts in seconds.
     public float dashDuration = 0.2f; // How long the dash lasts
 
+    [Tooltip("Seconds of invulnerability after the dash ends. The player is also invulnerable throughout the dash.")]
+    [Min(0f)] public float postDashInvulnerabilityDuration = 0.1f;
+
     // Base dash cooldown in seconds before stat modifiers.
     public float dashCooldown = 5f; // Dash cooldown time
 
@@ -61,6 +64,8 @@ public class PlayerController : MonoBehaviour
     private Vector2 movement;
     private Vector2 lastMoveDirection = Vector2.right;
     private bool isDashing = false;
+    private float dashInvulnerableUntil;
+    public bool IsDashInvulnerable => isDashing || Time.time < dashInvulnerableUntil;
     private float dashCooldownTimer = 0f;
 
     // Cooldown timestamps and experience bookkeeping.
@@ -212,6 +217,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // End dashing
+        dashInvulnerableUntil = Time.time + Mathf.Max(0f, postDashInvulnerabilityDuration);
         isDashing = false;
         Stats?.OnDashCompleted();
     }
