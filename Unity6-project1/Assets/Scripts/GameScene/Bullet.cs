@@ -39,6 +39,7 @@ public class Bullet : MonoBehaviour
         hitIndex = 0;
     }
     private readonly HashSet<Enemy> hitEnemies = new HashSet<Enemy>();
+    private readonly HashSet<ZoneSeal> hitSeals = new HashSet<ZoneSeal>();
 
     // Camera references used for resolution-aware projectile movement.
     private float cameraSizeFactor; // Since camera size changed due to resolution change, the speed related should also changed accordingly
@@ -58,6 +59,7 @@ public class Bullet : MonoBehaviour
         initialHits = remainingHits;
         launched = Time.time;
         hitEnemies.Clear();
+        hitSeals.Clear();
         mainCamera = Camera.main;
         cameraScaler = mainCamera != null ? mainCamera.GetComponent<CameraScaler>() : null;
     }
@@ -90,6 +92,19 @@ public class Bullet : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (spent) return;
+        ZoneSeal seal = other.GetComponentInParent<ZoneSeal>();
+        if (seal != null)
+        {
+            if (!hitSeals.Add(seal)) return;
+            PlayerStats sealStats = playerController != null ? playerController.Stats : null;
+            float raw = baseDamage * weaponScale * (weapon != null ? weapon.LevelDamageMultiplier *
+                (1f + weapon.Get(WeaponBuffEffect.Damage)) * weapon.CharacterDamageMultiplier : 1f);
+            seal.TakeDamage(sealStats != null ? sealStats.CalculateDamage(raw, playerController.damageMultiplier,
+                weapon == null || weapon.IsPrimaryWeapon) : raw);
+            remainingHits--;
+            if (remainingHits <= 0) { spent = true; Destroy(gameObject); }
+            return;
+        }
         Enemy enemy = other.GetComponentInParent<Enemy>();
         if (enemy == null || !hitEnemies.Add(enemy)) return;
         PlayerStats stats = playerController != null ? playerController.Stats : null;

@@ -61,25 +61,18 @@ public class ExperienceDrop: MonoBehaviour
     // Grants experience to the player and destroys the pickup on collection.
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!collected && other.CompareTag("Player"))
-        {
-            // Call method on player increase their exp here
-            PlayerController playerController = other.GetComponent<PlayerController>();
-            if (playerController != null)
-            {
-                collected = true;
-                if (RewardManager.Instance != null)
-                {
-                    RewardManager.Instance.GrantExperience(playerController, 1);
-                }
-                else
-                {
-                    playerController.CollectExperience(playerController.Stats != null
-                        ? playerController.Stats.GetExperienceAmount(1f) : 1f);
-                }
-            }
-            Destroy(gameObject);
-        }
+        PlayerController target = other.GetComponentInParent<PlayerController>();
+        if (target != null) Collect(target);
+    }
+
+    public bool Collect(PlayerController target)
+    {
+        if (collected || target == null) return false;
+        collected = true;
+        if (RewardManager.Instance != null) RewardManager.Instance.GrantExperience(target, 1f);
+        else target.CollectExperience(target.Stats != null ? target.Stats.GetExperienceAmount(1f) : 1f);
+        Destroy(gameObject);
+        return true;
     }
 
     // Returns movement scale based on current camera size.

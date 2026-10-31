@@ -6,6 +6,9 @@ using UnityEngine;
 public partial class PlayerWeaponSystem : MonoBehaviour
 {
     public WeaponDefinition Definition { get; private set; }
+    public int WeaponLevel { get; private set; } = 1;
+    public float LevelDamageMultiplier => 1f + .15f * (WeaponLevel - 1);
+    public void UpgradeLevel() { if (Definition != null) WeaponLevel++; }
     private PlayerController owner;
     private float nextAttack;
     private float lightningSearchRetryUntil;
@@ -21,6 +24,7 @@ public partial class PlayerWeaponSystem : MonoBehaviour
         summons.Clear();
         owner = player;
         Definition = definition;
+        WeaponLevel = 1;
         buffs.Clear();
         CharacterDamageMultiplier = CharacterCooldownMultiplier = 1f;
         configuredAt = Time.time;

@@ -92,6 +92,8 @@ public class Bomb: MonoBehaviour
     // Applies one independently rolled hit per enemy, even when it has multiple colliders.
     public static void DamageArea(Vector2 center, float radius, float baseDamage, PlayerController owner, bool primaryWeapon, bool directHit = true)
     {
+        ZoneSeal.DamageInRadius(center, radius, owner != null && owner.Stats != null
+            ? owner.Stats.CalculateDamage(baseDamage, owner.damageMultiplier, primaryWeapon) : baseDamage);
         HashSet<Enemy> damaged = new HashSet<Enemy>();
         foreach (Collider2D collider in Physics2D.OverlapCircleAll(center, radius))
         {

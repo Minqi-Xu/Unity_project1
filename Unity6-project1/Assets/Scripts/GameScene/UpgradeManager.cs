@@ -83,6 +83,9 @@ public class UpgradeManager : MonoBehaviour
         player != null && OfferRewards(player, player.level, true,
             $"Treasure Chest {rewardIndex}/{rewardCount} | Choose a Rare Upgrade");
 
+    public bool TryOfferZoneRewards(PlayerController player, bool rare) => player != null &&
+        OfferRewards(player, player.level, rare, rare ? "Map Treasure | Choose a Rare Upgrade" : "Ancient Altar | Choose an Upgrade");
+
     private bool OfferRewards(PlayerController player, int earnedLevel, bool rare, string rewardTitle = null)
     {
         if (player == null)
@@ -99,7 +102,7 @@ public class UpgradeManager : MonoBehaviour
         List<UpgradeDefinition> choices = rare ? PickRareChoices(player) : PickLevelUpChoices(player);
         if (choices.Count == 0)
         {
-            if (rare && RewardManager.Instance != null) RewardManager.Instance.GrantExhaustedChestReward(player);
+            if ((rare || rewardTitle != null) && RewardManager.Instance != null) RewardManager.Instance.GrantExhaustedChestReward(player);
             return false;
         }
 

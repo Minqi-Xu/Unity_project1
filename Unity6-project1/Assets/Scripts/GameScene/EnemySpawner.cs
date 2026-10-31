@@ -177,6 +177,24 @@ public class EnemySpawner : MonoBehaviour
         return FindType(EnemyKind.Chaser);
     }
 
+    public bool SpawnZoneWave(Vector2 center, float radius, int count)
+    {
+        if (!isActiveAndEnabled || enemyPrefab == null || enemyTypes == null || enemyTypes.Length == 0) return false;
+        for (int i = 0; i < Mathf.Clamp(count, 1, 40); i++)
+        {
+            float angle = i * Mathf.PI * 2f / Mathf.Clamp(count, 1, 40);
+            Vector2 position = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+            GameObject obj = Instantiate(enemyPrefab, position, Quaternion.identity);
+            Enemy enemy = obj.GetComponent<Enemy>();
+            EnemyDefinition type = PickNormalType(gameTime);
+            if (enemy != null && type != null)
+                enemy.Configure(type, EnemyRank.Normal, EnemyAffix.None,
+                    healIncreaseTime > 0f ? Mathf.Floor(gameTime / healIncreaseTime) * healIncreaseRate : 0f,
+                    StartingCharacterAverageSpeed);
+        }
+        return true;
+    }
+
     private EnemyDefinition FindType(EnemyKind kind)
     {
         foreach (EnemyDefinition type in enemyTypes) if (type != null && type.kind == kind) return type;

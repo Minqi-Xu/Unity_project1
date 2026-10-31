@@ -5,6 +5,7 @@ using UnityEngine;
 public class WeaponAttackContext
 {
     public readonly Dictionary<Enemy, int> hits = new Dictionary<Enemy, int>();
+    public readonly HashSet<ZoneSeal> seals = new HashSet<ZoneSeal>();
     public float healing;
 }
 
@@ -98,7 +99,7 @@ public partial class PlayerWeaponSystem
         if (Definition.kind == WeaponKind.Axe && enemy.currentHealth <= enemy.maxHealth * .3f)
             multiplier += Get(WeaponBuffEffect.AxeExecute);
         float characterScale = Definition.kind == WeaponKind.Bomb ? 1f : CharacterDamageMultiplier;
-        float damage = owner.Stats.CalculateDamage(baseDamage * multiplier * scale * characterScale, owner.damageMultiplier,
+        float damage = owner.Stats.CalculateDamage(baseDamage * multiplier * scale * characterScale * LevelDamageMultiplier, owner.damageMultiplier,
             IsPrimaryWeapon);
         enemy.TakeDamage(damage, owner.Stats, procs, projectileHit);
         bool killed = !enemy.IsAlive;
@@ -145,6 +146,9 @@ public partial class PlayerWeaponSystem
     public void DamageArea(Vector2 center, float radius, float damage, WeaponAttackContext context = null,
         bool procs = true, bool centerBonus = false, bool falloff = false)
     {
+        if (owner != null && owner.Stats != null)
+            ZoneSeal.DamageInRadius(center, radius, owner.Stats.CalculateDamage(damage * LevelDamageMultiplier *
+                (1f + Get(WeaponBuffEffect.Damage)), owner.damageMultiplier, IsPrimaryWeapon));
         HashSet<Enemy> targets = new HashSet<Enemy>();
         foreach (Collider2D collider in Physics2D.OverlapCircleAll(center, radius))
         {

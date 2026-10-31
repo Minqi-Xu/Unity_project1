@@ -58,6 +58,44 @@ public class RewardManager : MonoBehaviour
         Debug.Log("[Reward] Rare upgrade pool exhausted; chest roll restores 50% max health.");
     }
 
+    public bool GrantZoneReward(PlayerController player, ZoneRewardType type)
+    {
+        if (player == null) return false;
+        PlayerHealth health = player.GetComponent<PlayerHealth>();
+        if (health == null || health.currentHealth <= 0f) return false;
+        switch (type)
+        {
+            case ZoneRewardType.Altar:
+            case ZoneRewardType.DangerousChest:
+                if (UpgradeManager.Instance == null) return false;
+                // An exhausted pool is still a consumed reward; use the existing heal fallback.
+                bool rare = type == ZoneRewardType.DangerousChest;
+                UpgradeManager.Instance.TryOfferZoneRewards(player, rare);
+                return true;
+            case ZoneRewardType.HealingSpring:
+                HealPlayer(health, health.maxHealth * .5f);
+                return true;
+            case ZoneRewardType.WeaponWreckage:
+                PlayerWeaponSystem weapon = player.GetComponent<PlayerWeaponSystem>();
+                if (weapon == null || weapon.Definition == null) return false;
+                weapon.UpgradeLevel();
+                Debug.Log($"[Reward] {weapon.Definition.displayName} level {weapon.WeaponLevel}, damage +15% per level.");
+                return true;
+            case ZoneRewardType.ExperienceMagnet:
+                Camera camera = Camera.main;
+                if (camera == null) return false;
+                // Snapshot before collecting: level-up pauses do not cancel the rest of the reward.
+                foreach (ExperienceDrop drop in FindObjectsByType<ExperienceDrop>())
+                {
+                    Vector3 viewport = camera.WorldToViewportPoint(drop.transform.position);
+                    if (viewport.z > 0f && viewport.x >= 0f && viewport.x <= 1f && viewport.y >= 0f && viewport.y <= 1f)
+                        drop.Collect(player);
+                }
+                return true;
+            default: return false;
+        }
+    }
+
     // Grants experience to a player after applying experience multipliers.
     public void GrantExperience(PlayerController player, float amount)
     {

@@ -95,6 +95,9 @@ public class GameManager : MonoBehaviour
     // Creates runtime core managers if the scene does not already contain them.
     private void EnsureCoreSystems()
     {
+        if (FindAnyObjectByType<ZoneRewardDirector>() == null)
+            new GameObject("ZoneRewardDirector").AddComponent<ZoneRewardDirector>();
+
         if (UpgradeManager.Instance == null)
         {
             GameObject upgradeManagerObject = new GameObject("UpgradeManager");
